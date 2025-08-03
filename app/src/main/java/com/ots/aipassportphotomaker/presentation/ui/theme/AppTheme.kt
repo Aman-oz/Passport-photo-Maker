@@ -20,7 +20,7 @@ fun AppTheme(
         lightColors
     }
 
-    systemUiController.setStatusBarColor(color = colors.primary)
+    systemUiController.setStatusBarColor(color = colors.background)
 
     MaterialTheme(
         colorScheme = colors,

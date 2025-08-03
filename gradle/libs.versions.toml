@@ -1,5 +1,5 @@
 [versions]
-agp = "8.9.1"
+agp = "8.7.3"
 kotlin = "2.0.21"
 coreKtx = "1.16.0"
 junit = "4.13.2"
@@ -98,4 +98,3 @@ hilt = { id = "com.google.dagger.hilt.android", version.ref = "hiltGradlePlugin"
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "serializationGradlePlugin" }
-

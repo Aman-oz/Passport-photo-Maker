@@ -14,6 +14,8 @@ import androidx.work.impl.utils.forAll
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
 import com.ots.aipassportphotomaker.domain.bottom_nav.route
 import com.ots.aipassportphotomaker.presentation.ui.theme.colors
+import com.ots.aipassportphotomaker.presentation.ui.theme.custom400
+import com.ots.aipassportphotomaker.presentation.ui.theme.onCustom400
 
 // Created by amanullah on 25/07/2025.
 // Copyright (c) 2025 Ozi Publishing. All rights reserved.
@@ -41,7 +43,10 @@ fun BottomNavigationBar(
                 },
                 label = {
                     Text(text = item.tabName)
-                }
+                },
+                colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
+                    indicatorColor = if (selected) colors.custom400 else colors.background
+                )
             )
         }
     }
