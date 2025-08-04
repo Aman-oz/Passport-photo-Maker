@@ -10,6 +10,9 @@ import com.ots.aipassportphotomaker.common.ext.sharedViewModel
 import com.ots.aipassportphotomaker.domain.bottom_nav.Graph
 import com.ots.aipassportphotomaker.domain.bottom_nav.Page
 import com.ots.aipassportphotomaker.presentation.ui.bottom_nav.NavigationBarScreen
+import com.ots.aipassportphotomaker.presentation.ui.bottom_nav.NavigationBarSharedViewModel
+import com.ots.aipassportphotomaker.presentation.ui.home.HomePage
+import com.ots.aipassportphotomaker.presentation.ui.home.HomeScreenViewModel
 
 // Created by amanullah on 25/07/2025.
 // Copyright (c) 2025 Ozi Publishing. All rights reserved.
@@ -42,15 +45,18 @@ fun MainGraph(
             }
         }
 
-        /*composableHorizontalSlide<Page.Search> {
-            val viewModel = hiltViewModel<SearchViewModel>()
-            SearchPage(
-                mainNavController = mainNavController,
+        composableHorizontalSlide<Page.Home> {
+            val viewModel = hiltViewModel<HomeScreenViewModel>()
+            val sharedViewModel = hiltViewModel<NavigationBarSharedViewModel>()
+            val mainRouter = MainRouter(mainNavController)
+            HomePage(
+                mainRouter = mainRouter,
                 viewModel = viewModel,
+                sharedViewModel = sharedViewModel,
             )
         }
 
-        composableHorizontalSlide<Page.MovieDetails> {
+        /*composableHorizontalSlide<Page.MovieDetails> {
             val viewModel = hiltViewModel<MovieDetailsViewModel>()
             MovieDetailsPage(
                 mainNavController = mainNavController,

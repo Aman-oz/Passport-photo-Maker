@@ -13,7 +13,7 @@ class MainRouter(
 //        mainNavController.navigate(Page.Search)
     }
 
-    fun navigateToMovieDetails(movieId: Int) {
-        mainNavController.navigate(Page.MovieDetails(movieId))
+    fun navigateToItemDetailScreen(name: String) {
+        mainNavController.navigate(Page.ItemDetailScreen(name))
     }
 }

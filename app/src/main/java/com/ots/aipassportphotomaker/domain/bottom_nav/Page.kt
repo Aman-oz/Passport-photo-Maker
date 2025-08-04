@@ -18,7 +18,7 @@ sealed class Page {
     data object History : Page()
 
     @Serializable
-    data class MovieDetails(val movieId: Int) : Page()
+    data class ItemDetailScreen(val name: String) : Page()
 }
 
 sealed class Graph {

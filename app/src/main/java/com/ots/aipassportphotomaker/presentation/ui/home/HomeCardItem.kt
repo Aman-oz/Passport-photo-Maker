@@ -64,9 +64,9 @@ fun HomeCardItem(
         ) {
             Text(
                 text = title,
-                fontSize = 18.sp,
+                fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                color = textColor ?: Color.Black
+                color = textColor ?: colors.onPrimary
             )
 
             if (sparkleImage != null) {
