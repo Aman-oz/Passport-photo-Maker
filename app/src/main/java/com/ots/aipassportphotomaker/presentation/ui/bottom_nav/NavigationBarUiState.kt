@@ -1,11 +1,7 @@
 package com.ots.aipassportphotomaker.presentation.ui.bottom_nav
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.domain.bottom_nav.Page
@@ -34,7 +30,7 @@ sealed class BottomNavigationBarItem(
     data object CreateID : BottomNavigationBarItem(
         tabName = "Create ID",
         icon = { painterResource(id = R.drawable.create_id_icon) },
-        page = Page.CreateID
+        page = Page.PhotoID
     )
 
     data object History : BottomNavigationBarItem(

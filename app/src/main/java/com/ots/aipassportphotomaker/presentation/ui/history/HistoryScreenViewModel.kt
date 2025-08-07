@@ -1,4 +1,4 @@
-package com.ots.aipassportphotomaker.presentation.ui.home
+package com.ots.aipassportphotomaker.presentation.ui.history
 
 import androidx.lifecycle.viewModelScope
 import androidx.paging.CombinedLoadStates
@@ -6,6 +6,8 @@ import androidx.paging.LoadState
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
 import com.ots.aipassportphotomaker.domain.util.NetworkMonitor
 import com.ots.aipassportphotomaker.presentation.ui.base.BaseViewModel
+import com.ots.aipassportphotomaker.presentation.ui.home.HomeScreenNavigationState
+import com.ots.aipassportphotomaker.presentation.ui.home.HomeScreenUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,14 +19,16 @@ import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
 @HiltViewModel
-class HomeScreenViewModel  @Inject constructor(
+class HistoryScreenViewModel @Inject constructor(
     val networkMonitor: NetworkMonitor,
 ) : BaseViewModel() {
 
-    private val _uiState: MutableStateFlow<HomeScreenUiState> = MutableStateFlow(HomeScreenUiState())
+    private val _uiState: MutableStateFlow<HistoryScreenUiState> = MutableStateFlow(
+        HistoryScreenUiState()
+    )
     val uiState = _uiState.asStateFlow()
 
-    private val _navigationState: MutableSharedFlow<HomeScreenNavigationState> = singleSharedFlow()
+    private val _navigationState: MutableSharedFlow<HistoryScreenNavigationState> = singleSharedFlow()
     val navigationState = _navigationState.asSharedFlow()
 
     private val _refreshListState: MutableSharedFlow<Unit> = singleSharedFlow()
@@ -51,7 +55,7 @@ class HomeScreenViewModel  @Inject constructor(
     }
 
     fun onItemClick(name: String) =
-        _navigationState.tryEmit(HomeScreenNavigationState.PhotoID(name))
+        _navigationState.tryEmit(HistoryScreenNavigationState.PhotoIDDetails(name))
 
     private fun observeNetworkStatus() {
         networkMonitor.networkState

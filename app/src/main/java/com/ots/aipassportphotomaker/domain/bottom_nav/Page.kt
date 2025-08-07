@@ -12,13 +12,19 @@ sealed class Page {
     data object Home : Page()
 
     @Serializable
-    data object CreateID : Page()
+    data object PhotoID : Page()
 
     @Serializable
     data object History : Page()
 
     @Serializable
     data class ItemDetailScreen(val name: String) : Page()
+
+    @Serializable
+    data class PhotoIDDetailScreen(val name: String) : Page()
+
+    @Serializable
+    data class HistoryDetailScreen(val name: String) : Page()
 }
 
 sealed class Graph {
