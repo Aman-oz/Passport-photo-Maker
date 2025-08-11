@@ -41,9 +41,9 @@ fun BottomNavigationBar(
                 icon = {
                     Icon(painter = item.icon(), contentDescription = null, tint = tintColor)
                 },
-                label = {
+                /*label = {
                     Text(text = item.tabName)
-                },
+                },*/
                 colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
                     indicatorColor = if (selected) colors.custom400 else colors.background
                 )

@@ -48,7 +48,7 @@ fun NavigationBarScreen(
                 fontFamily = funnelFamily,
                 onThemeUpdated = onThemeUpdated,
                 onGetProClick = {
-                    mainRouter.navigateToSearch()
+                    mainRouter.navigateToPremiumScreen()
                 }
             )
 

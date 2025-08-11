@@ -18,6 +18,9 @@ sealed class Page {
     data object History : Page()
 
     @Serializable
+    data object Premium : Page()
+
+    @Serializable
     data class ItemDetailScreen(val name: String) : Page()
 
     @Serializable

@@ -9,19 +9,19 @@ class MainRouter(
     private val mainNavController: NavHostController
 ) {
 
-    fun navigateToSearch() {
-//        mainNavController.navigate(Page.Search)
-    }
-
     fun navigateToItemDetailScreen(name: String) {
         mainNavController.navigate(Page.ItemDetailScreen(name))
     }
 
     fun navigateToPhotoIDDetailScreen(name: String) {
-        mainNavController.navigate(Page.PhotoIDDetailScreen(name))
+        mainNavController.navigate(Page.PhotoID)
     }
 
     fun navigateToHistoryDetailScreen(name: String) {
         mainNavController.navigate(Page.HistoryDetailScreen(name))
+    }
+
+    fun navigateToPremiumScreen() {
+        mainNavController.navigate(Page.Premium)
     }
 }

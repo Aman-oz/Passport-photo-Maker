@@ -35,7 +35,7 @@ sealed class BottomNavigationBarItem(
 
     data object History : BottomNavigationBarItem(
         tabName = "History",
-        icon = { painterResource(id = R.drawable.history_icon) },
+        icon = { painterResource(id = R.drawable.history_icon_new) },
         page = Page.History
     )
 }

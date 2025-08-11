@@ -36,7 +36,7 @@ fun HomePage(
     viewModel.navigationState.collectAsEffect { navigationState ->
         Log.d(TAG, "HomePage: Navigation State: $navigationState")
         when (navigationState) {
-            is HomeScreenNavigationState.PhotoID -> mainRouter.navigateToItemDetailScreen(navigationState.name)
+            is HomeScreenNavigationState.PhotoID -> mainRouter.navigateToPhotoIDDetailScreen(navigationState.name)
         }
     }
     viewModel.refreshListState.collectAsEffect {
