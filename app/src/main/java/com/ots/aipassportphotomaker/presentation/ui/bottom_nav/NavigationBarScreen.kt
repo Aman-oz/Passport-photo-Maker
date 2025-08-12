@@ -16,6 +16,7 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
@@ -76,6 +77,7 @@ fun NavigationBarScreen(
             Modifier
                 .fillMaxSize(1f)
                 .padding(paddingValues)
+                .background(color = colors.background)
         ) {
             content()
         }
@@ -91,7 +93,7 @@ private fun NavigationBarScreenPreview() = PreviewContainer {
     val darkTheme = isSystemInDarkTheme()
 
     NavigationBarScreen(
-        sharedViewModel = NavigationBarSharedViewModel(),
+        sharedViewModel = hiltViewModel<NavigationBarSharedViewModel>(),
         mainRouter = mainRouter,
         darkMode = darkTheme,
         onThemeUpdated = { },
