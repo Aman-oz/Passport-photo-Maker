@@ -62,6 +62,7 @@ android {
         kotlinCompilerExtensionVersion = "1.5.13"
     }
     buildFeatures {
+        buildConfig = true
         compose = true
     }
 }
