@@ -55,7 +55,7 @@ class HistoryScreenViewModel @Inject constructor(
     }
 
     fun onItemClick(name: String) =
-        _navigationState.tryEmit(HistoryScreenNavigationState.PhotoIDDetails(name))
+        _navigationState.tryEmit(HistoryScreenNavigationState.PhotoID(name))
 
     private fun observeNetworkStatus() {
         networkMonitor.networkState

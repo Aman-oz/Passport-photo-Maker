@@ -24,7 +24,7 @@ sealed class Page {
     data class ItemDetailScreen(val name: String) : Page()
 
     @Serializable
-    data class PhotoIDDetailScreen(val name: String) : Page()
+    data class PhotoIDDetailScreen(val id: Int) : Page()
 
     @Serializable
     data class HistoryDetailScreen(val name: String) : Page()

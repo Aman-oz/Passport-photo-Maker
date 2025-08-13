@@ -37,7 +37,6 @@ fun HistoryPage(
         Log.d(TAG, "HomePage: Navigation State: $navigationState")
         when (navigationState) {
             is HistoryScreenNavigationState.PhotoID -> mainRouter.navigateToItemDetailScreen(navigationState.name)
-            is HistoryScreenNavigationState.PhotoIDDetails -> mainRouter.navigateToPhotoIDDetailScreen(navigationState.name)
         }
     }
     viewModel.refreshListState.collectAsEffect {

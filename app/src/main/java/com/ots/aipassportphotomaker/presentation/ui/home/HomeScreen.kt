@@ -47,7 +47,7 @@ fun HomePage(
         when (navigationState) {
             is HomeScreenNavigationState.PhotoID ->  {
                 mainRouter.navigateToPhotoIDDetailScreen(
-                    navigationState.name
+                    1
                 )
             }
         }

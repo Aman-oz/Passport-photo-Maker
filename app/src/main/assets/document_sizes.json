@@ -1,0 +1,311 @@
+{
+  "Passports": [
+    {
+      "Name": "United States Passport",
+      "Size": "2.0 x 2.0",
+      "Unit": "inch",
+      "Pixels": "600x600 px",
+      "Resolution": "300 dpi",
+      "Image": "https://lh3.googleusercontent.com/d/1-6TCzKDOOcY-rVFqkBCd5ScOfgvcX7BK",
+      "Type": "Passport"
+    },
+    {
+      "Name": "Canada Passport",
+      "Size": "50.0 x 70.0",
+      "Unit": "mm",
+      "Pixels": "1181x1653 px",
+      "Resolution": "300 dpi",
+      "Image": "https://lh3.googleusercontent.com/d/18Ae4qJPS5l8Iz-4aWeR-glx2fVW1oM6M",
+      "Type": "Passport"
+    },
+    {
+      "Name": "United Kingdom Passport",
+      "Size": "35.0 x 45.0",
+      "Unit": "mm",
+      "Pixels": "413x531 px",
+      "Resolution": "300 dpi",
+      "Image": "https://lh3.googleusercontent.com/d/1Ec0M4-GBAs2LXodcYyzeOAf8rGFE7unb",
+      "Type": "Passport"
+    },
+    {
+      "Name": "United Kingdom Passport Online",
+      "Size": "76.2 x 101.6",
+      "Unit": "mm",
+      "Pixels": "900x1200 px",
+      "Resolution": "300 dpi",
+      "Image": "https://lh3.googleusercontent.com/d/1Ec0M4-GBAs2LXodcYyzeOAf8rGFE7unb",
+      "Type": "Passport"
+    },
+    {
+      "Name": "Australia Passport",
+      "Size": "35.0 x 45.0",
+      "Unit": "mm",
+      "Pixels": "413x531 px",
+      "Resolution": "300 dpi",
+      "Image": "https://lh3.googleusercontent.com/d/16O1TVcECSP7E36BBpEkJDAGIQ4lxxMgV",
+      "Type": "Passport"
+    }
+  ],
+  "Visas": [
+    {
+      "Name": "United States",
+      "Size": "2.0 x 2.0",
+      "Unit": "inch",
+      "Pixels": "600x600 px",
+      "Resolution": "300 dpi",
+      "Type": "Visa"
+    },
+    {
+      "Name": "United Kingdom",
+      "Size": "35.0 x 45.0",
+      "Unit": "mm",
+      "Pixels": "413x531 px",
+      "Resolution": "300 dpi",
+      "Type": "Visa"
+    },
+    {
+      "Name": "Australia",
+      "Size": "35.0 x 45.0",
+      "Unit": "mm",
+      "Pixels": "413x531 px",
+      "Resolution": "300 dpi",
+      "Type": "Visa"
+    },
+    {
+      "Name": "Austria",
+      "Size": "35.0 x 45.0",
+      "Unit": "mm",
+      "Pixels": "413x531 px",
+      "Resolution": "300 dpi",
+      "Type": "Visa"
+    },
+    {
+      "Name": "Canada",
+      "Size": "35.0 x 45.0",
+      "Unit": "mm",
+      "Pixels": "413x531 px",
+      "Resolution": "300 dpi",
+      "Type": "Visa"
+    }
+  ],
+  "Standard": [
+    {
+      "Name": "Photo 2 x 2 inch",
+      "Size": "2.0 x 2.0",
+      "Unit": "inch",
+      "Pixels": "600x600 px",
+      "Resolution": "300 dpi",
+      "Type": "Standard"
+    },
+    {
+      "Name": "Photo 51 x 51 mm",
+      "Size": "51.0 x 51.0",
+      "Unit": "mm",
+      "Pixels": "602x602 px",
+      "Resolution": "300 dpi",
+      "Type": "Standard"
+    },
+    {
+      "Name": "Photo 35 x 45 mm",
+      "Size": "35.0 x 45.0",
+      "Unit": "mm",
+      "Pixels": "413x531 px",
+      "Resolution": "300 dpi",
+      "Type": "Standard"
+    },
+    {
+      "Name": "Photo 25 x 35 mm",
+      "Size": "25.0 x 35.0",
+      "Unit": "mm",
+      "Pixels": "295x413 px",
+      "Resolution": "300 dpi",
+      "Type": "Standard"
+    },
+    {
+      "Name": "Photo 30 x 40 mm",
+      "Size": "30.0 x 40.0",
+      "Unit": "mm",
+      "Pixels": "354x472 px",
+      "Resolution": "300 dpi",
+      "Type": "Standard"
+    }
+  ],
+  "NationalID": [
+    {
+      "Name": "Afghanistan Tazkira",
+      "Size": "35.0 x 45.0",
+      "Unit": "mm",
+      "Pixels": "413x531 px",
+      "Resolution": "300 dpi",
+      "Completed": "yes",
+      "Image": "https://lh3.googleusercontent.com/d/1LmCs3d0pDdDruCw28v3DkvGvA_i-wIlo",
+      "Type": "National ID"
+    },
+    {
+      "Name": "Algeria",
+      "Size": "35.0 x 45.0",
+      "Unit": "mm",
+      "Pixels": "413x531 px",
+      "Resolution": "300 dpi",
+      "Completed": "yes",
+      "Image": "https://lh3.googleusercontent.com/d/1EZqOoYaMLGd-yavoB9UdrDfgq7H42hFL",
+      "Type": "National ID"
+    },
+    {
+      "Name": "Angola",
+      "Size": "35.0 x 45.0",
+      "Unit": "mm",
+      "Pixels": "413x531 px",
+      "Resolution": "300 dpi",
+      "Completed": "yes",
+      "Image": "https://lh3.googleusercontent.com/d/1UbRhVc3UE2I0foVADOwwTEeudUJuK1oM",
+      "Type": "National ID"
+    },
+    {
+      "Name": "Argentina DNI",
+      "Size": "40.0 x 40.0",
+      "Unit": "mm",
+      "Pixels": "472x472 px",
+      "Resolution": "300 dpi",
+      "Completed": "yes",
+      "Image": "https://lh3.googleusercontent.com/d/1T3tKxRwpHGoGsT0Mktq-RtJAFx99t-2F",
+      "Type": "National ID"
+    },
+    {
+      "Name": "Armenia",
+      "Size": "35.0 x 45.0",
+      "Unit": "mm",
+      "Pixels": "413x531 px",
+      "Resolution": "300 dpi",
+      "Completed": "yes",
+      "Image": "https://lh3.googleusercontent.com/d/1FD0nNU20yR5aDC72rbwfTHEuPAm5KExf",
+      "Type": "National ID"
+    }
+  ],
+  "DriversLicense": [
+    {
+      "Name": "United Kingdom",
+      "Size": "35.0 x 45.0",
+      "Unit": "mm",
+      "Pixels": "413x531 px",
+      "Resolution": "300 dpi",
+      "Type": "Driver's License"
+    },
+    {
+      "Name": "Australia",
+      "Size": "35.0 x 45.0",
+      "Unit": "mm",
+      "Pixels": "413x531 px",
+      "Resolution": "300 dpi",
+      "Type": "Driver's License"
+    },
+    {
+      "Name": "India",
+      "Size": "35.0 x 45.0",
+      "Unit": "mm",
+      "Pixels": "413x531 px",
+      "Resolution": "300 dpi",
+      "Type": "Driver's License"
+    },
+    {
+      "Name": "Canada",
+      "Size": "50.0 x 70.0",
+      "Unit": "mm",
+      "Pixels": "590x826 px",
+      "Resolution": "300 dpi",
+      "Type": "Driver's License"
+    },
+    {
+      "Name": "China",
+      "Size": "22.0 x 32.0",
+      "Unit": "mm",
+      "Pixels": "259x377 px",
+      "Resolution": "300 dpi",
+      "Type": "Driver's License"
+    }
+  ],
+  "ResidentCards": [
+    {
+      "Name": "United States Green Card",
+      "Size": "2.0 x 2.0",
+      "Unit": "inch",
+      "Pixels": "600x600 px",
+      "Resolution": "300 dpi",
+      "Type": "Resident Card"
+    },
+    {
+      "Name": "Canada Permanent Resident Card",
+      "Size": "50.0 x 70.0",
+      "Unit": "mm",
+      "Pixels": "590x826 px",
+      "Resolution": "300 dpi",
+      "Type": "Resident Card"
+    },
+    {
+      "Name": "United Kingdom Residency Permit",
+      "Size": "35.0 x 45.0",
+      "Unit": "mm",
+      "Pixels": "413x531 px",
+      "Resolution": "300 dpi",
+      "Type": "Resident Card"
+    },
+    {
+      "Name": "Australia Permanent Residency",
+      "Size": "35.0 x 45.0",
+      "Unit": "mm",
+      "Pixels": "413x531 px",
+      "Resolution": "300 dpi",
+      "Type": "Resident Card"
+    },
+    {
+      "Name": "Singapore Permanent Residency",
+      "Size": "35.0 x 45.0",
+      "Unit": "mm",
+      "Pixels": "413x531 px",
+      "Resolution": "300 dpi",
+      "Type": "Resident Card"
+    }
+  ],
+  "Profiles": [
+    {
+      "Name": "Facebook",
+      "Size": "33.9 x 33.9",
+      "Unit": "mm",
+      "Pixels": "400x400 px",
+      "Resolution": "300 dpi",
+      "Type": "Profile"
+    },
+    {
+      "Name": "Instagram",
+      "Size": "33.9 x 33.9",
+      "Unit": "mm",
+      "Pixels": "400x400 px",
+      "Resolution": "300 dpi",
+      "Type": "Profile"
+    },
+    {
+      "Name": "Twitter",
+      "Size": "33.9 x 33.9",
+      "Unit": "mm",
+      "Pixels": "400x400 px",
+      "Resolution": "300 dpi",
+      "Type": "Profile"
+    },
+    {
+      "Name": "LinkedIn",
+      "Size": "33.9 x 33.9",
+      "Unit": "mm",
+      "Pixels": "400x400 px",
+      "Resolution": "300 dpi",
+      "Type": "Profile"
+    },
+    {
+      "Name": "YouTube",
+      "Size": "33.9 x 33.9",
+      "Unit": "mm",
+      "Pixels": "400x400 px",
+      "Resolution": "300 dpi",
+      "Type": "Profile"
+    }
+  ]
+}
