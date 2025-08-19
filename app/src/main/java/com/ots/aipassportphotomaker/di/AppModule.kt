@@ -3,6 +3,7 @@ package com.ots.aipassportphotomaker.di
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.work.WorkManager
+import com.ots.aipassportphotomaker.data.util.DiskExecutor
 import com.ots.aipassportphotomaker.data.util.NetworkMonitorImpl
 import dagger.Module
 import dagger.Provides
@@ -17,6 +18,11 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 class AppModule {
+
+    @Provides
+    fun provideDiskExecutor(): DiskExecutor {
+        return DiskExecutor()
+    }
     @Provides
     @AppSettingsSharedPreference
     fun provideAppSettingsSharedPreference(@ApplicationContext context: Context): SharedPreferences {

@@ -9,17 +9,14 @@ import java.io.IOException
 
 // Created by amanullah on 13/08/2025.
 // Copyright (c) 2025 Ozi Publishing. All rights reserved.
-class JsonDataReader(private val context: Context) {
+object JsonDataReader {
 
-    suspend fun readDocumentData(): DocumentData? = withContext(Dispatchers.IO) {
-        try {
-            context.assets.open("document_sizes.json").use { inputStream ->
-                val size = inputStream.available()
-                val buffer = ByteArray(size)
-                inputStream.read(buffer)
-                val jsonString = String(buffer, Charsets.UTF_8)
-                Gson().fromJson(jsonString, DocumentData::class.java)
-            }
+    fun <T> readFromAssets(context: Context, fileName: String, classType: Class<T>): T? {
+        return try {
+            val jsonString = context.assets.open(fileName)
+                .bufferedReader()
+                .use { it.readText() }
+            Gson().fromJson(jsonString, classType)
         } catch (e: IOException) {
             e.printStackTrace()
             null

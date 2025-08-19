@@ -24,7 +24,7 @@ import javax.inject.Inject
 @HiltViewModel
 class PhotoIDScreenViewModel @Inject constructor(
     val networkMonitor: NetworkMonitor,
-    getDocumentsWithSeparators: GetDocumentsWithSeparators
+    getDocumentsWithSeparators: GetDocumentsWithSeparators,
 ) : BaseViewModel() {
 
     val documents: Flow<PagingData<DocumentListItem>> = getDocumentsWithSeparators.documents(

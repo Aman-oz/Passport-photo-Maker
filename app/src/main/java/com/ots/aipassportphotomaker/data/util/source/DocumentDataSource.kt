@@ -22,6 +22,8 @@ interface DocumentDataSource {
         fun documents(): PagingSource<Int, DocumentDbData>
         suspend fun getDocuments(): Result<List<DocumentEntity>>
         suspend fun getDocument(movieId: Int): Result<DocumentEntity>
+        /*suspend fun getDocumentsFromJson() : Result<List<DocumentData>>
+        suspend fun getDocumentFromJson(movieId: Int): Result<DocumentData>*/
         suspend fun saveDocuments(movies: List<DocumentData>)
         suspend fun getLastRemoteKey(): DocumentRemoteKeyDbData?
         suspend fun saveRemoteKey(key: DocumentRemoteKeyDbData)

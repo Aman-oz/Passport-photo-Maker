@@ -3,6 +3,7 @@ package com.ots.aipassportphotomaker.di.module
 import com.jakewharton.retrofit2.adapter.kotlin.coroutines.CoroutineCallAdapterFactory
 import com.ots.aipassportphotomaker.di.util.BaseUrl
 import com.ots.aipassportphotomaker.data.remote.api.CropImageApi
+import com.ots.aipassportphotomaker.data.remote.api.DocumentApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -38,7 +39,13 @@ class NetworkModule {
 
     @Singleton
     @Provides
-    fun provideMovieApi(retrofit: Retrofit): CropImageApi {
+    fun provideCropImageApi(retrofit: Retrofit): CropImageApi {
         return retrofit.create(CropImageApi::class.java)
+    }
+
+    @Singleton
+    @Provides
+    fun provideDocumentApi(retrofit: Retrofit): DocumentApi {
+        return retrofit.create(DocumentApi::class.java)
     }
 }

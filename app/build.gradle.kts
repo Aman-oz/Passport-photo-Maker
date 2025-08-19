@@ -101,6 +101,10 @@ dependencies {
     implementation(libs.room.runtime)
     ksp(libs.room.compiler)
 
+    implementation(libs.room.ktx)
+    implementation(libs.room.paging)
+    implementation(libs.paging.common.ktx)
+
     // Hilt
     implementation(libs.hilt.dagger.android)
     implementation(libs.hilt.work)

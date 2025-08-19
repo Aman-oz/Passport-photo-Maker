@@ -2,7 +2,9 @@ package com.ots.aipassportphotomaker.domain.repository
 
 import androidx.paging.PagingData
 import com.ots.aipassportphotomaker.domain.model.DocumentEntity
+import com.ots.aipassportphotomaker.domain.model.DocumentListItem
 import kotlinx.coroutines.flow.Flow
+import com.ots.aipassportphotomaker.domain.util.Result
 
 /**
  * Created by Aman Ullah on 13/08/2025
