@@ -9,7 +9,7 @@ data class DocumentEntity(
     val unit: String,
     val pixels: String,
     val resolution: String,
-    val image: String? = null,
+    val image: String?,
     val type: String,
-    val completed: String? = null
+    val completed: String?
 )

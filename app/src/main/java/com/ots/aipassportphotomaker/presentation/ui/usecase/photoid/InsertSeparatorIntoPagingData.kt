@@ -7,7 +7,7 @@ import javax.inject.Inject
 import kotlin.let
 
 /**
- * @author by Ali Asadi on 29/01/2023
+ * @author by Aman Ullah on 13/08/2025.
  */
 class InsertSeparatorIntoPagingData @Inject constructor() {
     fun insert(pagingData: PagingData<DocumentListItem.Document>): PagingData<DocumentListItem> {
@@ -29,7 +29,7 @@ class InsertSeparatorIntoPagingData @Inject constructor() {
     private fun isFooter(after: DocumentListItem.Document?): Boolean = after == null
 
     private fun isDifferentCategory(before: DocumentListItem.Document?, after: DocumentListItem.Document?): Boolean =
-        before?.name != after?.name
+        before?.type != after?.type
 
     /**
      * Insert Header; return null to skip adding a header.
@@ -48,6 +48,6 @@ class InsertSeparatorIntoPagingData @Inject constructor() {
     private fun insertSeparatorItem(after: DocumentListItem.Document?): DocumentListItem.Separator? = createSeparator(after)
 
     private fun createSeparator(item: DocumentListItem.Document?) = item?.let {
-        DocumentListItem.Separator(it.name)
+        DocumentListItem.Separator(it.type)
     }
 }

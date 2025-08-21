@@ -6,5 +6,7 @@ data class PhotoIDScreenUiState(
 )
 
 sealed class PhotoIDScreenNavigationState {
-    data class PhotoIDDetails(val documentId: Int) : PhotoIDScreenNavigationState()
+    data class PhotoIDDetails(val type: String) : PhotoIDScreenNavigationState()
+    data class SelectPhotoScreen(val documentId: Int) : PhotoIDScreenNavigationState()
+
 }

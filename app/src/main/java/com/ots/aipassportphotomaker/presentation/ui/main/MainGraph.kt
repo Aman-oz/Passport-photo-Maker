@@ -11,6 +11,8 @@ import com.ots.aipassportphotomaker.domain.bottom_nav.Graph
 import com.ots.aipassportphotomaker.domain.bottom_nav.Page
 import com.ots.aipassportphotomaker.presentation.ui.bottom_nav.NavigationBarScreen
 import com.ots.aipassportphotomaker.presentation.ui.bottom_nav.NavigationBarSharedViewModel
+import com.ots.aipassportphotomaker.presentation.ui.createid.PhotoIDDetailPage
+import com.ots.aipassportphotomaker.presentation.ui.createid.PhotoIDDetailScreenViewModel
 import com.ots.aipassportphotomaker.presentation.ui.createid.PhotoIDPage
 import com.ots.aipassportphotomaker.presentation.ui.createid.PhotoIDScreenViewModel
 import com.ots.aipassportphotomaker.presentation.ui.home.HomePage
@@ -66,12 +68,12 @@ fun MainGraph(
             )
         }
 
-        /*composableHorizontalSlide<Page.MovieDetails> {
-            val viewModel = hiltViewModel<MovieDetailsViewModel>()
-            MovieDetailsPage(
-                mainNavController = mainNavController,
-                viewModel = viewModel,
+        composableHorizontalSlide<Page.PhotoIDDetailScreen> {
+            PhotoIDDetailPage(
+                mainRouter = MainRouter(mainNavController),
+                viewModel = hiltViewModel<PhotoIDDetailScreenViewModel>(),
+                sharedViewModel = hiltViewModel<NavigationBarSharedViewModel>(),
             )
-        }*/
+        }
     }
 }

@@ -1,6 +1,7 @@
 package com.ots.aipassportphotomaker.presentation.ui.createid
 
 import android.util.Log
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.Surface
@@ -19,38 +20,35 @@ import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.domain.bottom_nav.Page
 import com.ots.aipassportphotomaker.domain.model.DocumentListItem
 import com.ots.aipassportphotomaker.presentation.ui.bottom_nav.NavigationBarSharedViewModel
+import com.ots.aipassportphotomaker.presentation.ui.components.CommonTopBar
 import com.ots.aipassportphotomaker.presentation.ui.components.LoaderFullScreen
-import com.ots.aipassportphotomaker.presentation.ui.createid.PhotoIDScreenNavigationState.PhotoIDDetails
 import com.ots.aipassportphotomaker.presentation.ui.main.MainRouter
 import kotlinx.coroutines.flow.flowOf
 
+// Created by amanullah on 21/08/2025.
+// Copyright (c) 2025 Ozi Publishing. All rights reserved.
+
 @Composable
-fun PhotoIDPage(
+fun PhotoIDDetailPage(
     mainRouter: MainRouter,
-    viewModel: PhotoIDScreenViewModel = hiltViewModel(),
+    viewModel: PhotoIDDetailScreenViewModel = hiltViewModel(),
     sharedViewModel: NavigationBarSharedViewModel,
 ) {
-    val TAG = "PhotoIDPage"
+    val TAG = "PhotoIDDetailPage"
 
     val documentsPaging = viewModel.documents.collectAsLazyPagingItems()
     val uiState by viewModel.uiState.collectAsState()
-    Logger.d(TAG, "PhotoIDPage: UI State: $uiState")
-    Logger.d(TAG, "PhotoIDPage: Documents Paging: ${documentsPaging.itemCount} items loaded")
+    Logger.d(TAG, "PhotoIDDetailPage: UI State: $uiState")
+    Logger.d(TAG, "PhotoIDDetailPage: Documents Paging: ${documentsPaging.itemCount} items loaded")
     // val pullToRefreshState = rememberPullRefreshState(uiState.showLoading, { viewModel.onRefresh() })
     val lazyGridState = rememberLazyGridState()
 
 
     viewModel.navigationState.collectAsEffect { navigationState ->
 
-        Log.d(TAG, "HomePage: Navigation State: $navigationState")
+        Log.d(TAG, "PhotoIDDetailPage: Navigation State: $navigationState")
         when (navigationState) {
-            is PhotoIDDetails -> mainRouter.navigateToPhotoIDDetailScreen(navigationState.type)
-            is PhotoIDScreenNavigationState.SelectPhotoScreen -> {
-                Log.d(TAG, "HomePage: Navigate to Select Photo Screen")
-                mainRouter.navigateToSelectPhotoScreen(
-                    documentId = navigationState.documentId
-                )
-            }
+            is PhotoIDDetailScreenNavigationState.SelectPhotoScreen -> mainRouter.navigateToSelectPhotoScreen(navigationState.documentId)
         }
     }
 
@@ -69,39 +67,47 @@ fun PhotoIDPage(
         viewModel.onLoadStateUpdate(documentsPaging.loadState)
     }
 
-    PhotoIDScreen(
+    PhotoIDDetailScreen(
         documents = documentsPaging,
         uiState = uiState,
         lazyGridState = lazyGridState,
-        onDocumentClick = viewModel::onDocumentClicked,
-        onSeeAllClick = viewModel::onSeeAllClicked
+        onDocumentClick = viewModel::onDocumentClicked
     )
 }
 
 @Composable
-private fun PhotoIDScreen(
+private fun PhotoIDDetailScreen(
     documents: LazyPagingItems<DocumentListItem>,
-    uiState: PhotoIDScreenUiState,
+    uiState: PhotoIDDetailScreenUiState,
     lazyGridState: LazyGridState,
     onDocumentClick: (documentId: Int) -> Unit,
-    onSeeAllClick: (type: String) -> Unit
+    onBackClick: () -> Unit = {},
+    onGetProClick: () -> Unit = {},
 ) {
     Surface {
-        if (uiState.showLoading) {
-            LoaderFullScreen()
-        } else {
-            DocumentList(
-                documents,
-                onDocumentClick,
-                onSeeAllClick
+        Column {
+            CommonTopBar(
+                title = uiState.title.ifEmpty { "Document Details" },
+                onBackClick = onBackClick,
+                onGetProClick = onGetProClick
             )
+
+            if (uiState.showLoading) {
+                LoaderFullScreen()
+            } else {
+                DocumentDetailList(
+                    documents,
+                    onDocumentClick,
+                    lazyGridState = lazyGridState,
+                )
+            }
         }
     }
 }
 
 @Preview(showSystemUi = true, device = "id:pixel_5")
 @Composable
-fun PhotoIDScreenPreview() {
+fun PhotoIDDetailScreenPreview() {
     val documents = flowOf(
         PagingData.from(
             listOf<DocumentListItem>(
@@ -189,15 +195,14 @@ fun PhotoIDScreenPreview() {
         )
     ).collectAsLazyPagingItems()
     PreviewContainer {
-        PhotoIDScreen(
+        PhotoIDDetailScreen(
             documents = documents,
-            uiState = PhotoIDScreenUiState(
+            uiState = PhotoIDDetailScreenUiState(
                 showLoading = false,
                 errorMessage = null,
             ),
             lazyGridState = rememberLazyGridState(),
-            onDocumentClick = {},
-            onSeeAllClick = {}
+            onDocumentClick = {}
         )
     }
 }

@@ -15,5 +15,5 @@ sealed class DocumentListItem {
         val completed: String? = null
     ): DocumentListItem()
 
-    data class Separator(val category: String) : DocumentListItem()
+    data class Separator(val type: String) : DocumentListItem()
 }

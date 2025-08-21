@@ -9,25 +9,25 @@ data class DocumentJsonResponse(
 )
 
 data class DocumentJson(
-    val id: Int,
-    val name: String,
-    val size: String,
-    val unit: String,
-    val pixels: String,
-    val resolution: String,
-    val image: String? = null,
-    val type: String,
+    val id: Int = 0, // Default value, overridden during deserialization
+    val Name: String,
+    val Size: String,
+    val Unit: String,
+    val Pixels: String,
+    val Resolution: String,
+    val Image: String? = null,
+    val Type: String,
     val completed: String? = null
 )
 
 fun DocumentJson.toDomain() = DocumentEntity(
     id = id,
-    name = name,
-    size = size,
-    unit = unit,
-    pixels = pixels,
-    resolution = resolution,
-    image = image,
-    type = type,
+    name = Name,
+    size = Size,
+    unit = Unit,
+    pixels = Pixels,
+    resolution = Resolution,
+    image = Image,
+    type = Type,
     completed = completed
 )

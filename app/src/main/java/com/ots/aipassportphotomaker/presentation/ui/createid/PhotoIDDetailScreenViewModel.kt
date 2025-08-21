@@ -21,8 +21,11 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
+// Created by amanullah on 21/08/2025.
+// Copyright (c) 2025 Ozi Publishing. All rights reserved.
+
 @HiltViewModel
-class PhotoIDScreenViewModel @Inject constructor(
+class PhotoIDDetailScreenViewModel @Inject constructor(
     val networkMonitor: NetworkMonitor,
     getDocumentsWithSeparators: GetDocumentsWithSeparators,
 ) : BaseViewModel() {
@@ -31,10 +34,10 @@ class PhotoIDScreenViewModel @Inject constructor(
         pageSize = 90
     ).cachedIn(viewModelScope)
 
-    private val _uiState: MutableStateFlow<PhotoIDScreenUiState> = MutableStateFlow(PhotoIDScreenUiState())
+    private val _uiState: MutableStateFlow<PhotoIDDetailScreenUiState> = MutableStateFlow(PhotoIDDetailScreenUiState())
     val uiState = _uiState.asStateFlow()
 
-    private val _navigationState: MutableSharedFlow<PhotoIDScreenNavigationState> = singleSharedFlow()
+    private val _navigationState: MutableSharedFlow<PhotoIDDetailScreenNavigationState> = singleSharedFlow()
     val navigationState = _navigationState.asSharedFlow()
 
     private val _refreshListState: MutableSharedFlow<Unit> = singleSharedFlow()
@@ -69,10 +72,15 @@ class PhotoIDScreenViewModel @Inject constructor(
     }
 
     fun onDocumentClicked(documentId: Int) =
-        _navigationState.tryEmit(PhotoIDScreenNavigationState.SelectPhotoScreen(documentId))
+        _navigationState.tryEmit(PhotoIDDetailScreenNavigationState.SelectPhotoScreen(documentId))
 
-    fun onSeeAllClicked(type: String) =
-        _navigationState.tryEmit(PhotoIDScreenNavigationState.PhotoIDDetails(type))
+    fun onBackClicked() {
+        //_navigationState.tryEmit(PhotoIDDetailScreenNavigationState.NavigateBack)
+    }
+
+    fun onGetProClicked() {
+        // Navigate to premium screen or show premium dialog
+    }
 
     fun onLoadStateUpdate(loadState: CombinedLoadStates) {
         val showLoading = loadState.refresh is LoadState.Loading

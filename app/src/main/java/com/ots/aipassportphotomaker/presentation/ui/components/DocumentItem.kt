@@ -4,7 +4,9 @@ import android.content.res.Configuration
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
@@ -31,12 +33,18 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import coil.size.Scale
+import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.common.ext.ImageSize
 import com.ots.aipassportphotomaker.common.ext.toPX
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
+import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.domain.model.DocumentListItem
 import com.ots.aipassportphotomaker.presentation.ui.theme.colors
 import com.ots.aipassportphotomaker.presentation.ui.theme.custom100
@@ -49,11 +57,11 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun DocumentItem(
+    modifier: Modifier = Modifier,
     document: DocumentListItem.Document,
     imageSize: ImageSize,
     itemVisible: Boolean,
-    onDocumentClick: (documentId: Int) -> Unit = {},
-    modifier: Modifier = Modifier
+    onDocumentClick: (documentId: Int) -> Unit = {}
 ) {
 
     var scale by remember { mutableFloatStateOf(0.70f) }
@@ -70,7 +78,6 @@ fun DocumentItem(
 
     Column(
         modifier = modifier
-            .aspectRatio(0.8f) // 0.8:1 ratio (width:height)
             .background(colors.custom400, RoundedCornerShape(8.dp))
             .border(1.dp, colors.custom100, RoundedCornerShape(8.dp))
             .padding(8.dp),
@@ -86,8 +93,9 @@ fun DocumentItem(
             loading = { DocumentItemPlaceholder() },
             error = { DocumentItemPlaceholder() },
             contentDescription = null,
-            contentScale = ContentScale.Crop,
+            contentScale = ContentScale.Fit,
             modifier = Modifier
+                .weight(1f)
                 .padding(3.dp)
                 .aspectRatio(9 / 16f)
                 .scale(animatedScale)
@@ -106,40 +114,72 @@ fun DocumentItem(
                 }
         )
 
-        /*AsyncImage(
-            model = imageUrl,
-            contentDescription = "$name image",
+        Column(
             modifier = Modifier
-                .fillMaxWidth(0.7f)
-                .padding(bottom = 8.dp),
-            contentScale = ContentScale.Fit,
-            placeholder = painterResource(id = android.R.drawable.ic_menu_gallery), // Placeholder
-            error = painterResource(id = android.R.drawable.ic_dialog_alert) // Error
-        )*/
-        Text(
-            text = document.name,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            color = colors.onCustom400
-        )
-        Text(
-            text = "${document.size} — ${document.unit}",
-            fontSize = 14.sp,
-            color = colors.onCustom400.copy(alpha = 0.6f),
-        )
+                .weight(1f) // Takes up the other half
+                .padding(top = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = document.name,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = colors.onCustom400,
+                textAlign = TextAlign.Center,
+                maxLines = 2, // Allow wrapping for long names
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = "${document.size} — ${document.unit}",
+                style = MaterialTheme.typography.labelSmall,
+                color = colors.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
     }
 }
 
 @Composable
-fun Separator(title: String) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Normal),
+fun Separator(
+    type: String,
+    isSeeAllVisible: Boolean = true,
+    onSeeAllClick: ((String) -> Unit)? = null
+) {
+    Row(
         modifier = Modifier
-            .padding(10.dp)
             .fillMaxWidth()
-    )
+            .padding(horizontal = 10.dp, vertical = 6.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = type,
+            color = colors.onBackground,
+            style = MaterialTheme.typography.titleMedium
+        )
+        if (!isSeeAllVisible) return@Row
+
+        Text(
+            text = stringResource(id = R.string.see_all),
+            color = colors.primary,
+            style = MaterialTheme.typography.labelLarge.copy(
+                textDecoration = TextDecoration.Underline
+            ),
+            modifier = Modifier
+                .padding(start = 8.dp)
+                .then(
+                    if (onSeeAllClick != null) {
+                        Modifier.clickable { onSeeAllClick(type) }
+                    } else {
+                        Modifier
+                    }
+                )
+        )
+    }
 }
+
 
 @Preview("Light")
 @Preview("Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
@@ -151,9 +191,48 @@ fun PhotoDataItemPreview() {
             Column {
                 Separator("Passport")
                 Row {
-                    DocumentItem(DocumentListItem.Document(1, "Passport", "2 X 2", "inch", "413x531 px", "300dpi", "https://i.stack.imgur.com/lDFzt.jpg", ""), imageSize, true)
-                    DocumentItem(DocumentListItem.Document(1, "Passport", "2 X 2", "mm", "413x531 px", "300dpi", "https://i.stack.imgur.com/lDFzt.jpg", ""), imageSize, true)
-                    DocumentItem(DocumentListItem.Document(1, "Passport", "2 X 2", "inch", "513x531 px", "300dpi", "https://i.stack.imgur.com/lDFzt.jpg", ""), imageSize, true)
+                    DocumentItem(
+                        document = DocumentListItem.Document(
+                            id = 1,
+                            name = "United States Passport",
+                            size = "2.0 x 2.0",
+                            unit = "inch",
+                            pixels = "600x600 px",
+                            resolution = "300 dpi",
+                            image = "https://i.stack.imgur.com/lDFzt.jpg",
+                            type = "Passport"
+                        ),
+                        imageSize = imageSize,
+                        itemVisible = true
+                    )
+                    DocumentItem(
+                        document = DocumentListItem.Document(
+                            id = 2,
+                            name = "Canada Passport",
+                            size = "50.0 x 70.0",
+                            unit = "mm",
+                            pixels = "1181x1653 px",
+                            resolution = "300 dpi",
+                            image = "https://i.stack.imgur.com/lDFzt.jpg",
+                            type = "Passport"
+                        ),
+                        imageSize = imageSize,
+                        itemVisible = true
+                    )
+                    DocumentItem(
+                        document = DocumentListItem.Document(
+                            id = 3,
+                            name = "United Kingdom Passport",
+                            size = "35.0 x 45.0",
+                            unit = "mm",
+                            pixels = "413x531 px",
+                            resolution = "300 dpi",
+                            image = "https://i.stack.imgur.com/lDFzt.jpg",
+                            type = "Passport"
+                        ),
+                        imageSize = imageSize,
+                        itemVisible = true
+                    )
                 }
             }
         }

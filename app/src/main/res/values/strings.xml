@@ -6,4 +6,5 @@
     <string name="no_history_found_title">No history found!</string>
     <string name="no_history_found_subtitle">You have not created any photo id\'s yet.</string>
     <string name="create_id">Create ID</string>
+    <string name="see_all">See all</string>
 </resources>

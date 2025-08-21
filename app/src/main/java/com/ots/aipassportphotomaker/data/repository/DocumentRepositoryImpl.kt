@@ -5,6 +5,7 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
+import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.data.model.toDomain
 import com.ots.aipassportphotomaker.data.repository.favorite.FavoriteDocumentsDataSource
 import com.ots.aipassportphotomaker.data.util.DocumentRemoteMediator
@@ -34,8 +35,9 @@ class DocumentRepositoryImpl(
     @OptIn(ExperimentalPagingApi::class)
     override fun documents(pageSize: Int): Flow<PagingData<DocumentEntity>> {
         return flow {
-            val movies = json.getDocuments()
-            val pagingData = PagingData.from(movies)
+            val documents = json.getDocuments()
+            Logger.d("DocumentRepositoryImpl", "documents: ${documents.size} documents loaded from JSON")
+            val pagingData = PagingData.from(documents)
             emit(pagingData)
         }
     } /*= Pager(
@@ -63,9 +65,9 @@ class DocumentRepositoryImpl(
 
     override fun search(query: String, pageSize: Int): Flow<PagingData<DocumentEntity>> {
         return flow {
-            val movies = json.getDocuments()
+            val documents = json.getDocuments()
                 .filter { it.name.contains(query, ignoreCase = true) }
-            emit(PagingData.from(movies))
+            emit(PagingData.from(documents))
         }
     } /*= Pager(
         config = PagingConfig(

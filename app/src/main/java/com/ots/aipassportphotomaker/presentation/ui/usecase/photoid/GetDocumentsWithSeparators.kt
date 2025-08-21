@@ -2,6 +2,7 @@ package com.ots.aipassportphotomaker.presentation.ui.usecase.photoid
 
 import androidx.paging.PagingData
 import androidx.paging.map
+import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.domain.model.DocumentListItem
 import com.ots.aipassportphotomaker.domain.repository.DocumentRepository
 import com.ots.aipassportphotomaker.presentation.ui.mapper.toPresentation
@@ -18,7 +19,10 @@ class GetDocumentsWithSeparators @Inject constructor(
 ) {
 
     fun documents(pageSize: Int): Flow<PagingData<DocumentListItem>> = documentRepository.documents(pageSize).map {
-        val pagingData: PagingData<DocumentListItem.Document> = it.map { document -> document.toPresentation() }
+        val pagingData: PagingData<DocumentListItem.Document> = it.map { document ->
+            Logger.d("GetDocumentsWithSeparators", "Mapping document: ${document.name}")
+            document.toPresentation()
+        }
         insertSeparatorIntoPagingData.insert(pagingData)
     }
 }

@@ -13,8 +13,12 @@ class MainRouter(
         mainNavController.navigate(Page.ItemDetailScreen(name))
     }
 
-    fun navigateToPhotoIDDetailScreen(documentId: Int) {
-        mainNavController.navigate(Page.PhotoIDDetailScreen(documentId))
+    fun navigateToPhotoIDDetailScreen(type: String) {
+        mainNavController.navigate(Page.PhotoIDDetailScreen(type))
+    }
+
+    fun navigateToSelectPhotoScreen(documentId: Int) {
+        mainNavController.navigate(Page.SelectPhotoScreen(documentId))
     }
 
     fun navigateToHistoryDetailScreen(name: String) {

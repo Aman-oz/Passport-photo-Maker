@@ -102,24 +102,8 @@ fun TopBar(
                     Icon(imageVector = Icons.Default.Search, contentDescription = "Search")
                 }*/
 
-                Surface(
-                    modifier = Modifier
-                        .padding(horizontal = 8.dp)
-                        .border(
-                            width = 1.dp,
-                            color = colors.outline,
-                            shape = RoundedCornerShape(12.dp)
-                        )
-                        .clickable { onGetProClick() },
-                    color = colors.custom400,
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(
-                        text = "Get Pro",
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = colors.onCustom400
-                    )
+                GetProButton {
+                    onGetProClick()
                 }
 
                 IconButton(
