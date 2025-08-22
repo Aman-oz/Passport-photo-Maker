@@ -107,7 +107,6 @@ private fun PhotoIDScreen(
     uiState: PhotoIDScreenUiState,
     lazyGridState: LazyGridState,
     onDocumentClick: (documentId: Int) -> Unit,
-    onQueryChange: (query: String) -> Unit,
     onSeeAllClick: (type: String) -> Unit
 ) {
 
@@ -141,7 +140,7 @@ private fun PhotoIDScreen(
                 SearchView(
                     onQueryChange = {
                         query = it
-                        onQueryChange(it)
+//                        onQueryChange(it)
                     },
                     onCloseClick = {
                         query = ""
