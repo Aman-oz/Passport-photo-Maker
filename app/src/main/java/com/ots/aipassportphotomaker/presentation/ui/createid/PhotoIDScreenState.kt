@@ -3,6 +3,7 @@ package com.ots.aipassportphotomaker.presentation.ui.createid
 data class PhotoIDScreenUiState(
     val showLoading: Boolean = true,
     val errorMessage: String? = null,
+    val showNoDocumentsFound: Boolean = false,
 )
 
 sealed class PhotoIDScreenNavigationState {

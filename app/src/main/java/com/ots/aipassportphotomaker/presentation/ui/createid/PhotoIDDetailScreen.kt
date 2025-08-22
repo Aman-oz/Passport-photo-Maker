@@ -39,6 +39,7 @@ fun PhotoIDDetailPage(
     val documentsPaging = viewModel.documents.collectAsLazyPagingItems()
     val uiState by viewModel.uiState.collectAsState()
     Logger.d(TAG, "PhotoIDDetailPage: UI State: $uiState")
+    Logger.d(TAG, "PhotoIDDetailPage: UI State type: ${uiState.type}")
     Logger.d(TAG, "PhotoIDDetailPage: Documents Paging: ${documentsPaging.itemCount} items loaded")
     // val pullToRefreshState = rememberPullRefreshState(uiState.showLoading, { viewModel.onRefresh() })
     val lazyGridState = rememberLazyGridState()
@@ -87,7 +88,7 @@ private fun PhotoIDDetailScreen(
     Surface {
         Column {
             CommonTopBar(
-                title = uiState.title.ifEmpty { "Document Details" },
+                title = uiState.type.ifEmpty { uiState.type },
                 onBackClick = onBackClick,
                 onGetProClick = onGetProClick
             )

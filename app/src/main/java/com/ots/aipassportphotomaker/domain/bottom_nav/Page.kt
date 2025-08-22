@@ -15,6 +15,9 @@ sealed class Page {
     data object PhotoID : Page()
 
     @Serializable
+    data object PhotoID2 : Page()
+
+    @Serializable
     data object History : Page()
 
     @Serializable

@@ -53,6 +53,16 @@ class DocumentRepositoryImpl(
         pagingData.map { it.toDomain() }
     }*/
 
+    @OptIn(ExperimentalPagingApi::class)
+    override fun documents(type: String, pageSize: Int): Flow<PagingData<DocumentEntity>> {
+        return flow {
+            val documents = json.getDocumentsByType(type)
+            Logger.d("DocumentRepositoryImpl", "documents: ${documents.size} documents loaded from JSON")
+            val pagingData = PagingData.from(documents)
+            emit(pagingData)
+        }
+    }
+
     override fun favoriteDocuments(pageSize: Int): Flow<PagingData<DocumentEntity>> = Pager(
         config = PagingConfig(
             pageSize = pageSize,

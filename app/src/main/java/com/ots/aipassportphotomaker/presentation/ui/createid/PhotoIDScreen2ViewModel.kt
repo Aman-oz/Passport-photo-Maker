@@ -1,6 +1,5 @@
 package com.ots.aipassportphotomaker.presentation.ui.createid
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.paging.CombinedLoadStates
 import androidx.paging.LoadState
@@ -8,7 +7,6 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
 import com.ots.aipassportphotomaker.domain.model.DocumentListItem
-import com.ots.aipassportphotomaker.domain.usecase.photoid.SearchDocuments
 import com.ots.aipassportphotomaker.domain.util.NetworkMonitor
 import com.ots.aipassportphotomaker.presentation.ui.base.BaseViewModel
 import com.ots.aipassportphotomaker.presentation.ui.usecase.photoid.GetDocumentsWithSeparators
@@ -24,10 +22,8 @@ import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
 @HiltViewModel
-class PhotoIDScreenViewModel @Inject constructor(
+class PhotoIDScreen2ViewModel @Inject constructor(
     val networkMonitor: NetworkMonitor,
-    private val searchDocuments: SearchDocuments,
-    private val savedStateHandle: SavedStateHandle,
     getDocumentsWithSeparators: GetDocumentsWithSeparators,
 ) : BaseViewModel() {
 
@@ -35,10 +31,10 @@ class PhotoIDScreenViewModel @Inject constructor(
         pageSize = 90
     ).cachedIn(viewModelScope)
 
-    private val _uiState: MutableStateFlow<PhotoIDScreenUiState> = MutableStateFlow(PhotoIDScreenUiState())
+    private val _uiState: MutableStateFlow<PhotoIDScreen2UiState> = MutableStateFlow(PhotoIDScreen2UiState())
     val uiState = _uiState.asStateFlow()
 
-    private val _navigationState: MutableSharedFlow<PhotoIDScreenNavigationState> = singleSharedFlow()
+    private val _navigationState: MutableSharedFlow<PhotoIDScreen2NavigationState> = singleSharedFlow()
     val navigationState = _navigationState.asSharedFlow()
 
     private val _refreshListState: MutableSharedFlow<Unit> = singleSharedFlow()
@@ -73,14 +69,10 @@ class PhotoIDScreenViewModel @Inject constructor(
     }
 
     fun onDocumentClicked(documentId: Int) =
-        _navigationState.tryEmit(PhotoIDScreenNavigationState.SelectPhotoScreen(documentId))
+        _navigationState.tryEmit(PhotoIDScreen2NavigationState.SelectPhotoScreen(documentId))
 
     fun onSeeAllClicked(type: String) =
-        _navigationState.tryEmit(PhotoIDScreenNavigationState.PhotoIDDetails(type))
-
-    fun onSearch(query: String) {
-        savedStateHandle[KEY_SEARCH_QUERY] = query
-    }
+        _navigationState.tryEmit(PhotoIDScreen2NavigationState.PhotoIDDetails(type))
 
     fun onLoadStateUpdate(loadState: CombinedLoadStates) {
         val showLoading = loadState.refresh is LoadState.Loading
@@ -94,10 +86,6 @@ class PhotoIDScreenViewModel @Inject constructor(
     }
     fun onRefresh() = launch {
         _refreshListState.emit(Unit)
-    }
-
-    companion object {
-        const val KEY_SEARCH_QUERY = "search_query"
     }
 
 }

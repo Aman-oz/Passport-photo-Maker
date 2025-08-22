@@ -6,5 +6,5 @@ data class HomeScreenUiState(
 )
 
 sealed class HomeScreenNavigationState {
-    data class PhotoID(val name: String) : HomeScreenNavigationState()
+    data class PhotoID(val type: String) : HomeScreenNavigationState()
 }

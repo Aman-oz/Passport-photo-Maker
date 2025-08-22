@@ -11,11 +11,12 @@ import com.ots.aipassportphotomaker.domain.util.Result
  */
 interface DocumentRepository {
     fun documents(pageSize: Int): Flow<PagingData<DocumentEntity>>
+    fun documents(type: String, pageSize: Int): Flow<PagingData<DocumentEntity>>
     fun favoriteDocuments(pageSize: Int): Flow<PagingData<DocumentEntity>>
     fun search(query: String, pageSize: Int): Flow<PagingData<DocumentEntity>>
-    suspend fun getDocument(movieId: Int): Result<DocumentEntity>
-    suspend fun checkFavoriteStatus(movieId: Int): Result<Boolean>
-    suspend fun addDocumentToFavorite(movieId: Int)
-    suspend fun removeDocumentFromFavorite(movieId: Int)
+    suspend fun getDocument(documentId: Int): Result<DocumentEntity>
+    suspend fun checkFavoriteStatus(documentId: Int): Result<Boolean>
+    suspend fun addDocumentToFavorite(documentId: Int)
+    suspend fun removeDocumentFromFavorite(documentId: Int)
     suspend fun sync(): Boolean
 }

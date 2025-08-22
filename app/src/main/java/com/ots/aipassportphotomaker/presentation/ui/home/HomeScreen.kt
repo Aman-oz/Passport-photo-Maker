@@ -45,10 +45,8 @@ fun HomePage(
     viewModel.navigationState.collectAsEffect { navigationState ->
         Logger.d(TAG, "HomePage: Navigation State: $navigationState")
         when (navigationState) {
-            is HomeScreenNavigationState.PhotoID ->  {
-                mainRouter.navigateToPhotoIDDetailScreen(
-                    "1"
-                )
+            is HomeScreenNavigationState.PhotoID ->  { navigationState
+                mainRouter.navigateToPhotoIDScreen2()
             }
         }
     }

@@ -61,15 +61,6 @@ fun TopBar(
     Column {
         TopAppBar(
             title = {
-                /*Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleLarge,
-                    lineHeight = fontSize * 1.2f,
-                    letterSpacing = 0.15.sp,
-                    fontFamily = fontFamily,
-                    color = colors.onBackground,
-                    fontWeight = fontWeight
-                )*/
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
@@ -96,11 +87,6 @@ fun TopBar(
                 }
             },
             actions = {
-                /*IconButton(
-                    onClick = { onSearchClick() }
-                ) {
-                    Icon(imageVector = Icons.Default.Search, contentDescription = "Search")
-                }*/
 
                 GetProButton {
                     onGetProClick()
@@ -111,7 +97,6 @@ fun TopBar(
 //                        onThemeUpdated()
                     }
                 ) {
-
                     Icon(
                         painter = painterResource(id = R.drawable.settings_icon),
                         contentDescription = "Dark Mode",

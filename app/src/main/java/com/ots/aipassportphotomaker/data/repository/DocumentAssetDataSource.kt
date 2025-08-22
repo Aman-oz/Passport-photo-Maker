@@ -16,27 +16,6 @@ import kotlinx.coroutines.withContext
 // Copyright (c) 2025 Ozi Publishing. All rights reserved.
 class DocumentAssetDataSource(private val context: Context) {
 
-    /*suspend fun getDocuments(): List<DocumentEntity> = withContext(Dispatchers.IO) {
-        val response = JsonDataReader.readFromAssets(
-            context,
-            "document_sizes.json",
-            DocumentJsonResponse::class.java
-        ) ?: return@withContext emptyList()
-
-        response.documents.map { document ->
-            DocumentEntity(
-                id = document.id,
-                name = document.Name,
-                size = document.Size,
-                unit = document.Unit,
-                pixels = document.Pixels,
-                resolution = document.Resolution,
-                image = document.Image,
-                type = document.Type,
-                completed = document.completed
-            )
-        }
-    }*/
     suspend fun getDocuments(): List<DocumentEntity> = withContext(Dispatchers.IO) {
         try {
             // Read raw JSON string
@@ -79,6 +58,16 @@ class DocumentAssetDataSource(private val context: Context) {
             // Log error for debugging
             e.printStackTrace()
             emptyList() // Return empty list instead of crashing
+        }
+    }
+
+    suspend fun getDocumentsByType(type: String): List<DocumentEntity> = withContext(Dispatchers.IO) {
+        try {
+            val allDocuments = getDocuments()
+            allDocuments.filter { it.type == type }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
         }
     }
 }

@@ -6,9 +6,11 @@ import androidx.paging.LoadState
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
+import com.ots.aipassportphotomaker.domain.model.DocumentEntity
 import com.ots.aipassportphotomaker.domain.model.DocumentListItem
 import com.ots.aipassportphotomaker.domain.util.NetworkMonitor
 import com.ots.aipassportphotomaker.presentation.ui.base.BaseViewModel
+import com.ots.aipassportphotomaker.presentation.ui.usecase.photoid.GetDocumentsByType
 import com.ots.aipassportphotomaker.presentation.ui.usecase.photoid.GetDocumentsWithSeparators
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
@@ -16,6 +18,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
@@ -27,10 +30,14 @@ import javax.inject.Inject
 @HiltViewModel
 class PhotoIDDetailScreenViewModel @Inject constructor(
     val networkMonitor: NetworkMonitor,
-    getDocumentsWithSeparators: GetDocumentsWithSeparators,
+    getDocumentsByType: GetDocumentsByType,
+    photoIDDetailBundle: PhotoIDDetailBundle,
 ) : BaseViewModel() {
 
-    val documents: Flow<PagingData<DocumentListItem>> = getDocumentsWithSeparators.documents(
+    private val type = photoIDDetailBundle.type
+
+    val documents: Flow<PagingData<DocumentListItem>> = getDocumentsByType.documents(
+        type = type,//should get by the selected type
         pageSize = 90
     ).cachedIn(viewModelScope)
 
@@ -46,6 +53,7 @@ class PhotoIDDetailScreenViewModel @Inject constructor(
     init {
         observeNetworkStatus()
         observeLoadState()
+        onInitialState()
     }
 
     private fun loadData() {
@@ -69,6 +77,26 @@ class PhotoIDDetailScreenViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private fun onInitialState() = launch {
+
+        _uiState.value = _uiState.value.copy(
+            type = type, //should get by the selected type
+            showLoading = true // Start with loading until data is available
+        )
+
+        documents.firstOrNull()?.let { firstPage ->
+            _uiState.update { currentState ->
+                currentState.copy(showLoading = false)
+            }
+        }
+
+        /*getDocumentsByType(type).onSuccess {
+            _uiState.value = PhotoIDDetailScreenUiState(
+                type = it.type
+            )
+        }*/
     }
 
     fun onDocumentClicked(documentId: Int) =
@@ -95,5 +123,8 @@ class PhotoIDDetailScreenViewModel @Inject constructor(
     fun onRefresh() = launch {
         _refreshListState.emit(Unit)
     }
+
+
+    private suspend fun getDocumentsByType(type: String): Result<DocumentEntity> = getDocumentsByType(type)
 
 }

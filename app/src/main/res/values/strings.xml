@@ -7,4 +7,6 @@
     <string name="no_history_found_subtitle">You have not created any photo id\'s yet.</string>
     <string name="create_id">Create ID</string>
     <string name="see_all">See all</string>
+    <string name="no_search_results_title">No Results Found</string>
+    <string name="no_search_results_subtitle">No results for \"%s\". Please try another search.</string>
 </resources>
