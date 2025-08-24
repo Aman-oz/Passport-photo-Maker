@@ -30,18 +30,23 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -72,6 +77,7 @@ import com.ots.aipassportphotomaker.presentation.ui.theme.custom400
 import com.ots.aipassportphotomaker.presentation.ui.theme.customSuccess
 import com.ots.aipassportphotomaker.presentation.ui.theme.onCustom300
 import com.ots.aipassportphotomaker.presentation.ui.theme.onCustom400
+import kotlinx.coroutines.launch
 
 @Composable
 fun DocumentInfoPage(
@@ -208,8 +214,9 @@ private fun DocumentInfoScreen(
                                             // onDocumentClick(document.id)
                                         }
                                     )
-                                }.scale(imageAnimatedScale)
-                            
+                                }
+                                .scale(imageAnimatedScale)
+
                         )
                     }
 
@@ -293,12 +300,36 @@ private fun DocumentInfoScreen(
                             Spacer(modifier = Modifier.height(8.dp))
 
                             // Checklist Items
-                            ChecklistItem(uiState, text = "Image Selection", isChecked = false, onChangeBackground = {})
-                            ChecklistItem(uiState, text = "Document Size", isChecked = true, onChangeBackground = {})
-                            ChecklistItem(uiState, text = "Unit", isChecked = true, onChangeBackground = {})
-                            ChecklistItem(uiState, text = "Pixel", isChecked = false, onChangeBackground = {})
-                            ChecklistItem(uiState, text = "Resolution", isChecked = true, onChangeBackground = {})
-                            ChecklistItem(uiState, text = "Background", isChecked = true, onChangeBackground = {})
+                            ChecklistItem(
+                                uiState,
+                                text = "Image Selection",
+                                isChecked = false,
+                                onChangeBackground = {})
+                            ChecklistItem(
+                                uiState,
+                                text = "Document Size",
+                                isChecked = true,
+                                onChangeBackground = {})
+                            ChecklistItem(
+                                uiState,
+                                text = "Unit",
+                                isChecked = true,
+                                onChangeBackground = {})
+                            ChecklistItem(
+                                uiState,
+                                text = "Pixel",
+                                isChecked = false,
+                                onChangeBackground = {})
+                            ChecklistItem(
+                                uiState,
+                                text = "Resolution",
+                                isChecked = true,
+                                onChangeBackground = {})
+                            ChecklistItem(
+                                uiState,
+                                text = "Background",
+                                isChecked = true,
+                                onChangeBackground = {})
 
                         }
                     }
@@ -360,18 +391,18 @@ private fun DocumentInfoScreen(
                                 .fillMaxWidth()
                                 .padding(bottom = 8.dp)
                                 .height(48.dp)
-                            .pointerInput(Unit) {
-                                detectTapGestures(
-                                    onPress = {
-                                        scale2 = 0.90f
-                                        tryAwaitRelease()
-                                        scale2 = 1f
-                                    },
-                                    onTap = {
-                                        onCreatePhotoClick(uiState.documentType)
-                                    }
-                                )
-                            }
+                                .pointerInput(Unit) {
+                                    detectTapGestures(
+                                        onPress = {
+                                            scale2 = 0.90f
+                                            tryAwaitRelease()
+                                            scale2 = 1f
+                                        },
+                                        onTap = {
+                                            onCreatePhotoClick(uiState.documentType)
+                                        }
+                                    )
+                                }
                                 .scale(buttonAnimatedScale)
                         ) {
                             Text(
@@ -448,6 +479,7 @@ private fun DocumentInfoScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChecklistItem(
     uiState: DocumentInfoScreenUiState,
@@ -455,7 +487,9 @@ fun ChecklistItem(
     isChecked: Boolean,
     onChangeBackground: () -> Unit
 ) {
-    var showDialog by remember { mutableStateOf(false) }
+    var showBottomSheet by rememberSaveable { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    val bottomSheetState = rememberModalBottomSheetState()
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -498,7 +532,13 @@ fun ChecklistItem(
                             Color.Transparent,
                             shape = RoundedCornerShape(6.dp)
                         )
-                        .clickable { showDialog = true }
+                        .clickable {
+                            scope.launch {
+                                bottomSheetState.show()
+                                bottomSheetState.expand()
+                            }
+                            showBottomSheet = true
+                        }
                 ) {
 
                     Box(
@@ -539,93 +579,94 @@ fun ChecklistItem(
 
     }
 
-    // Background Color Dialog
-    if (showDialog) {
-        AlertDialog(
-            onDismissRequest = { showDialog = false },
-            title = {
+    // Modal Bottom Sheet
+    if (showBottomSheet) {
+        ModalBottomSheet(
+            onDismissRequest = {
+                scope.launch {
+                    bottomSheetState.hide()
+                }
+                showBottomSheet = false
+            },
+            containerColor = colors.background,
+            sheetState = bottomSheetState
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
                 Text(
-                    text = "Change color",
-                    style = MaterialTheme.typography.titleMedium
+                    text = "Change Background",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(bottom = 8.dp)
                 )
-            },
-            text = {
-                Column {
-                    Text(
-                        text = "Keep original background or add custom color.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = colors.onSurfaceVariant
+                Text(
+                    text = "Select a background color for your document.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = colors.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                Image(
+                    painter = painterResource(id = R.drawable.ic_launcher_foreground), // Replace with your image
+                    contentDescription = "Background Preview",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(1f)
+                        .padding(bottom = 16.dp)
+                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(Color.White, RoundedCornerShape(8.dp))
+                            .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))
+                            .clickable { /* Handle color selection */ }
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = true, // Default to "Do not change"
-                            onClick = { /* Handle "Do not change" selection */ }
-                        )
-                        Text(
-                            text = "Do not change",
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.padding(start = 8.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = false, // Default to unselected
-                            onClick = { /* Handle "Change background color" selection */ }
-                        )
-                        Text(
-                            text = "Change background color",
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.padding(start = 8.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(24.dp)
-                                .background(Color.White, RoundedCornerShape(4.dp))
-                                .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))
-                        )
-                        Box(
-                            modifier = Modifier
-                                .size(24.dp)
-                                .background(Color.LightGray, RoundedCornerShape(4.dp))
-                                .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))
-                        )
-                        Box(
-                            modifier = Modifier
-                                .size(24.dp)
-                                .background(Color.Blue, RoundedCornerShape(4.dp))
-                                .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))
-                        )
-                        Box(
-                            modifier = Modifier
-                                .size(24.dp)
-                                .background(Color.Red, RoundedCornerShape(4.dp))
-                                .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))
-                        )
-                    }
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(Color.LightGray, RoundedCornerShape(8.dp))
+                            .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))
+                            .clickable { /* Handle color selection */ }
+                    )
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(Color.Blue, RoundedCornerShape(8.dp))
+                            .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))
+                            .clickable { /* Handle color selection */ }
+                    )
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(Color.Red, RoundedCornerShape(8.dp))
+                            .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))
+                            .clickable { /* Handle color selection */ }
+                    )
                 }
-            },
-            confirmButton = {
-                TextButton(onClick = { showDialog = false }) {
-                    Text("OK")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDialog = false }) {
-                    Text("Cancel")
+                Button(
+                    onClick = {
+                        scope.launch { bottomSheetState.hide() }
+                        showBottomSheet = false
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = colors.primary)
+                ) {
+                    Text(
+                        text = "Apply",
+                        color = colors.onPrimary,
+                        fontSize = 16.sp
+                    )
                 }
             }
-        )
+        }
     }
 }
 
