@@ -107,8 +107,8 @@ object AppColors {
     val DarkOn100 = Color(0xFFFFFFFF)
     val Dark200 = Color(0xFF343437)
     val DarkOn200 = Color(0xFF2D2D30)
-    val Dark300 = Color(0xFFFFFFFF)
-    val DarkOn300 = Color(0xFF28282B)
+    val Dark300 = Color(0xFF2D2D30)
+    val DarkOn300 = Color(0xFFFFFFFF)
     val Dark400 = Color(0xFF28282B)
     val DarkOn400 = Color(0xFFFFFFFF)
 }

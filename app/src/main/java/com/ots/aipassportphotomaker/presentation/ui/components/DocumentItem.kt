@@ -80,7 +80,20 @@ fun DocumentItem(
         modifier = modifier
             .background(colors.custom400, RoundedCornerShape(8.dp))
             .border(1.dp, colors.custom100, RoundedCornerShape(8.dp))
-            .padding(8.dp),
+            .padding(8.dp)
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onPress = {
+                        scale = 0.90f
+                        tryAwaitRelease()
+                        scale = 1f
+                    },
+                    onTap = {
+                        onDocumentClick(document.id)
+                    }
+                )
+            }
+        ,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 

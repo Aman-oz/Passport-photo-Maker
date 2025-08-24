@@ -27,6 +27,7 @@ import com.ots.aipassportphotomaker.presentation.ui.theme.colors
 @Composable
 fun CommonTopBar(
     title: String,
+    showGetProButton: Boolean = true,
     onBackClick: () -> Unit,
     onGetProClick: () -> Unit
 ) {
@@ -50,9 +51,10 @@ fun CommonTopBar(
             }
         },
         actions = {
-            GetProButton {
-                onGetProClick()
-            }
+            if (showGetProButton)
+                GetProButton {
+                    onGetProClick()
+                }
         },
         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
             containerColor = colors.background

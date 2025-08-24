@@ -9,11 +9,14 @@ import kotlin.text.get
 data class PhotoIDDetailScreenUiState(
     val showLoading: Boolean = true,
     val errorMessage: String? = null,
+    val showDefaultState: Boolean = true,
+    val showNoDocumentsFound: Boolean = false,
     val type: String = "",
 )
 
 sealed class PhotoIDDetailScreenNavigationState {
     data class SelectPhotoScreen(val documentId: Int) : PhotoIDDetailScreenNavigationState()
+    data class DocumentInfoScreen(val documentId: Int) : PhotoIDDetailScreenNavigationState()
 }
 
 class PhotoIDDetailBundle @Inject constructor(

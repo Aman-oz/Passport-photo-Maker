@@ -70,4 +70,14 @@ class DocumentAssetDataSource(private val context: Context) {
             emptyList()
         }
     }
+
+    suspend fun getDocumentById(documentId: Int): DocumentEntity? = withContext(Dispatchers.IO) {
+        try {
+            val allDocuments = getDocuments()
+            allDocuments.find { it.id == documentId }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
 }

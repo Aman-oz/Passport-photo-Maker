@@ -17,6 +17,8 @@ import com.ots.aipassportphotomaker.presentation.ui.createid.PhotoIDPage
 import com.ots.aipassportphotomaker.presentation.ui.createid.PhotoIDPage2
 import com.ots.aipassportphotomaker.presentation.ui.createid.PhotoIDScreen2ViewModel
 import com.ots.aipassportphotomaker.presentation.ui.createid.PhotoIDScreenViewModel
+import com.ots.aipassportphotomaker.presentation.ui.documentinfo.DocumentInfoPage
+import com.ots.aipassportphotomaker.presentation.ui.documentinfo.DocumentInfoScreenViewModel
 import com.ots.aipassportphotomaker.presentation.ui.home.HomePage
 import com.ots.aipassportphotomaker.presentation.ui.home.HomeScreenViewModel
 
@@ -82,6 +84,14 @@ fun MainGraph(
             PhotoIDDetailPage(
                 mainRouter = MainRouter(mainNavController),
                 viewModel = hiltViewModel<PhotoIDDetailScreenViewModel>(),
+                sharedViewModel = hiltViewModel<NavigationBarSharedViewModel>(),
+            )
+        }
+
+        composableHorizontalSlide<Page.DocumentInfoScreen> {
+            DocumentInfoPage(
+                mainRouter = MainRouter(mainNavController),
+                viewModel = hiltViewModel<DocumentInfoScreenViewModel>(),
                 sharedViewModel = hiltViewModel<NavigationBarSharedViewModel>(),
             )
         }

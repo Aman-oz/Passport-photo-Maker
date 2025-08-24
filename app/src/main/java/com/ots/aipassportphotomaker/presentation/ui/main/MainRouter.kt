@@ -9,12 +9,20 @@ class MainRouter(
     private val mainNavController: NavHostController
 ) {
 
+    fun goBack() {
+        mainNavController.popBackStack()
+    }
+
     fun navigateToItemDetailScreen(name: String) {
         mainNavController.navigate(Page.ItemDetailScreen(name))
     }
 
     fun navigateToPhotoIDScreen2() {
         mainNavController.navigate(Page.PhotoID2)
+    }
+
+    fun navigateToDocumentInfoScreen(documentId: Int) {
+        mainNavController.navigate(Page.DocumentInfoScreen(documentId = documentId))
     }
 
     fun navigateToPhotoIDDetailScreen(type: String) {

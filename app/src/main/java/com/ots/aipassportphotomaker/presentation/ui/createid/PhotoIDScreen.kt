@@ -56,20 +56,26 @@ fun PhotoIDPage(
     val TAG = "PhotoIDPage"
 
     val documentsPaging = viewModel.documents.collectAsLazyPagingItems()
+    val documentsSearchedPaging = viewModel.searchedDocuments.collectAsLazyPagingItems()
     val uiState by viewModel.uiState.collectAsState()
+
     Logger.d(TAG, "PhotoIDPage: UI State: $uiState")
     Logger.d(TAG, "PhotoIDPage: Documents Paging: ${documentsPaging.itemCount} items loaded")
+    Logger.d(TAG, "PhotoIDPage: Searched Documents Paging: ${documentsSearchedPaging.itemCount} items loaded")
     // val pullToRefreshState = rememberPullRefreshState(uiState.showLoading, { viewModel.onRefresh() })
     val lazyGridState = rememberLazyGridState()
 
 
     viewModel.navigationState.collectAsEffect { navigationState ->
 
-        Log.d(TAG, "HomePage: Navigation State: $navigationState")
+        Log.d(TAG, "PhotoIDPage: Navigation State: $navigationState")
         when (navigationState) {
             is PhotoIDDetails -> mainRouter.navigateToPhotoIDDetailScreen(navigationState.type)
+            is PhotoIDScreenNavigationState.DocumentInfoScreen -> {
+                mainRouter.navigateToDocumentInfoScreen(navigationState.documentId)
+            }
             is PhotoIDScreenNavigationState.SelectPhotoScreen -> {
-                Log.d(TAG, "HomePage: Navigate to Select Photo Screen")
+                Log.d(TAG, "PhotoIDPage: Navigate to Select Photo Screen")
                 mainRouter.navigateToSelectPhotoScreen(
                     documentId = navigationState.documentId
                 )
@@ -82,7 +88,7 @@ fun PhotoIDPage(
     }
 
     sharedViewModel.bottomItem.collectAsEffect {
-        Log.d(TAG, "HomePage: Clicked on item: ${it.page}")
+        Log.d(TAG, "PhotoIDPage: Clicked on item: ${it.page}")
         if (it.page == Page.Home) {
             lazyGridState.animateScrollToItem(0)
         }
@@ -92,11 +98,16 @@ fun PhotoIDPage(
         viewModel.onLoadStateUpdate(documentsPaging.loadState)
     }
 
+    // Choose which list to show
+    val showSearchResults = !uiState.showDefaultState
+    val documentsToShow = if (showSearchResults) documentsSearchedPaging else documentsPaging
+
     PhotoIDScreen(
-        documents = documentsPaging,
+        documents = documentsToShow,
         uiState = uiState,
         lazyGridState = lazyGridState,
         onDocumentClick = viewModel::onDocumentClicked,
+        onQueryChange = viewModel::onSearch,
         onSeeAllClick = viewModel::onSeeAllClicked
     )
 }
@@ -107,6 +118,7 @@ private fun PhotoIDScreen(
     uiState: PhotoIDScreenUiState,
     lazyGridState: LazyGridState,
     onDocumentClick: (documentId: Int) -> Unit,
+    onQueryChange: (query: String) -> Unit,
     onSeeAllClick: (type: String) -> Unit
 ) {
 
@@ -117,13 +129,15 @@ private fun PhotoIDScreen(
 
         val context = LocalContext.current
         val isLoading = uiState.showLoading
-        val showNoDocumentsFound = uiState.showNoDocumentsFound
+        var showNoDocumentsFound = uiState.showNoDocumentsFound
         val errorMessage = uiState.errorMessage
         var query: String by remember { mutableStateOf("") }
 
+        showNoDocumentsFound = !uiState.showDefaultState && documents.itemCount == 0
+
         if (errorMessage != null) Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
 
-        if (uiState.showLoading) {
+        if (isLoading) {
             LoaderFullScreen()
         } else {
             Column(
@@ -140,10 +154,11 @@ private fun PhotoIDScreen(
                 SearchView(
                     onQueryChange = {
                         query = it
-//                        onQueryChange(it)
+                        onQueryChange(it)
                     },
                     onCloseClick = {
                         query = ""
+                        onQueryChange("")
                     }
                 )
                 if (showNoDocumentsFound) {
@@ -274,6 +289,7 @@ fun PhotoIDScreenPreview() {
             ),
             lazyGridState = rememberLazyGridState(),
             onDocumentClick = {},
+            onQueryChange = {},
             onSeeAllClick = {}
         )
     }

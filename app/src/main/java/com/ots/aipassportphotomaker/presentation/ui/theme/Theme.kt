@@ -83,6 +83,42 @@ val ColorScheme.custom400: Color
 val ColorScheme.onCustom400: Color
     get() = if (this == darkColors) AppColors.DarkOn400 else AppColors.LightOn400
 
+val ColorScheme.customSuccess: Color
+    get() = if (this == darkColors) AppColors.DarkSuccess else AppColors.LightSuccess
+
+val ColorScheme.onCustomSuccess: Color
+    get() = if (this == darkColors) AppColors.DarkOnSuccess else AppColors.LightOnSuccess
+
+val ColorScheme.customSuccessContainer: Color
+    get() = if (this == darkColors) AppColors.DarkSuccessContainer else AppColors.LightSuccessContainer
+
+val ColorScheme.onCustomSuccessContainer: Color
+    get() = if (this == darkColors) AppColors.DarkOnSuccessContainer else AppColors.LightOnSuccessContainer
+
+val ColorScheme.customError: Color
+    get() = if (this == darkColors) AppColors.DarkError else AppColors.LightError
+
+val ColorScheme.onCustomError: Color
+    get() = if (this == darkColors) AppColors.DarkOnError else AppColors.LightOnError
+
+val ColorScheme.customErrorContainer: Color
+    get() = if (this == darkColors) AppColors.DarkErrorContainer else AppColors.LightErrorContainer
+
+val ColorScheme.onCustomErrorContainer: Color
+    get() = if (this == darkColors) AppColors.DarkOnErrorContainer else AppColors.LightOnErrorContainer
+
+val ColorScheme.customWarning: Color
+    get() = if (this == darkColors) AppColors.DarkWarning else AppColors.LightWarning
+
+val ColorScheme.onCustomWarning: Color
+    get() = if (this == darkColors) AppColors.DarkOnWarning else AppColors.LightOnWarning
+
+val ColorScheme.customWarningContainer: Color
+    get() = if (this == darkColors) AppColors.DarkWarningContainer else AppColors.LightWarningContainer
+
+val ColorScheme.onCustomWarningContainer: Color
+    get() = if (this == darkColors) AppColors.DarkOnWarningContainer else AppColors.LightOnWarningContainer
+
 // Define dark and light color schemes with custom colors
 val darkColors = DarkColorScheme.copy(
     primary = AppColors.DarkPrimary,

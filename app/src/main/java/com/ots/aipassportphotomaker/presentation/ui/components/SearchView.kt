@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -81,14 +82,14 @@ fun SearchView(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp)
-            .border(1.dp, colors.outline, RoundedCornerShape(50.dp))
+            .padding(horizontal = 16.dp, vertical = 4.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .background(colors.custom400, RoundedCornerShape(50.dp))
+                .background(colors.custom400, RoundedCornerShape(32.dp))
+                .border(1.dp, colors.outline, RoundedCornerShape(32.dp))
                 .padding(horizontal = 16.dp, vertical = 0.dp)
         ) {
             Icon(
@@ -96,9 +97,10 @@ fun SearchView(
                 contentDescription = "Search",
                 tint = colors.outline
             )
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(4.dp))
                 TextField(
                     value = query,
+                    textStyle = MaterialTheme.typography.titleMedium,
                     onValueChange = {
                         query = it
                         onQueryChange(it)

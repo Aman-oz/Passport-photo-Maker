@@ -30,6 +30,9 @@ sealed class Page {
     data class PhotoIDDetailScreen(val type: String) : Page()
 
     @Serializable
+    data class DocumentInfoScreen(val documentId: Int) : Page()
+
+    @Serializable
     data class SelectPhotoScreen(val id: Int) : Page()
 
     @Serializable

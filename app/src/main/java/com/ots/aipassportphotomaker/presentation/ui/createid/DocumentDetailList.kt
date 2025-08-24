@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -30,9 +31,19 @@ import com.ots.aipassportphotomaker.presentation.ui.theme.colors
 fun DocumentDetailList(
     documents: LazyPagingItems<DocumentListItem>,
     onDocumentClick: (documentId: Int) -> Unit,
+    showSeparator: Boolean = false,
     lazyGridState: LazyGridState = rememberLazyGridState(),
     config: DocumentSpanSizeConfig = DocumentSpanSizeConfig(2),
+    onScrollStarted: () -> Unit = {},
 ) {
+
+    val isScrolling = lazyGridState.isScrollInProgress
+
+    LaunchedEffect(isScrolling) {
+        if (isScrolling) {
+            onScrollStarted()
+        }
+    }
 
     val imageSize = ImageSize.getImageFixedSize()
 
@@ -72,7 +83,10 @@ fun DocumentDetailList(
                     itemVisible = itemVisible
                 )
 
-                is DocumentListItem.Separator -> Separator(document.type, false)
+                is DocumentListItem.Separator -> {
+                    if (showSeparator)
+                        Separator(document.type, false)
+                }
                 else -> Loader()
             }
         }

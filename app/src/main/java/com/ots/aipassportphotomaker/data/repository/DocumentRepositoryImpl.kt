@@ -89,30 +89,32 @@ class DocumentRepositoryImpl(
         pagingData.map { it.toDomain() }
     }*/
 
-    override suspend fun getDocument(movieId: Int): Result<DocumentEntity> {
-        return when (val localResult = local.getDocument(movieId)) {
-            is Success -> localResult
-            is Error -> remote.getDocument(movieId).map { it.toDomain() }
+    override suspend fun getDocument(documentId: Int): Result<DocumentEntity> {
+        val documentInJson = json.getDocumentById(documentId)
+        return if (documentInJson != null) {
+            Success(documentInJson)
+        } else {
+            Error(Exception("Document not found in JSON"))
         }
     }
 
-    override suspend fun checkFavoriteStatus(movieId: Int): Result<Boolean> = localFavorite.checkFavoriteStatus(movieId)
+    override suspend fun checkFavoriteStatus(documentId: Int): Result<Boolean> = localFavorite.checkFavoriteStatus(documentId)
 
 
-    override suspend fun addDocumentToFavorite(movieId: Int) {
-        local.getDocument(movieId)
+    override suspend fun addDocumentToFavorite(documentId: Int) {
+        local.getDocument(documentId)
             .onSuccess {
-                localFavorite.addDocumentToFavorite(movieId)
+                localFavorite.addDocumentToFavorite(documentId)
             }
             .onError {
-                remote.getDocument(movieId).onSuccess { movie ->
+                remote.getDocument(documentId).onSuccess { movie ->
                     local.saveDocuments(listOf(movie))
-                    localFavorite.addDocumentToFavorite(movieId)
+                    localFavorite.addDocumentToFavorite(documentId)
                 }
             }
     }
 
-    override suspend fun removeDocumentFromFavorite(movieId: Int) = localFavorite.removeDocumentFromFavorite(movieId)
+    override suspend fun removeDocumentFromFavorite(documentId: Int) = localFavorite.removeDocumentFromFavorite(documentId)
 
     override suspend fun sync(): Boolean {
         return when (val result = local.getDocuments()) {
@@ -124,8 +126,8 @@ class DocumentRepositoryImpl(
         }
     }
 
-    private suspend fun updateLocalWithRemoteMovies(movieIds: List<Int>): Boolean {
-        return when (val remoteResult = remote.getDocuments(movieIds)) {
+    private suspend fun updateLocalWithRemoteMovies(documentIds: List<Int>): Boolean {
+        return when (val remoteResult = remote.getDocuments(documentIds)) {
             is Error -> false
             is Success -> {
                 local.saveDocuments(remoteResult.data)
