@@ -23,21 +23,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -54,7 +47,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -62,19 +54,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ots.aipassportphotomaker.R
-import com.ots.aipassportphotomaker.common.ext.ImageSize
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
 import com.ots.aipassportphotomaker.common.utils.Logger
+import com.ots.aipassportphotomaker.domain.util.determineOrientation
+import com.ots.aipassportphotomaker.domain.util.determinePixels
 import com.ots.aipassportphotomaker.presentation.ui.bottom_nav.NavigationBarSharedViewModel
 import com.ots.aipassportphotomaker.presentation.ui.components.CommonTopBar
+import com.ots.aipassportphotomaker.presentation.ui.components.ImageWithMeasurements
 import com.ots.aipassportphotomaker.presentation.ui.components.LoaderFullScreen
 import com.ots.aipassportphotomaker.presentation.ui.main.MainRouter
 import com.ots.aipassportphotomaker.presentation.ui.theme.colors
 import com.ots.aipassportphotomaker.presentation.ui.theme.custom100
 import com.ots.aipassportphotomaker.presentation.ui.theme.custom300
 import com.ots.aipassportphotomaker.presentation.ui.theme.custom400
-import com.ots.aipassportphotomaker.presentation.ui.theme.customSuccess
 import com.ots.aipassportphotomaker.presentation.ui.theme.onCustom300
 import com.ots.aipassportphotomaker.presentation.ui.theme.onCustom400
 import kotlinx.coroutines.launch
@@ -154,7 +147,6 @@ private fun DocumentInfoScreen(
         if (isLoading) {
             LoaderFullScreen()
         } else {
-            val imageSize = ImageSize.getImageFixedSize()
             val isImageSelected by remember { mutableStateOf(false) }
 
             var scale0 by remember { mutableFloatStateOf(1f) }
@@ -193,30 +185,38 @@ private fun DocumentInfoScreen(
 
                     Box(
                         modifier = Modifier
-                            .width(150.dp)
-                            .background(colors.primary),
+                            .width(140.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.sample_image_square), // Replace with your drawable resource ID
-                            contentDescription = null,
-                            contentScale = ContentScale.Fit,
-                            modifier = Modifier
-                                .aspectRatio(1f)
-                                .pointerInput(Unit) {
-                                    detectTapGestures(
-                                        onPress = {
-                                            scale0 = 0.90f
-                                            tryAwaitRelease()
-                                            scale0 = 1f
-                                        },
-                                        onTap = {
-                                            // onDocumentClick(document.id)
-                                        }
-                                    )
-                                }
-                                .scale(imageAnimatedScale)
 
+                        val unitSize = determineOrientation(uiState.documentSize)
+                        val pixelSize = determinePixels(uiState.documentPixels)
+                        Logger.i("DocumentInfoScreen", "Document size: width: ${unitSize.width}, height: ${unitSize.height}, orientation: ${unitSize.orientation}")
+
+                        val ratio = if (unitSize.orientation == "Landscape") {
+                            if (unitSize.height != 0f) unitSize.width / unitSize.height else 1f
+                        } else if (unitSize.orientation == "Portrait") {
+                            300 / 396f
+                        } else {
+                            1f
+                        }
+
+                        val image = if (unitSize.orientation == "Landscape") {
+                            R.drawable.sample_image_square
+                        } else if (unitSize.orientation == "Portrait") {
+                            R.drawable.sample_image_portrait
+                        } else {
+                            R.drawable.sample_image_square
+                        }
+
+                        ImageWithMeasurements(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            unitSize = unitSize,
+                            pixelSize = pixelSize,
+                            unit = uiState.documentUnit,
+                            imageRes = image,
+                            imageRatio = ratio
                         )
                     }
 
@@ -303,7 +303,7 @@ private fun DocumentInfoScreen(
                             ChecklistItem(
                                 uiState,
                                 text = "Image Selection",
-                                isChecked = false,
+                                isChecked = true,
                                 onChangeBackground = {})
                             ChecklistItem(
                                 uiState,
@@ -497,10 +497,9 @@ fun ChecklistItem(
             .fillMaxWidth()
             .padding(vertical = 4.dp)
     ) {
-        Icon(
-            imageVector = if (isChecked) Icons.Default.CheckCircle else Icons.Default.CheckCircle,
+        Image(
+            painter = painterResource(id = if (isChecked) R.drawable.check_circle else R.drawable.cross_circle_red),
             contentDescription = if (isChecked) "Checked" else "Unchecked",
-            tint = if (isChecked) colors.customSuccess else Color.Gray,
             modifier = Modifier.size(24.dp)
         )
         Spacer(modifier = Modifier.width(8.dp))
@@ -513,11 +512,9 @@ fun ChecklistItem(
         when (text) {
             "Image Selection" -> {
                 Icon(
-                    imageVector = if (isChecked) Icons.Default.Check else Icons.Default.Close, // Replace with your drawable resource ID
+                    painter = painterResource(id = if (isChecked) R.drawable.tick_icon else R.drawable.cross_icon), // Replace with your drawable resource ID
                     contentDescription = null,
-                    tint = colors.onCustom300,
                     modifier = Modifier
-                        .size(16.dp)
                 )
 
             }
@@ -553,6 +550,30 @@ fun ChecklistItem(
 
                 }
 
+            }
+
+            "Resolution" -> {
+                Box(
+                    modifier = Modifier
+                        .background(colors.custom300, shape = RoundedCornerShape(6.dp))
+                        .border(1.dp, colors.custom100, shape = RoundedCornerShape(6.dp))
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Row {
+                        Image(
+                            painter = painterResource(id = R.drawable.pen_icon),
+                            contentDescription = "Edit Icon",
+                            modifier = Modifier
+                                .padding(horizontal = 6.dp)
+                        )
+                        Text(
+                            text = uiState.documentResolution ?: "300 DPI",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = colors.onCustom300
+                        )
+                    }
+
+                }
             }
 
             else -> {

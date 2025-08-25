@@ -37,4 +37,5 @@ class ImageSize(
             return ImageSize(imageWidth, imageHeight)
         }
     }
+
 }

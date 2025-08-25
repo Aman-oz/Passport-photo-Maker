@@ -78,6 +78,8 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
 
+    implementation(libs.androidx.constraintlayout.compose)
+
     // AndroidX
     implementation(libs.appcompat)
     implementation(libs.lifecycle.viewmodel.ktx)
