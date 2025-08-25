@@ -49,10 +49,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.github.skydoves.colorpicker.compose.ColorEnvelope
+import com.github.skydoves.colorpicker.compose.HsvColorPicker
+import com.github.skydoves.colorpicker.compose.rememberColorPickerController
 import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
@@ -60,10 +64,13 @@ import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.domain.util.determineOrientation
 import com.ots.aipassportphotomaker.domain.util.determinePixels
 import com.ots.aipassportphotomaker.presentation.ui.bottom_nav.NavigationBarSharedViewModel
+import com.ots.aipassportphotomaker.presentation.ui.components.ColorItem
 import com.ots.aipassportphotomaker.presentation.ui.components.CommonTopBar
 import com.ots.aipassportphotomaker.presentation.ui.components.ImageWithMeasurements
 import com.ots.aipassportphotomaker.presentation.ui.components.LoaderFullScreen
+import com.ots.aipassportphotomaker.presentation.ui.components.RadioButtonSingleSelection
 import com.ots.aipassportphotomaker.presentation.ui.main.MainRouter
+import com.ots.aipassportphotomaker.presentation.ui.theme.AppColors
 import com.ots.aipassportphotomaker.presentation.ui.theme.colors
 import com.ots.aipassportphotomaker.presentation.ui.theme.custom100
 import com.ots.aipassportphotomaker.presentation.ui.theme.custom300
@@ -588,7 +595,6 @@ fun ChecklistItem(
                             "Document Size" -> uiState.documentSize ?: "2.0 x 2.0"
                             "Unit" -> uiState.documentUnit ?: "inch"
                             "Pixel" -> uiState.documentPixels ?: "600 x 600 px"
-                            "Resolution" -> uiState.documentResolution ?: "300 DPI"
                             else -> ""
                         },
                         style = MaterialTheme.typography.bodyMedium,
@@ -619,7 +625,9 @@ fun ChecklistItem(
             ) {
                 Text(
                     text = "Change Background",
-                    style = MaterialTheme.typography.titleMedium,
+                    color = colors.onCustom400,
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
                 Text(
@@ -628,46 +636,84 @@ fun ChecklistItem(
                     color = colors.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
-                Image(
-                    painter = painterResource(id = R.drawable.ic_launcher_foreground), // Replace with your image
-                    contentDescription = "Background Preview",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(1f)
-                        .padding(bottom = 16.dp)
-                )
+
+                RadioButtonSingleSelection(
+                    radioButtonList = listOf("Keep Original", "Change background color")
+                ) {
+
+                }
+
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.padding(bottom = 16.dp)
                 ) {
-                    Box(
+
+                    Spacer(modifier = Modifier.width(40.dp))
+
+                    ColorItem(
                         modifier = Modifier
-                            .size(40.dp)
-                            .background(Color.White, RoundedCornerShape(8.dp))
-                            .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))
-                            .clickable { /* Handle color selection */ }
-                    )
-                    Box(
+                            .width(42.dp),
+                        color = Color.White,
+                        ratio = 1.2f,
+                        showEyeDropper = true
+
+                    ){
+                        val controller = rememberColorPickerController()
+                        HsvColorPicker(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(450.dp)
+                                .padding(10.dp),
+                            controller = controller,
+                            onColorChanged = { colorEnvelope: ColorEnvelope ->
+                                val color: Color = colorEnvelope.color // ARGB color value.
+                                val hexCode: String = colorEnvelope.hexCode // Color hex code, which represents color value.
+                                val fromUser: Boolean = colorEnvelope.fromUser // Represents this event is triggered by user or not.
+                            }
+                        )
+                    }
+
+                    ColorItem(
                         modifier = Modifier
-                            .size(40.dp)
-                            .background(Color.LightGray, RoundedCornerShape(8.dp))
-                            .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))
-                            .clickable { /* Handle color selection */ }
-                    )
-                    Box(
+                            .width(42.dp),
+                        color = Color.White,
+                        ratio = 1.2f
+
+                    ){  }
+
+                    ColorItem(
                         modifier = Modifier
-                            .size(40.dp)
-                            .background(Color.Blue, RoundedCornerShape(8.dp))
-                            .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))
-                            .clickable { /* Handle color selection */ }
-                    )
-                    Box(
+                            .width(42.dp),
+                        color = Color.White,
+                        ratio = 1.2f
+
+                    ){  }
+
+                    ColorItem(
                         modifier = Modifier
-                            .size(40.dp)
-                            .background(Color.Red, RoundedCornerShape(8.dp))
-                            .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))
-                            .clickable { /* Handle color selection */ }
-                    )
+                            .width(42.dp),
+                        color = Color.Gray,
+                        ratio = 1.2f
+
+                    ){  }
+
+                    ColorItem(
+                        modifier = Modifier
+                            .width(42.dp),
+                        color = AppColors.LightPrimary,
+                        ratio = 1.2f
+
+                    ){  }
+
+                    ColorItem(
+                        modifier = Modifier
+                            .width(42.dp),
+                        color = Color.Red,
+                        ratio = 1.2f
+
+                    ){  }
+
+
                 }
                 Button(
                     onClick = {
@@ -687,6 +733,7 @@ fun ChecklistItem(
                     )
                 }
             }
+
         }
     }
 }

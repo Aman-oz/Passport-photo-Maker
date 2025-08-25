@@ -79,6 +79,7 @@ dependencies {
     implementation(libs.androidx.material3)
 
     implementation(libs.androidx.constraintlayout.compose)
+    implementation(libs.compose.colorpicker)
 
     // AndroidX
     implementation(libs.appcompat)

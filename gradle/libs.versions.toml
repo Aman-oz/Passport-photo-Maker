@@ -35,6 +35,7 @@ serializationGradlePlugin = "2.0.0"
 ksp = "2.0.21-1.0.28"
 accompanistSystemuicontroller = "0.27.0"
 constraintVersion = "1.1.1"
+colorpicker = "1.1.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -90,6 +91,8 @@ coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose"
 navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 accompanist-systemuicontroller = { module = "com.google.accompanist:accompanist-systemuicontroller", version.ref = "accompanistSystemuicontroller" }
+
+compose-colorpicker = { module = "com.github.skydoves:colorpicker-compose", version.ref = "colorpicker" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
