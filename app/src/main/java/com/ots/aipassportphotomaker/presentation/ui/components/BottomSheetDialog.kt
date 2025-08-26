@@ -1,5 +1,6 @@
 package com.ots.aipassportphotomaker.presentation.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -32,6 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -43,6 +45,7 @@ import com.ots.aipassportphotomaker.common.preview.PreviewContainer
 import com.ots.aipassportphotomaker.presentation.ui.theme.AppColors
 import com.ots.aipassportphotomaker.presentation.ui.theme.colors
 import com.ots.aipassportphotomaker.presentation.ui.theme.onCustom400
+import io.mhssn.colorpicker.ext.transparentBackground
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -99,7 +102,8 @@ fun BottomSheetDialogLayout(
                 modifier = Modifier
                     .width(42.dp),
                 color = Color.White,
-                ratio = 1.2f
+                ratio = 1.2f,
+                showTransparentBg = true
 
             ){  }
 
@@ -114,7 +118,7 @@ fun BottomSheetDialogLayout(
             ColorItem(
                 modifier = Modifier
                     .width(42.dp),
-                color = Color.Gray,
+                color = Color.Green,
                 ratio = 1.2f
 
             ){  }
@@ -165,7 +169,8 @@ fun ColorItem(
     radius: Dp = 8.dp,
     ratio: Float = 1f,
     showEyeDropper: Boolean = false,
-    onClick: @Composable () -> Unit,
+    showTransparentBg: Boolean = false,
+    onClick: () -> Unit,
 ) {
     Box(
         modifier = modifier
@@ -177,18 +182,31 @@ fun ColorItem(
                 shape = RoundedCornerShape(radius)
             )
             .clickable {
-                onClick
+                onClick.invoke()
             }
     ) {
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
+        val itemBgModifier = if (showTransparentBg) {
+            Modifier.fillMaxSize()
+                .padding(start = 2.dp, end = 2.dp, top = 2.dp, bottom = 2.dp)
+//                .transparentBackground(verticalBoxesAmount = 20)
+                .background(
+                    Color.Transparent,
+                    shape = RoundedCornerShape(radius)
+                )
+        } else {
+            Modifier.fillMaxSize()
                 .padding(2.dp)
                 .background(
                     color,
                     shape = RoundedCornerShape(radius)
-                ),
+                )
+        }
+
+        Box(
+            modifier = itemBgModifier
+                .clickable(onClick = {
+                    onClick.invoke()
+                }),
             contentAlignment = Alignment.Center
         ) {
             if (showEyeDropper) {
@@ -199,12 +217,23 @@ fun ColorItem(
                         .padding(4.dp)
                 )
             }
+
+            if (showTransparentBg) {
+                Image(
+                    painter = painterResource(id = R.drawable.transparent_round_bg),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    contentScale = ContentScale.Fit,
+                )
+            }
         }
 
     }
 }
 
-@Preview(showSystemUi = true)
+@Preview("Light")
+@Preview("Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun GreetingPreview() {
     PreviewContainer {

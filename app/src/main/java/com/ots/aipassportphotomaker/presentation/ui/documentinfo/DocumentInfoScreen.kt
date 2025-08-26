@@ -42,10 +42,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -53,10 +55,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.github.skydoves.colorpicker.compose.ColorEnvelope
-import com.github.skydoves.colorpicker.compose.HsvColorPicker
-import com.github.skydoves.colorpicker.compose.rememberColorPickerController
+//import com.github.skydoves.colorpicker.compose.ColorEnvelope
+//import com.github.skydoves.colorpicker.compose.HsvColorPicker
+//import com.github.skydoves.colorpicker.compose.rememberColorPickerController
 import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
@@ -77,6 +80,8 @@ import com.ots.aipassportphotomaker.presentation.ui.theme.custom300
 import com.ots.aipassportphotomaker.presentation.ui.theme.custom400
 import com.ots.aipassportphotomaker.presentation.ui.theme.onCustom300
 import com.ots.aipassportphotomaker.presentation.ui.theme.onCustom400
+import io.mhssn.colorpicker.ColorPickerDialog
+import io.mhssn.colorpicker.ColorPickerType
 import kotlinx.coroutines.launch
 
 @Composable
@@ -198,7 +203,10 @@ private fun DocumentInfoScreen(
 
                         val unitSize = determineOrientation(uiState.documentSize)
                         val pixelSize = determinePixels(uiState.documentPixels)
-                        Logger.i("DocumentInfoScreen", "Document size: width: ${unitSize.width}, height: ${unitSize.height}, orientation: ${unitSize.orientation}")
+                        Logger.i(
+                            "DocumentInfoScreen",
+                            "Document size: width: ${unitSize.width}, height: ${unitSize.height}, orientation: ${unitSize.orientation}"
+                        )
 
                         val ratio = if (unitSize.orientation == "Landscape") {
                             if (unitSize.height != 0f) unitSize.width / unitSize.height else 1f
@@ -486,17 +494,38 @@ private fun DocumentInfoScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun ChecklistItem(
     uiState: DocumentInfoScreenUiState,
     text: String,
     isChecked: Boolean,
-    onChangeBackground: () -> Unit
+    onChangeBackground: (Color) -> Unit
 ) {
     var showBottomSheet by rememberSaveable { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val bottomSheetState = rememberModalBottomSheetState()
+
+    var color by remember {
+        mutableStateOf(Color.Red)
+    }
+    var showDialog by remember {
+        mutableStateOf(false)
+    }
+
+    ColorPickerDialog(
+        show = showDialog,
+        type = ColorPickerType.Classic(),
+        properties = DialogProperties(),
+        onDismissRequest = {
+            showDialog = false
+        },
+        onPickedColor = {
+            showDialog = false
+            color = it
+            Logger.i("ChecklistItem", "Selected color: $color")
+        },
+    )
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -571,7 +600,8 @@ fun ChecklistItem(
                             painter = painterResource(id = R.drawable.pen_icon),
                             contentDescription = "Edit Icon",
                             modifier = Modifier
-                                .padding(horizontal = 6.dp)
+                                .padding(horizontal = 6.dp),
+                            colorFilter = ColorFilter.tint(colors.onCustom300)
                         )
                         Text(
                             text = uiState.documentResolution ?: "300 DPI",
@@ -657,29 +687,18 @@ fun ChecklistItem(
                         ratio = 1.2f,
                         showEyeDropper = true
 
-                    ){
-                        val controller = rememberColorPickerController()
-                        HsvColorPicker(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(450.dp)
-                                .padding(10.dp),
-                            controller = controller,
-                            onColorChanged = { colorEnvelope: ColorEnvelope ->
-                                val color: Color = colorEnvelope.color // ARGB color value.
-                                val hexCode: String = colorEnvelope.hexCode // Color hex code, which represents color value.
-                                val fromUser: Boolean = colorEnvelope.fromUser // Represents this event is triggered by user or not.
-                            }
-                        )
+                    ) {
+                        showDialog = true
                     }
 
                     ColorItem(
                         modifier = Modifier
                             .width(42.dp),
                         color = Color.White,
-                        ratio = 1.2f
+                        ratio = 1.2f,
+                        showTransparentBg = true
 
-                    ){  }
+                    ) { }
 
                     ColorItem(
                         modifier = Modifier
@@ -687,7 +706,7 @@ fun ChecklistItem(
                         color = Color.White,
                         ratio = 1.2f
 
-                    ){  }
+                    ) { }
 
                     ColorItem(
                         modifier = Modifier
@@ -695,7 +714,7 @@ fun ChecklistItem(
                         color = Color.Gray,
                         ratio = 1.2f
 
-                    ){  }
+                    ) { }
 
                     ColorItem(
                         modifier = Modifier
@@ -703,7 +722,7 @@ fun ChecklistItem(
                         color = AppColors.LightPrimary,
                         ratio = 1.2f
 
-                    ){  }
+                    ) { }
 
                     ColorItem(
                         modifier = Modifier
@@ -711,7 +730,7 @@ fun ChecklistItem(
                         color = Color.Red,
                         ratio = 1.2f
 
-                    ){  }
+                    ) { }
 
 
                 }

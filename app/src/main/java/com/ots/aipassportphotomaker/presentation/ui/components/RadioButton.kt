@@ -17,6 +17,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
@@ -25,6 +26,7 @@ import com.ots.aipassportphotomaker.common.preview.PreviewContainer
 import com.ots.aipassportphotomaker.presentation.ui.theme.colors
 import com.ots.aipassportphotomaker.presentation.ui.theme.onCustom400
 import com.ots.aipassportphotomaker.R
+import com.ots.aipassportphotomaker.presentation.ui.theme.onCustom300
 
 @Composable
 fun RadioButtonSingleSelection(
@@ -49,14 +51,11 @@ fun RadioButtonSingleSelection(
                     ),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                /*RadioButton(
-                    selected = (text == selectedOption),
-                    onClick = null
-                )*/
                 Image(
                     painter = painterResource(
                         id = if (text == selectedOption) R.drawable.radio_checked else R.drawable.radio_unchecked
                     ),
+                    colorFilter = ColorFilter.tint(colors.onCustom400),
                     contentDescription = null
                 )
                 Text(
