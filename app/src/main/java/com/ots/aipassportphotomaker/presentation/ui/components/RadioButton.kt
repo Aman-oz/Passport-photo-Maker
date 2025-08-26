@@ -31,12 +31,14 @@ import com.ots.aipassportphotomaker.presentation.ui.theme.onCustom300
 @Composable
 fun RadioButtonSingleSelection(
     modifier: Modifier = Modifier,
-    radioButtonList: List<String> = listOf("Calls", "Missed", "Friends"),
-    onOptionSelected: (String) -> Unit = {}
+    radioButtonList: List<String> = listOf("Keep Original", "Change background color"),
+    selectedIndex: Int = 0,
+    onSelectionChange: (Int) -> Unit
 ) {
-    val (selectedOption, onRadioButtonSelected) = remember { mutableStateOf(radioButtonList[0]) }
+    val (selectedOption, onRadioButtonSelected) = remember { mutableStateOf(radioButtonList[selectedIndex]) }
     Column(modifier.selectableGroup()) {
         radioButtonList.forEach { text ->
+
             Row(
                 Modifier
                     .fillMaxWidth()
@@ -44,8 +46,8 @@ fun RadioButtonSingleSelection(
                     .selectable(
                         selected = (text == selectedOption),
                         onClick = {
+                            onSelectionChange(radioButtonList.indexOf(text))
                             onRadioButtonSelected(text)
-                            onOptionSelected(text)
                         },
                         role = Role.RadioButton
                     ),
@@ -74,7 +76,10 @@ fun RadioButtonSingleSelection(
 @Composable
 fun RadioButtonPreview() {
     PreviewContainer {
-        RadioButtonSingleSelection()
+        RadioButtonSingleSelection(
+            modifier = Modifier.padding(16.dp),
+            onSelectionChange = {}
+        )
 
     }
 }

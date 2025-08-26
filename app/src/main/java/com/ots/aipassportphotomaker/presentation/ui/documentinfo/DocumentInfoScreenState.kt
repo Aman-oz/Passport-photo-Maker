@@ -17,8 +17,14 @@ data class DocumentInfoScreenUiState(
     val documentImage: String? = null,
     val documentType: String = "",
     val documentCompleted: String? = null,
+    val backgroundOption: BackgroundOption = BackgroundOption.KEEP_ORIGINAL
 
 )
+
+enum class BackgroundOption {
+    KEEP_ORIGINAL,
+    CHANGE_BACKGROUND
+}
 
 class DocumentDetailsBundle @Inject constructor(
     savedStateHandle: SavedStateHandle

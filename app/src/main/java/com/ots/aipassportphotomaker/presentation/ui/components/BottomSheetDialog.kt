@@ -1,6 +1,7 @@
 package com.ots.aipassportphotomaker.presentation.ui.components
 
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -21,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -94,6 +96,7 @@ fun BottomSheetDialogLayout(
                     .width(42.dp),
                 color = Color.White,
                 ratio = 1.2f,
+                isSelected = false,
                 showEyeDropper = true
 
             ){  }
@@ -103,6 +106,7 @@ fun BottomSheetDialogLayout(
                     .width(42.dp),
                 color = Color.White,
                 ratio = 1.2f,
+                isSelected = true,
                 showTransparentBg = true
 
             ){  }
@@ -111,6 +115,7 @@ fun BottomSheetDialogLayout(
                 modifier = Modifier
                     .width(42.dp),
                 color = Color.White,
+                isSelected = false,
                 ratio = 1.2f
 
             ){  }
@@ -119,6 +124,7 @@ fun BottomSheetDialogLayout(
                 modifier = Modifier
                     .width(42.dp),
                 color = Color.Green,
+                isSelected = false,
                 ratio = 1.2f
 
             ){  }
@@ -127,6 +133,7 @@ fun BottomSheetDialogLayout(
                 modifier = Modifier
                     .width(42.dp),
                 color = AppColors.LightPrimary,
+                isSelected = false,
                 ratio = 1.2f
 
             ){  }
@@ -135,6 +142,7 @@ fun BottomSheetDialogLayout(
                 modifier = Modifier
                     .width(42.dp),
                 color = Color.Red,
+                isSelected = false,
                 ratio = 1.2f
 
             ){  }
@@ -168,15 +176,17 @@ fun ColorItem(
     color: Color = colors.primary,
     radius: Dp = 8.dp,
     ratio: Float = 1f,
+    isSelected: Boolean,
     showEyeDropper: Boolean = false,
     showTransparentBg: Boolean = false,
     onClick: () -> Unit,
 ) {
+    val borderColor = if (isSelected) colors.primary else colors.outline
     Box(
         modifier = modifier
             .width(36.dp)
             .aspectRatio(ratio)
-            .border(1.dp, colors.outline, shape = RoundedCornerShape(6.dp))
+            .border(1.dp, borderColor, shape = RoundedCornerShape(6.dp))
             .background(
                 Color.Transparent,
                 shape = RoundedCornerShape(radius)
@@ -209,7 +219,7 @@ fun ColorItem(
                 }),
             contentAlignment = Alignment.Center
         ) {
-            if (showEyeDropper) {
+            AnimatedVisibility(showEyeDropper) {
                 Image(
                     painter = painterResource(id = R.drawable.eye_dropper_icon),
                     contentDescription = null,
@@ -218,13 +228,24 @@ fun ColorItem(
                 )
             }
 
-            if (showTransparentBg) {
+            AnimatedVisibility(showTransparentBg) {
                 Image(
                     painter = painterResource(id = R.drawable.transparent_round_bg),
                     contentDescription = null,
                     modifier = Modifier
                         .fillMaxSize(),
                     contentScale = ContentScale.Fit,
+                )
+            }
+
+            // Show tick icon if selected
+            AnimatedVisibility(isSelected && !showEyeDropper) {
+                Icon(
+                    painter = painterResource(id = R.drawable.tick_icon),
+                    contentDescription = "Selected",
+                    tint = Color.Black,
+                    modifier = Modifier
+                        .align(Alignment.Center)
                 )
             }
         }

@@ -3,6 +3,8 @@ package com.ots.aipassportphotomaker.presentation.ui.documentinfo
 import android.content.res.Configuration
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -57,13 +59,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
-//import com.github.skydoves.colorpicker.compose.ColorEnvelope
-//import com.github.skydoves.colorpicker.compose.HsvColorPicker
-//import com.github.skydoves.colorpicker.compose.rememberColorPickerController
 import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
 import com.ots.aipassportphotomaker.common.utils.Logger
+import com.ots.aipassportphotomaker.domain.repository.ColorFactory
 import com.ots.aipassportphotomaker.domain.util.determineOrientation
 import com.ots.aipassportphotomaker.domain.util.determinePixels
 import com.ots.aipassportphotomaker.presentation.ui.bottom_nav.NavigationBarSharedViewModel
@@ -78,10 +78,12 @@ import com.ots.aipassportphotomaker.presentation.ui.theme.colors
 import com.ots.aipassportphotomaker.presentation.ui.theme.custom100
 import com.ots.aipassportphotomaker.presentation.ui.theme.custom300
 import com.ots.aipassportphotomaker.presentation.ui.theme.custom400
+import com.ots.aipassportphotomaker.presentation.ui.theme.customError
 import com.ots.aipassportphotomaker.presentation.ui.theme.onCustom300
 import com.ots.aipassportphotomaker.presentation.ui.theme.onCustom400
 import io.mhssn.colorpicker.ColorPickerDialog
 import io.mhssn.colorpicker.ColorPickerType
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
@@ -93,6 +95,7 @@ fun DocumentInfoPage(
     val TAG = "DocumentInfoPage"
 
     val uiState by viewModel.uiState.collectAsState()
+    val selectedColor by viewModel.selectedColor.collectAsState(initial = Color.White)
 
     Logger.d(TAG, "DocumentInfoPage: UI State: $uiState")
     Logger.i(TAG, "DocumentInfoPage: Document name: ${uiState.documentName}")
@@ -121,6 +124,7 @@ fun DocumentInfoPage(
 
     DocumentInfoScreen(
         uiState = uiState,
+        viewModel = viewModel,
         onOpenGalleryClick = {
             viewModel.onSelectPhotoClicked()
         },
@@ -133,16 +137,21 @@ fun DocumentInfoPage(
         onBackClick = {
             mainRouter.goBack()
         },
+        onSetCustomColor = { color ->
+            viewModel.setCustomColor(color)
+        }
     )
 }
 
 @Composable
 private fun DocumentInfoScreen(
     uiState: DocumentInfoScreenUiState,
+    viewModel: DocumentInfoScreenViewModel,
     onOpenGalleryClick: () -> Unit,
     onTakePhotoClick: () -> Unit,
     onCreatePhotoClick: (type: String) -> Unit,
     onBackClick: () -> Unit,
+    onSetCustomColor: (Color) -> Unit = {}
 ) {
 
     Surface(
@@ -317,31 +326,40 @@ private fun DocumentInfoScreen(
                             // Checklist Items
                             ChecklistItem(
                                 uiState,
+                                viewModel = viewModel,
                                 text = "Image Selection",
                                 isChecked = true,
+                                onSetCustomColor = { color ->
+                                    onSetCustomColor(color)
+                                },
                                 onChangeBackground = {})
                             ChecklistItem(
                                 uiState,
+                                viewModel = viewModel,
                                 text = "Document Size",
                                 isChecked = true,
                                 onChangeBackground = {})
                             ChecklistItem(
                                 uiState,
+                                viewModel = viewModel,
                                 text = "Unit",
                                 isChecked = true,
                                 onChangeBackground = {})
                             ChecklistItem(
                                 uiState,
+                                viewModel = viewModel,
                                 text = "Pixel",
                                 isChecked = false,
                                 onChangeBackground = {})
                             ChecklistItem(
                                 uiState,
+                                viewModel = viewModel,
                                 text = "Resolution",
                                 isChecked = true,
                                 onChangeBackground = {})
                             ChecklistItem(
                                 uiState,
+                                viewModel = viewModel,
                                 text = "Background",
                                 isChecked = true,
                                 onChangeBackground = {})
@@ -498,9 +516,11 @@ private fun DocumentInfoScreen(
 @Composable
 fun ChecklistItem(
     uiState: DocumentInfoScreenUiState,
+    viewModel: DocumentInfoScreenViewModel = hiltViewModel(),
     text: String,
     isChecked: Boolean,
-    onChangeBackground: (Color) -> Unit
+    onSetCustomColor: (Color) -> Unit = {},
+    onChangeBackground: (Color) -> Unit = {}
 ) {
     var showBottomSheet by rememberSaveable { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -509,6 +529,9 @@ fun ChecklistItem(
     var color by remember {
         mutableStateOf(Color.Red)
     }
+    val selectedColor by viewModel.selectedColor.collectAsState(initial = Color.White)
+    val colorFactory = viewModel.colorFactory // Access ColorFactory via ViewModel
+
     var showDialog by remember {
         mutableStateOf(false)
     }
@@ -523,6 +546,7 @@ fun ChecklistItem(
         onPickedColor = {
             showDialog = false
             color = it
+            onSetCustomColor(it)
             Logger.i("ChecklistItem", "Selected color: $color")
         },
     )
@@ -533,6 +557,7 @@ fun ChecklistItem(
             .fillMaxWidth()
             .padding(vertical = 4.dp)
     ) {
+
         Image(
             painter = painterResource(id = if (isChecked) R.drawable.check_circle else R.drawable.cross_circle_red),
             contentDescription = if (isChecked) "Checked" else "Unchecked",
@@ -542,7 +567,9 @@ fun ChecklistItem(
         Text(
             text = text,
             style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier
+                .animateContentSize()
+                .weight(1f)
         )
 
         when (text) {
@@ -579,7 +606,7 @@ fun ChecklistItem(
                             .fillMaxSize()
                             .padding(2.dp)
                             .background(
-                                colors.primary,
+                                if (selectedColor != Color.Unspecified) selectedColor else colors.background,
                                 shape = RoundedCornerShape(6.dp)
                             )
                     )
@@ -638,6 +665,8 @@ fun ChecklistItem(
 
     // Modal Bottom Sheet
     if (showBottomSheet) {
+        var showErrorText by remember { mutableStateOf(false) }
+
         ModalBottomSheet(
             onDismissRequest = {
                 scope.launch {
@@ -668,9 +697,11 @@ fun ChecklistItem(
                 )
 
                 RadioButtonSingleSelection(
-                    radioButtonList = listOf("Keep Original", "Change background color")
-                ) {
-
+                    radioButtonList = listOf("Keep Original", "Change background color"),
+                    selectedIndex = if (uiState.backgroundOption == BackgroundOption.KEEP_ORIGINAL) 0 else 1
+                ) { selectedIndex ->
+                    val option = if (selectedIndex == 0) BackgroundOption.KEEP_ORIGINAL else BackgroundOption.CHANGE_BACKGROUND
+                    viewModel.onBackgroundOptionChanged(option)
                 }
 
                 Row(
@@ -679,65 +710,163 @@ fun ChecklistItem(
                 ) {
 
                     Spacer(modifier = Modifier.width(40.dp))
+                    val isChangeBackgroundSelected =
+                        uiState.backgroundOption == BackgroundOption.CHANGE_BACKGROUND
 
+                    // 1st: Custom Color (Color Picker)
+                    val isCustomSelected = colorFactory.selectedColorType == ColorFactory.ColorType.CUSTOM &&
+                            colorFactory.customColor == selectedColor
+                    ColorItem(
+                        modifier = Modifier.width(42.dp),
+                        color = if (colorFactory.isCustomColorSelected()) colorFactory.customColor else Color.White,
+                        ratio = 1.2f,
+                        showEyeDropper = true,
+                        isSelected = isCustomSelected,
+                        onClick = {
+//                            showBottomSheet = false
+                            if (isChangeBackgroundSelected) {
+                                viewModel.setCustomColor(color)
+                                showDialog = true
+                            } else {
+                                showErrorText = true
+                                scope.launch {
+                                    delay(4000)
+                                    showErrorText = false
+                                }
+                            }
+                        }
+                    )
+
+                    val isTransparentSelected = colorFactory.selectedColorType == ColorFactory.ColorType.TRANSPARENT &&
+                            colorFactory.getColorByType(ColorFactory.ColorType.TRANSPARENT) == selectedColor
                     ColorItem(
                         modifier = Modifier
                             .width(42.dp),
                         color = Color.White,
                         ratio = 1.2f,
-                        showEyeDropper = true
+                        showTransparentBg = true,
+                        isSelected = isTransparentSelected,
+                        onClick = {
+                            if (isChangeBackgroundSelected)
+                                viewModel.selectPredefinedColor(ColorFactory.ColorType.TRANSPARENT)
+                            else {
+                                showErrorText = true
+                                scope.launch {
+                                    delay(4000)
+                                    showErrorText = false
+                                }
+                            }
+                        }
 
-                    ) {
-                        showDialog = true
-                    }
+                    )
 
+                    val isWhiteSelected = colorFactory.selectedColorType == ColorFactory.ColorType.WHITE &&
+                            colorFactory.getColorByType(ColorFactory.ColorType.WHITE) == selectedColor
                     ColorItem(
                         modifier = Modifier
                             .width(42.dp),
                         color = Color.White,
                         ratio = 1.2f,
-                        showTransparentBg = true
+                        isSelected = isWhiteSelected,
+                        onClick = {
+                            if (isChangeBackgroundSelected)
+                                viewModel.selectPredefinedColor(ColorFactory.ColorType.WHITE)
+                            else {
+                                showErrorText = true
+                                scope.launch {
+                                    delay(4000)
+                                    showErrorText = false
+                                }
+                            }
+                        }
 
-                    ) { }
+                    )
 
+                    val isGreenSelected = colorFactory.selectedColorType == ColorFactory.ColorType.GREEN &&
+                            colorFactory.getColorByType(ColorFactory.ColorType.GREEN) == selectedColor
                     ColorItem(
                         modifier = Modifier
                             .width(42.dp),
-                        color = Color.White,
-                        ratio = 1.2f
+                        color = Color.Green,
+                        ratio = 1.2f,
+                        isSelected = isGreenSelected,
+                        onClick = {
+                            if (isChangeBackgroundSelected)
+                                viewModel.selectPredefinedColor(ColorFactory.ColorType.GREEN)
+                            else {
+                                showErrorText = true
+                                scope.launch {
+                                    delay(4000)
+                                    showErrorText = false
+                                }
+                            }
+                        }
 
-                    ) { }
+                    )
 
-                    ColorItem(
-                        modifier = Modifier
-                            .width(42.dp),
-                        color = Color.Gray,
-                        ratio = 1.2f
-
-                    ) { }
-
+                    val isBlueSelected = colorFactory.selectedColorType == ColorFactory.ColorType.BLUE &&
+                            colorFactory.getColorByType(ColorFactory.ColorType.BLUE) == selectedColor
                     ColorItem(
                         modifier = Modifier
                             .width(42.dp),
                         color = AppColors.LightPrimary,
-                        ratio = 1.2f
+                        ratio = 1.2f,
+                        isSelected = isBlueSelected,
+                        onClick = {
+                            if (isChangeBackgroundSelected)
+                                viewModel.selectPredefinedColor(ColorFactory.ColorType.BLUE)
+                            else {
+                                showErrorText = true
+                                scope.launch {
+                                    delay(4000)
+                                    showErrorText = false
+                                }
+                            }
+                        }
 
-                    ) { }
+                    )
 
+                    val isRedSelected = colorFactory.selectedColorType == ColorFactory.ColorType.RED &&
+                            colorFactory.getColorByType(ColorFactory.ColorType.RED) == selectedColor
                     ColorItem(
                         modifier = Modifier
                             .width(42.dp),
                         color = Color.Red,
-                        ratio = 1.2f
+                        ratio = 1.2f,
+                        isSelected = isRedSelected,
+                        onClick = {
+                            if (isChangeBackgroundSelected)
+                                viewModel.selectPredefinedColor(ColorFactory.ColorType.RED)
+                            else {
+                                showErrorText = true
+                                scope.launch {
+                                    delay(4000)
+                                    showErrorText = false
+                                }
+                            }
+                        }
 
-                    ) { }
+                    )
 
 
                 }
+                // show this error text animatedly for 4 seconds when user tries to apply without selecting "Change background color" option
+                AnimatedVisibility(showErrorText) {
+                    Text(
+                        text = "Select change background color option",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = colors.customError,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                }
+
                 Button(
                     onClick = {
-                        scope.launch { bottomSheetState.hide() }
+                        scope.launch {
+                            bottomSheetState.hide()
+                        }
                         showBottomSheet = false
+                        viewModel.applySelectedColor()
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -766,7 +895,15 @@ fun DocumentInfoScreenPreview() {
             uiState = DocumentInfoScreenUiState(
                 showLoading = false,
                 errorMessage = null,
+                documentName = "Sample Passport",
+                documentType = "Passport",
+                documentSize = "35 x 45",
+                documentUnit = "mm",
+                documentPixels = "413x531 px",
+                documentResolution = "300 DPI",
+                backgroundOption = BackgroundOption.CHANGE_BACKGROUND
             ),
+            viewModel = hiltViewModel(),
             onOpenGalleryClick = {},
             onTakePhotoClick = {},
             onCreatePhotoClick = {},

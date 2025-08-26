@@ -1,6 +1,7 @@
 package com.ots.aipassportphotomaker.presentation.ui.components
 
 import android.annotation.SuppressLint
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -158,6 +159,7 @@ fun ImageWithMeasurements(
                 .background(color = colors.primary)
                 .width(200.dp)
                 .aspectRatio(imageRatio)
+                .animateContentSize()
         ) {
             Image(
                 painter = painterResource(id = imageRes), // Replace with your drawable resource ID

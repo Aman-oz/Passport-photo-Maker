@@ -1,7 +1,9 @@
 package com.ots.aipassportphotomaker.presentation.ui.documentinfo
 
+import androidx.compose.ui.graphics.Color
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
 import com.ots.aipassportphotomaker.domain.model.DocumentEntity
+import com.ots.aipassportphotomaker.domain.repository.ColorFactory
 import com.ots.aipassportphotomaker.domain.usecase.photoid.GetDocumentDetails
 import com.ots.aipassportphotomaker.presentation.ui.base.BaseViewModel
 import kotlinx.coroutines.async
@@ -19,6 +21,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 class DocumentInfoScreenViewModel @Inject constructor(
     private val getDocumentDetails: GetDocumentDetails,
     documentDetailsBundle: DocumentDetailsBundle,
+    val colorFactory: ColorFactory,
 ) : BaseViewModel() {
 
     private val _uiState: MutableStateFlow<DocumentInfoScreenUiState> = MutableStateFlow(DocumentInfoScreenUiState())
@@ -27,11 +30,15 @@ class DocumentInfoScreenViewModel @Inject constructor(
     private val _navigationState: MutableSharedFlow<DocumentInfoScreenNavigationState> = singleSharedFlow()
     val navigationState = _navigationState.asSharedFlow()
 
+    private val _selectedColor: MutableSharedFlow<Color> = singleSharedFlow()
+    val selectedColor = _selectedColor.asSharedFlow()
+
     private val documentId: Int = documentDetailsBundle.documentId
 
     init {
         onInitialState()
         loadState(false)
+        colorFactory.resetToDefault()
     }
 
     private fun onInitialState() = launch {
@@ -67,6 +74,43 @@ class DocumentInfoScreenViewModel @Inject constructor(
 //        _navigationState.tryEmit(PhotoIDScreenNavigationState.ProcessingScreen(documentId))
     }
 
+    fun onBackgroundOptionChanged(option: BackgroundOption) {
+        _uiState.value = _uiState.value.copy(backgroundOption = option)
+
+        // If "Keep Original" is selected, clear the color selection
+        if (option == BackgroundOption.KEEP_ORIGINAL) {
+            colorFactory.resetToDefault()
+            _selectedColor.tryEmit(Color.Unspecified)
+        }
+    }
+
+    fun selectPredefinedColor(colorType: ColorFactory.ColorType) {
+        _uiState.value = _uiState.value.copy(backgroundOption = BackgroundOption.CHANGE_BACKGROUND)
+        colorFactory.selectColor(colorType)
+        _selectedColor.tryEmit(colorFactory.selectedColor)
+    }
+
+    fun setCustomColor(color: Color) {
+        _uiState.value = _uiState.value.copy(backgroundOption = BackgroundOption.CHANGE_BACKGROUND)
+        colorFactory.setCustomColor(color)
+        _selectedColor.tryEmit(colorFactory.selectedColor)
+    }
+
+    fun applySelectedColor() {
+        val currentBackgroundOption = _uiState.value.backgroundOption
+
+        if (currentBackgroundOption == BackgroundOption.CHANGE_BACKGROUND) {
+            _selectedColor.tryEmit(colorFactory.selectedColor)
+        } else {
+            // Keep original - don't apply any color
+            _selectedColor.tryEmit(Color.Unspecified)
+        }
+    }
+
+    fun resetColorSelection() {
+        colorFactory.resetToDefault()
+        _selectedColor.tryEmit(colorFactory.selectedColor)
+    }
 
     private suspend fun getDocumentById(documentId: Int): Result<DocumentEntity> = getDocumentDetails(documentId)
 
