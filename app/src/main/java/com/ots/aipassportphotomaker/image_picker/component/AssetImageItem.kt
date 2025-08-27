@@ -58,12 +58,16 @@ fun AssetImageItem(
     } else {
         Pair(Color.Transparent, 1F)
     }
+
+
+
     val context = LocalContext.current
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(backgroundColor)
+            .clip(RoundedCornerShape(8.dp))
             .alpha(alpha)
             .then(modifier),
     ) {
@@ -98,7 +102,6 @@ fun AssetImageItem(
                 Icon(
                     imageVector = Icons.Filled.Close,
                     contentDescription = null,
-                    tint = Color.White,
                 )
             }
         }

@@ -1,7 +1,9 @@
 package com.ots.aipassportphotomaker.image_picker.view
 
+import android.content.res.Configuration
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -13,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
@@ -20,15 +23,21 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ots.aipassportphotomaker.R
+import com.ots.aipassportphotomaker.common.preview.PreviewContainer
 import com.ots.aipassportphotomaker.image_picker.model.AssetInfo
 import com.ots.aipassportphotomaker.image_picker.model.AssetPickerConfig
+import com.ots.aipassportphotomaker.presentation.ui.theme.colors
+import com.ots.aipassportphotomaker.presentation.ui.theme.onCustom400
 
 internal val LocalAssetConfig = compositionLocalOf { AssetPickerConfig() }
 
@@ -59,6 +68,12 @@ fun AssetImageIndicator(
     val maxAssets = LocalAssetConfig.current.maxAssets
     val errorMessage = stringResource(R.string.message_selected_exceed, maxAssets)
 
+    val checkBoxIcon = if (selected) {
+        R.drawable.gallery_checked
+    } else {
+        R.drawable.gallery_unchecked
+    }
+
     val (border, color) = if (selected) {
         Pair(null, Color(64, 151, 246))
     } else {
@@ -67,8 +82,8 @@ fun AssetImageIndicator(
     Box(
         modifier = Modifier
             .padding(6.dp)
-            .size(size)
-            .then(if (border == null) Modifier else Modifier.border(border, shape = CircleShape))
+//            .size(size)
+//            .then(if (border == null) Modifier else Modifier.border(border, shape = CircleShape))
             .background(color = color, shape = CircleShape)
             .clickable {
                 val isSelected = !selected
@@ -86,12 +101,69 @@ fun AssetImageIndicator(
             },
         contentAlignment = Alignment.Center
     ) {
-        if (selected) {
+        Image(
+            painter = painterResource(
+                id = checkBoxIcon
+            ),
+            contentDescription = null
+        )
+        /*if (selected) {
+
             Text(
                 text = "${assetSelected.indexOf(assetInfo) + 1}",
                 color = Color.White,
                 fontSize = fontSize,
             )
+        }*/
+    }
+}
+
+
+@Preview("Light")
+@Preview("Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun AssetImageIndicatorPreview() {
+    PreviewContainer {
+        val (border, color) = if (false) {
+            Pair(null, Color(64, 151, 246))
+        } else {
+            Pair(BorderStroke(width = 1.dp, color = Color.White), Color.Black.copy(alpha = 0.3F))
+        }
+        val checkBoxIcon = if (false) {
+            R.drawable.gallery_checked
+        } else {
+            R.drawable.gallery_unchecked
+        }
+
+
+        Box(
+            modifier = Modifier
+                .padding(6.dp)
+//            .then(if (border == null) Modifier else Modifier.border(border, shape = CircleShape))
+            .background(color = color, shape = CircleShape),
+
+            contentAlignment = Alignment.Center
+        ) {
+
+            Image(
+                painter = painterResource(
+                    id = checkBoxIcon
+                ),
+                contentDescription = null
+            )
+            /*Icon(
+                modifier = Modifier,
+                painter = painterResource(id = checkBoxIcon),
+                contentDescription = null,
+            )*/
+            /*if (selected) {
+
+                Text(
+                    text = "${assetSelected.indexOf(assetInfo) + 1}",
+                    color = Color.White,
+                    fontSize = fontSize,
+                )
+            }*/
         }
     }
 }

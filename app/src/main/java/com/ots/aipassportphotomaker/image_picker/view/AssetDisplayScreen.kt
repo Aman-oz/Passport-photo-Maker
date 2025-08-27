@@ -74,6 +74,7 @@ import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
 import com.ots.aipassportphotomaker.image_picker.component.AssetImageItem
 import com.ots.aipassportphotomaker.image_picker.model.AssetInfo
+import com.ots.aipassportphotomaker.image_picker.model.AssetResourceType
 import com.ots.aipassportphotomaker.image_picker.model.RequestType
 import com.ots.aipassportphotomaker.image_picker.viewmodel.AssetViewModel
 import com.ots.aipassportphotomaker.presentation.ui.theme.colors
@@ -113,9 +114,15 @@ internal fun AssetDisplayScreen(
         }
     ) {
 
-        Box(modifier = Modifier.padding(it)) {
+        // Showing only images
+        Box(modifier = Modifier
+            .padding(it)
+            .background(colors.background)
+        ) {
             AssetContent(viewModel, RequestType.IMAGE)
         }
+
+        //currently not showing the tab for all, videos, images. If want to show just unwrap the bellow box
         if (showTab) {
             Box(modifier = Modifier.padding(it)) {
                 val tabs = listOf(TabItem.All, TabItem.Video, TabItem.Image)
@@ -124,7 +131,7 @@ internal fun AssetDisplayScreen(
                 Column {
                     AssetTab(tabs = tabs, pagerState = pagerState)
                     HorizontalPager(state = pagerState, userScrollEnabled = false) { page ->
-                        tabs[2].screen(viewModel)
+                        tabs[page].screen(viewModel)
                     }
                 }
             }
@@ -262,8 +269,8 @@ private fun DisplayBottomBar(viewModel: AssetViewModel, onPicked: (List<AssetInf
     }
 }
 
-@Preview("Light")
-@Preview("Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
+/*@Preview("Light")
+@Preview("Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)*/
 @Composable
 fun DisplayBottomBarPreview() {
     val isListEmpty by remember { mutableStateOf(true) }
@@ -323,7 +330,7 @@ private fun AssetTab(tabs: List<TabItem>, pagerState: PagerState) {
     }
 }
 
-@Preview("Light")
+/*@Preview("Light")
 @Preview("Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun AssetTabPreview() {
@@ -332,7 +339,7 @@ fun AssetTabPreview() {
     PreviewContainer {
         AssetTab(tabs = tabs, pagerState = pagerState)
     }
-}
+}*/
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -374,7 +381,7 @@ private fun AssetContent(viewModel: AssetViewModel, requestType: RequestType) {
                         style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium)
                     )
 
-                    TextButton(onClick = {
+                    /*TextButton(onClick = {
                         if (allSelected || (isAlreadyFull && hasSelected)) {
                             viewModel.unSelectAll(resources)
                         } else {
@@ -390,7 +397,7 @@ private fun AssetContent(viewModel: AssetViewModel, requestType: RequestType) {
                                 stringResource(id = R.string.text_select_all)
                             }
                         )
-                    }
+                    }*/
                 }
             }
 
@@ -414,39 +421,6 @@ private fun AssetContent(viewModel: AssetViewModel, requestType: RequestType) {
     }
 }
 
-@Preview("Light")
-@Preview("Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-fun AssetContentPreview() {
-    PreviewContainer {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "",
-                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium)
-            )
-
-            TextButton(onClick = {
-
-            }) {
-                Text(
-                    text = if (false) {
-                        stringResource(id = R.string.text_deselect_all)
-                    } else {
-                        stringResource(id = R.string.text_select_all)
-                    }
-                )
-            }
-        }
-    }
-    
-}
-
 @Composable
 private fun AssetImage(
     modifier: Modifier = Modifier,
@@ -461,7 +435,10 @@ private fun AssetImage(
     val errorMessage = stringResource(R.string.message_selected_exceed, maxAssets)
 
     Box(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .padding(4.dp)
+            .clip(RoundedCornerShape(8.dp)),
         contentAlignment = Alignment.TopEnd,
     ) {
         AssetImageItem(
@@ -485,6 +462,43 @@ private fun AssetImage(
             selected = selected,
             assetSelected = selectedList
         )
+    }
+}
+
+@Preview("Light")
+@Preview("Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun AssetImagePreview() {
+    PreviewContainer {
+
+        val context = LocalContext.current
+        val maxAssets = LocalAssetConfig.current.maxAssets
+        val errorMessage = stringResource(R.string.message_selected_exceed, maxAssets)
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(RoundedCornerShape(8.dp))
+                .background(colors.onBackground),
+            contentAlignment = Alignment.TopEnd,
+        ) {
+            AssetImageItem(
+                filterQuality = FilterQuality.None,
+                urlString = "",
+                isSelected = true,
+                resourceType = AssetResourceType.IMAGE,
+                durationString = "",
+                navigateToPreview = {},
+                onLongClick = {
+
+                }
+            )
+            AssetImageIndicator(
+                assetInfo = AssetInfo(0L, "", "","","",0L,0,"", 0L,0L),
+                selected = true,
+                assetSelected = SnapshotStateList<AssetInfo>()
+            )
+        }
     }
 }
 
