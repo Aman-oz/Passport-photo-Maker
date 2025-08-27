@@ -22,4 +22,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "AI Passport Photo Maker"
 include(":app")
- 
+include(":image-picker")

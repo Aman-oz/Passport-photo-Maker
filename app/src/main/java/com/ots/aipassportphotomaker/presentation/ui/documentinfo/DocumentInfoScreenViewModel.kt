@@ -1,5 +1,6 @@
 package com.ots.aipassportphotomaker.presentation.ui.documentinfo
 
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.graphics.Color
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
 import com.ots.aipassportphotomaker.domain.model.DocumentEntity
@@ -12,7 +13,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 import com.ots.aipassportphotomaker.domain.util.Result
 import com.ots.aipassportphotomaker.domain.util.onSuccess
-import com.ots.aipassportphotomaker.presentation.ui.createid.PhotoIDScreenNavigationState
+import com.ots.aipassportphotomaker.image_picker.model.AssetInfo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -32,6 +33,8 @@ class DocumentInfoScreenViewModel @Inject constructor(
 
     private val _selectedColor: MutableSharedFlow<Color> = singleSharedFlow()
     val selectedColor = _selectedColor.asSharedFlow()
+
+    val selectedImagesList = mutableStateListOf<AssetInfo>()
 
     private val documentId: Int = documentDetailsBundle.documentId
 

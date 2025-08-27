@@ -36,6 +36,9 @@ ksp = "2.0.21-1.0.28"
 accompanistSystemuicontroller = "0.27.0"
 constraintVersion = "1.1.1"
 colorpicker = "1.1.2"
+material = "1.12.0"
+
+charisbanesComposeVersion = "2024.09.00"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -93,6 +96,12 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 accompanist-systemuicontroller = { module = "com.google.accompanist:accompanist-systemuicontroller", version.ref = "accompanistSystemuicontroller" }
 
 compose-colorpicker = { module = "com.github.skydoves:colorpicker-compose", version.ref = "colorpicker" }
+material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+
+#-----------------------------Image Picker -----------------------------
+chrisbanes-compose = {module = "dev.chrisbanes.compose:compose-bom", version.ref = "charisbanesComposeVersion"}
+coil-compose-video = {module = "io.coil-kt:coil-video", version.ref = "coilCompose"}
+coil-compose-gif = {module = "io.coil-kt:coil-gif", version.ref = "coilCompose"}
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
@@ -104,3 +113,4 @@ hilt = { id = "com.google.dagger.hilt.android", version.ref = "hiltGradlePlugin"
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "serializationGradlePlugin" }
+android-library = { id = "com.android.library", version.ref = "agp" }

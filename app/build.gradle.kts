@@ -78,6 +78,11 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
 
+//    implementation(project(path = ":image-picker"))
+
+    implementation(libs.coil.compose.video)
+    implementation(libs.coil.compose.gif)
+
     implementation(libs.androidx.constraintlayout.compose)
 //    implementation(libs.compose.colorpicker)
     implementation ("io.mhssn:colorpicker:1.0.0")

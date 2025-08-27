@@ -66,6 +66,8 @@ import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.domain.repository.ColorFactory
 import com.ots.aipassportphotomaker.domain.util.determineOrientation
 import com.ots.aipassportphotomaker.domain.util.determinePixels
+import com.ots.aipassportphotomaker.image_picker.model.AssetPickerConfig
+import com.ots.aipassportphotomaker.image_picker.view.AssetPicker
 import com.ots.aipassportphotomaker.presentation.ui.bottom_nav.NavigationBarSharedViewModel
 import com.ots.aipassportphotomaker.presentation.ui.components.ColorItem
 import com.ots.aipassportphotomaker.presentation.ui.components.CommonTopBar
@@ -85,6 +87,8 @@ import io.mhssn.colorpicker.ColorPickerDialog
 import io.mhssn.colorpicker.ColorPickerType
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.collections.addAll
+import kotlin.text.clear
 
 @Composable
 fun DocumentInfoPage(
@@ -95,7 +99,12 @@ fun DocumentInfoPage(
     val TAG = "DocumentInfoPage"
 
     val uiState by viewModel.uiState.collectAsState()
+
     val selectedColor by viewModel.selectedColor.collectAsState(initial = Color.White)
+    val colorFactory = viewModel.colorFactory
+
+    val showAssetPicker = remember { mutableStateOf(false) }
+    var isImageSelected by remember { mutableStateOf(viewModel.selectedImagesList.isNotEmpty()) }
 
     Logger.d(TAG, "DocumentInfoPage: UI State: $uiState")
     Logger.i(TAG, "DocumentInfoPage: Document name: ${uiState.documentName}")
@@ -124,9 +133,11 @@ fun DocumentInfoPage(
 
     DocumentInfoScreen(
         uiState = uiState,
-        viewModel = viewModel,
+        isImageSelected = isImageSelected,
+        selectedColor = selectedColor,
+        colorFactory = colorFactory,
         onOpenGalleryClick = {
-            viewModel.onSelectPhotoClicked()
+            showAssetPicker.value = true
         },
         onTakePhotoClick = {
             viewModel.onOpenCameraClicked()
@@ -134,24 +145,63 @@ fun DocumentInfoPage(
         onCreatePhotoClick = { type ->
             viewModel.onCreatePhotoClicked()
         },
+        onReselectDocument = {
+            mainRouter.goBack()
+        },
         onBackClick = {
             mainRouter.goBack()
         },
         onSetCustomColor = { color ->
             viewModel.setCustomColor(color)
+        },
+        selectPredefinedColor = { colorType ->
+            viewModel.selectPredefinedColor(colorType)
+        },
+        onBackgroundOptionChanged = { option ->
+            viewModel.onBackgroundOptionChanged(option)
+        },
+        onApplySelectedColor = {
+            viewModel.applySelectedColor()
         }
     )
+
+    if (showAssetPicker.value) {
+        AssetPicker(
+            assetPickerConfig = AssetPickerConfig(gridCount = 3),
+            onPicked = {
+                isImageSelected = it.isNotEmpty()
+                Logger.i("DocumentInfoPage", "Selected images: ${it.size}, asset: ${it.firstOrNull()?.uriString}")
+                viewModel.selectedImagesList.clear()
+                viewModel.selectedImagesList.addAll(it)
+                showAssetPicker.value = false
+//                mainRouter.goBack()
+            },
+            onClose = {
+                viewModel.selectedImagesList.clear()
+                showAssetPicker.value = false
+//                mainRouter.goBack()
+            }
+        )
+    }
+
 }
+
 
 @Composable
 private fun DocumentInfoScreen(
     uiState: DocumentInfoScreenUiState,
-    viewModel: DocumentInfoScreenViewModel,
+    isImageSelected: Boolean = false,
+    selectedColor: Color,
+    colorFactory: ColorFactory,
     onOpenGalleryClick: () -> Unit,
     onTakePhotoClick: () -> Unit,
     onCreatePhotoClick: (type: String) -> Unit,
+    onReselectDocument: () -> Unit = {},
     onBackClick: () -> Unit,
-    onSetCustomColor: (Color) -> Unit = {}
+    onSetCustomColor: (Color) -> Unit = {},
+    selectPredefinedColor: (ColorFactory.ColorType) -> Unit = {},
+    onBackgroundOptionChanged: (BackgroundOption) -> Unit = {},
+    onApplySelectedColor: () -> Unit = {},
 ) {
 
     Surface(
@@ -168,7 +218,6 @@ private fun DocumentInfoScreen(
         if (isLoading) {
             LoaderFullScreen()
         } else {
-            val isImageSelected by remember { mutableStateOf(false) }
 
             var scale0 by remember { mutableFloatStateOf(1f) }
             val imageAnimatedScale by animateFloatAsState(
@@ -304,6 +353,7 @@ private fun DocumentInfoScreen(
                                         .pointerInput(Unit) {
                                             detectTapGestures(
                                                 onTap = {
+                                                    onReselectDocument()
                                                     Log.d(
                                                         "DocumentInfoScreen",
                                                         "Settings icon tapped"
@@ -326,43 +376,92 @@ private fun DocumentInfoScreen(
                             // Checklist Items
                             ChecklistItem(
                                 uiState,
-                                viewModel = viewModel,
                                 text = "Image Selection",
-                                isChecked = true,
+                                isChecked = isImageSelected,
+                                selectedColor = selectedColor,
+                                colorFactory = colorFactory,
                                 onSetCustomColor = { color ->
                                     onSetCustomColor(color)
                                 },
-                                onChangeBackground = {})
+                                onBackgroundOptionChanged = {
+                                    option -> onBackgroundOptionChanged(option)
+                                },
+                                selectPredefinedColor = { colorType: ColorFactory.ColorType ->
+                                    selectPredefinedColor(colorType)
+
+                                },
+                                onApplySelectedColor = { onApplySelectedColor() }
+                            )
                             ChecklistItem(
                                 uiState,
-                                viewModel = viewModel,
+                                selectedColor = selectedColor,
+                                colorFactory = colorFactory,
                                 text = "Document Size",
                                 isChecked = true,
-                                onChangeBackground = {})
+                                onBackgroundOptionChanged = {
+                                    option -> onBackgroundOptionChanged(option)
+                                },
+                                selectPredefinedColor = { colorType: ColorFactory.ColorType ->
+                                    selectPredefinedColor(colorType)
+
+                                },
+                                onApplySelectedColor = { onApplySelectedColor() })
                             ChecklistItem(
                                 uiState,
-                                viewModel = viewModel,
+                                selectedColor = selectedColor,
+                                colorFactory = colorFactory,
                                 text = "Unit",
                                 isChecked = true,
-                                onChangeBackground = {})
+                                onBackgroundOptionChanged = {
+                                    option -> onBackgroundOptionChanged(option)
+                                },
+                                selectPredefinedColor = { colorType: ColorFactory.ColorType ->
+                                    selectPredefinedColor(colorType)
+
+                                },
+                                onApplySelectedColor = { onApplySelectedColor() })
                             ChecklistItem(
                                 uiState,
-                                viewModel = viewModel,
+                                selectedColor = selectedColor,
+                                colorFactory = colorFactory,
                                 text = "Pixel",
-                                isChecked = false,
-                                onChangeBackground = {})
+                                isChecked = true,
+                                onBackgroundOptionChanged = {
+                                        option -> onBackgroundOptionChanged(option)
+                                },
+                                selectPredefinedColor = { colorType: ColorFactory.ColorType ->
+                                    selectPredefinedColor(colorType)
+
+                                },
+                                onApplySelectedColor = { onApplySelectedColor() })
                             ChecklistItem(
                                 uiState,
-                                viewModel = viewModel,
+                                selectedColor = selectedColor,
+                                colorFactory = colorFactory,
                                 text = "Resolution",
                                 isChecked = true,
-                                onChangeBackground = {})
+                                onBackgroundOptionChanged = {
+                                        option -> onBackgroundOptionChanged(option)
+                                },
+                                selectPredefinedColor = { colorType: ColorFactory.ColorType ->
+                                    selectPredefinedColor(colorType)
+
+                                },
+                                onApplySelectedColor = { onApplySelectedColor() })
                             ChecklistItem(
                                 uiState,
-                                viewModel = viewModel,
+                                selectedColor = selectedColor,
+                                colorFactory = colorFactory,
                                 text = "Background",
                                 isChecked = true,
-                                onChangeBackground = {})
+                                onBackgroundOptionChanged = {
+                                        option -> onBackgroundOptionChanged(option)
+                                },
+                                selectPredefinedColor = { colorType: ColorFactory.ColorType ->
+                                    selectPredefinedColor(colorType)
+
+                                },
+                                onApplySelectedColor = { onApplySelectedColor() })
 
                         }
                     }
@@ -391,7 +490,7 @@ private fun DocumentInfoScreen(
                                             scale1 = 1f
                                         },
                                         onTap = {
-                                            onCreatePhotoClick(uiState.documentType)
+                                            onOpenGalleryClick()
                                         }
                                     )
                                 }
@@ -516,11 +615,14 @@ private fun DocumentInfoScreen(
 @Composable
 fun ChecklistItem(
     uiState: DocumentInfoScreenUiState,
-    viewModel: DocumentInfoScreenViewModel = hiltViewModel(),
     text: String,
     isChecked: Boolean,
+    selectedColor: Color = Color.White,
+    colorFactory: ColorFactory,
     onSetCustomColor: (Color) -> Unit = {},
-    onChangeBackground: (Color) -> Unit = {}
+    onBackgroundOptionChanged: (BackgroundOption) -> Unit = {},
+    selectPredefinedColor: (ColorFactory.ColorType) -> Unit = {},
+    onApplySelectedColor: () -> Unit = {},
 ) {
     var showBottomSheet by rememberSaveable { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -529,8 +631,6 @@ fun ChecklistItem(
     var color by remember {
         mutableStateOf(Color.Red)
     }
-    val selectedColor by viewModel.selectedColor.collectAsState(initial = Color.White)
-    val colorFactory = viewModel.colorFactory // Access ColorFactory via ViewModel
 
     var showDialog by remember {
         mutableStateOf(false)
@@ -701,7 +801,7 @@ fun ChecklistItem(
                     selectedIndex = if (uiState.backgroundOption == BackgroundOption.KEEP_ORIGINAL) 0 else 1
                 ) { selectedIndex ->
                     val option = if (selectedIndex == 0) BackgroundOption.KEEP_ORIGINAL else BackgroundOption.CHANGE_BACKGROUND
-                    viewModel.onBackgroundOptionChanged(option)
+                    onBackgroundOptionChanged(option)
                 }
 
                 Row(
@@ -725,7 +825,7 @@ fun ChecklistItem(
                         onClick = {
 //                            showBottomSheet = false
                             if (isChangeBackgroundSelected) {
-                                viewModel.setCustomColor(color)
+                                onSetCustomColor(color)
                                 showDialog = true
                             } else {
                                 showErrorText = true
@@ -748,7 +848,7 @@ fun ChecklistItem(
                         isSelected = isTransparentSelected,
                         onClick = {
                             if (isChangeBackgroundSelected)
-                                viewModel.selectPredefinedColor(ColorFactory.ColorType.TRANSPARENT)
+                                selectPredefinedColor(ColorFactory.ColorType.TRANSPARENT)
                             else {
                                 showErrorText = true
                                 scope.launch {
@@ -770,7 +870,7 @@ fun ChecklistItem(
                         isSelected = isWhiteSelected,
                         onClick = {
                             if (isChangeBackgroundSelected)
-                                viewModel.selectPredefinedColor(ColorFactory.ColorType.WHITE)
+                                selectPredefinedColor(ColorFactory.ColorType.WHITE)
                             else {
                                 showErrorText = true
                                 scope.launch {
@@ -792,7 +892,7 @@ fun ChecklistItem(
                         isSelected = isGreenSelected,
                         onClick = {
                             if (isChangeBackgroundSelected)
-                                viewModel.selectPredefinedColor(ColorFactory.ColorType.GREEN)
+                                selectPredefinedColor(ColorFactory.ColorType.GREEN)
                             else {
                                 showErrorText = true
                                 scope.launch {
@@ -814,7 +914,7 @@ fun ChecklistItem(
                         isSelected = isBlueSelected,
                         onClick = {
                             if (isChangeBackgroundSelected)
-                                viewModel.selectPredefinedColor(ColorFactory.ColorType.BLUE)
+                                selectPredefinedColor(ColorFactory.ColorType.BLUE)
                             else {
                                 showErrorText = true
                                 scope.launch {
@@ -836,7 +936,7 @@ fun ChecklistItem(
                         isSelected = isRedSelected,
                         onClick = {
                             if (isChangeBackgroundSelected)
-                                viewModel.selectPredefinedColor(ColorFactory.ColorType.RED)
+                                selectPredefinedColor(ColorFactory.ColorType.RED)
                             else {
                                 showErrorText = true
                                 scope.launch {
@@ -866,7 +966,7 @@ fun ChecklistItem(
                             bottomSheetState.hide()
                         }
                         showBottomSheet = false
-                        viewModel.applySelectedColor()
+                        onApplySelectedColor()
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -903,11 +1003,20 @@ fun DocumentInfoScreenPreview() {
                 documentResolution = "300 DPI",
                 backgroundOption = BackgroundOption.CHANGE_BACKGROUND
             ),
-            viewModel = hiltViewModel(),
+            selectedColor = Color.White,
+            colorFactory = ColorFactory(),
             onOpenGalleryClick = {},
             onTakePhotoClick = {},
             onCreatePhotoClick = {},
-            onBackClick = {}
+            onBackClick = {},
+
+            onBackgroundOptionChanged = {
+
+            },
+            selectPredefinedColor = { colorType: ColorFactory.ColorType ->
+
+            },
+            onApplySelectedColor = {  }
         )
     }
 }
