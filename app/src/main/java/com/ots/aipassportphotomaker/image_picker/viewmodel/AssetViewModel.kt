@@ -13,7 +13,8 @@ import com.ots.aipassportphotomaker.image_picker.model.AssetInfo
 import com.ots.aipassportphotomaker.image_picker.model.RequestType
 import com.ots.aipassportphotomaker.image_picker.provider.AssetPickerRepository
 
-const val init_directory = "Photos/Videos"
+//const val init_directory = "Photos/Videos"
+const val init_directory = "Camera/Download"
 
 internal class AssetViewModel(
     private val assetPickerRepository: AssetPickerRepository,

@@ -83,6 +83,8 @@ dependencies {
     implementation(libs.coil.compose.video)
     implementation(libs.coil.compose.gif)
 
+    implementation ("io.github.farimarwat:permissionmate-compose:1.1")
+
     implementation(libs.androidx.constraintlayout.compose)
 //    implementation(libs.compose.colorpicker)
     implementation ("io.mhssn:colorpicker:1.0.0")

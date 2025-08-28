@@ -57,6 +57,7 @@ internal object AssetLoader {
                     it.getColumnIndexOrThrow(MediaStore.Video.Media.DATA)
                 }
 
+
                 return AssetInfo(
                     id = id,
                     uriString = it.getString(filepathIndex),
@@ -97,7 +98,33 @@ internal object AssetLoader {
                     ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, id)
                 }
 
+                // Handle null values safely
+                val filepath = it.getString(indexFilepath) ?: "" // Fallback to empty string or skip
+                val filename = it.getString(indexFilename) ?: "Unknown_${id}" // Fallback to a default name
+                val mimeType = it.getString(indexMimeType) ?: "application/octet-stream" // Fallback MIME type
+                val directory = it.getString(indexDirectory) ?: "" // Fallback to empty string
+
+                // Optionally, skip entries with critical null values
+                if (filepath.isEmpty() && mediaType == MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO) {
+                    continue // Skip videos with no filepath, if necessary
+                }
+
                 assets.add(
+                    AssetInfo(
+                        id = id,
+                        uriString = contentUri.toString(),
+                        filepath = filepath,
+                        filename = filename,
+                        date = it.getLong(indexDate),
+                        mediaType = mediaType,
+                        mimeType = mimeType,
+                        size = it.getLong(indexSize),
+                        duration = it.getLong(indexDuration),
+                        directory = directory,
+                    )
+                )
+
+                /*assets.add(
                     AssetInfo(
                         id = id,
                         uriString = contentUri.toString(),
@@ -110,7 +137,7 @@ internal object AssetLoader {
                         duration = it.getLong(indexDuration),
                         directory = it.getString(indexDirectory),
                     )
-                )
+                )*/
             }
         }
         return assets

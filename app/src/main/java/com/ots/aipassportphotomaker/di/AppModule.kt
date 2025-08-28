@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import androidx.work.WorkManager
 import com.ots.aipassportphotomaker.data.util.DiskExecutor
 import com.ots.aipassportphotomaker.data.util.NetworkMonitorImpl
+import com.ots.aipassportphotomaker.domain.permission.PermissionsHelper
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -39,4 +40,8 @@ class AppModule {
     fun provideNetworkMonitor(
         @ApplicationContext context: Context
     ): NetworkMonitorImpl = NetworkMonitorImpl(context)
+
+    @Provides
+    @Singleton
+    fun providePermissionsHelper(): PermissionsHelper = PermissionsHelper()
 }

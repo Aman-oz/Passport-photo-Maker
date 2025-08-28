@@ -82,6 +82,7 @@ import com.ots.aipassportphotomaker.presentation.ui.theme.custom100
 import com.ots.aipassportphotomaker.presentation.ui.theme.custom300
 import kotlinx.coroutines.launch
 import kotlin.collections.forEachIndexed
+import kotlin.text.clear
 
 @Composable
 internal fun AssetDisplayScreen(
@@ -449,12 +450,23 @@ private fun AssetImage(
             durationString = assetInfo.formatDuration(),
             navigateToPreview = navigateToPreview,
             onLongClick = {
-                val selectResult = !selected
+
+                val isSelected = !selected
+                if (isSelected) {
+                    selectedList.clear()
+                    selectedList.add(assetInfo)
+                } else {
+                    selectedList.clear()
+                }
+
+                onLongClick(isSelected)
+
+                /*val selectResult = !selected
                 if (selected || selectedList.size < maxAssets) {
                     onLongClick(selectResult)
                 } else {
                     Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
-                }
+                }*/
             }
         )
         AssetImageIndicator(

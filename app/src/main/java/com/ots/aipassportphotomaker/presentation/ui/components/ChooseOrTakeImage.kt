@@ -142,7 +142,7 @@ fun ChooseOrPickImage(
     }
 }
 
-private fun createImageUri(context: Context): Uri {
+fun createImageUri(context: Context): Uri {
     val contentValues = android.content.ContentValues().apply {
         put(android.provider.MediaStore.Images.Media.TITLE, "Photo")
         put(android.provider.MediaStore.Images.Media.MIME_TYPE, "image/jpeg")

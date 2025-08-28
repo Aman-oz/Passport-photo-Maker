@@ -22,6 +22,7 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
@@ -38,6 +39,7 @@ import com.ots.aipassportphotomaker.image_picker.model.AssetInfo
 import com.ots.aipassportphotomaker.image_picker.model.AssetPickerConfig
 import com.ots.aipassportphotomaker.presentation.ui.theme.colors
 import com.ots.aipassportphotomaker.presentation.ui.theme.onCustom400
+import kotlin.text.clear
 
 internal val LocalAssetConfig = compositionLocalOf { AssetPickerConfig() }
 
@@ -81,23 +83,31 @@ fun AssetImageIndicator(
     }
     Box(
         modifier = Modifier
-            .padding(6.dp)
 //            .size(size)
 //            .then(if (border == null) Modifier else Modifier.border(border, shape = CircleShape))
-            .background(color = color, shape = CircleShape)
+//            .background(color = color, shape = CircleShape)
+            .clip(shape = CircleShape)
             .clickable {
                 val isSelected = !selected
                 if (onClicks != null) {
                     onClicks(isSelected)
                     return@clickable
                 }
-                if (assetSelected.size == maxAssets && isSelected) {
+
+                if (isSelected) {
+                    assetSelected.clear()
+                    assetSelected.add(assetInfo)
+                } else {
+                    assetSelected.clear()
+                }
+
+                /*if (assetSelected.size == maxAssets && isSelected) {
                     Toast
                         .makeText(context, errorMessage, Toast.LENGTH_SHORT)
                         .show()
                     return@clickable
                 }
-                if (isSelected) assetSelected.add(assetInfo) else assetSelected.remove(assetInfo)
+                if (isSelected) assetSelected.add(assetInfo) else assetSelected.remove(assetInfo)*/
             },
         contentAlignment = Alignment.Center
     ) {
@@ -138,9 +148,11 @@ fun AssetImageIndicatorPreview() {
 
         Box(
             modifier = Modifier
-                .padding(6.dp)
+
+                .clip(shape = CircleShape)
+//                .padding(6.dp)
 //            .then(if (border == null) Modifier else Modifier.border(border, shape = CircleShape))
-            .background(color = color, shape = CircleShape),
+            /*.background(color = color, shape = CircleShape)*/,
 
             contentAlignment = Alignment.Center
         ) {

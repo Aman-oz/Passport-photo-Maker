@@ -1,8 +1,11 @@
 package com.ots.aipassportphotomaker.presentation.ui.documentinfo
 
 import android.content.res.Configuration
+import android.net.Uri
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
@@ -66,7 +69,9 @@ import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.domain.repository.ColorFactory
 import com.ots.aipassportphotomaker.domain.util.determineOrientation
 import com.ots.aipassportphotomaker.domain.util.determinePixels
+import com.ots.aipassportphotomaker.image_picker.model.AssetInfo
 import com.ots.aipassportphotomaker.image_picker.model.AssetPickerConfig
+import com.ots.aipassportphotomaker.image_picker.util.StringUtil
 import com.ots.aipassportphotomaker.image_picker.view.AssetPicker
 import com.ots.aipassportphotomaker.presentation.ui.bottom_nav.NavigationBarSharedViewModel
 import com.ots.aipassportphotomaker.presentation.ui.components.ColorItem
@@ -74,6 +79,7 @@ import com.ots.aipassportphotomaker.presentation.ui.components.CommonTopBar
 import com.ots.aipassportphotomaker.presentation.ui.components.ImageWithMeasurements
 import com.ots.aipassportphotomaker.presentation.ui.components.LoaderFullScreen
 import com.ots.aipassportphotomaker.presentation.ui.components.RadioButtonSingleSelection
+import com.ots.aipassportphotomaker.presentation.ui.components.createImageUri
 import com.ots.aipassportphotomaker.presentation.ui.main.MainRouter
 import com.ots.aipassportphotomaker.presentation.ui.theme.AppColors
 import com.ots.aipassportphotomaker.presentation.ui.theme.colors
@@ -131,6 +137,7 @@ fun DocumentInfoPage(
     }
 
 
+
     DocumentInfoScreen(
         uiState = uiState,
         isImageSelected = isImageSelected,
@@ -139,8 +146,21 @@ fun DocumentInfoPage(
         onOpenGalleryClick = {
             showAssetPicker.value = true
         },
-        onTakePhotoClick = {
-            viewModel.onOpenCameraClicked()
+        onTakePhotoClick = { uri ->
+            viewModel.selectedImagesList.clear()
+            viewModel.selectedImagesList.addAll(
+                listOf(AssetInfo(
+                    id = 0L,
+                    uriString = uri.toString(),
+                    filepath = uri.toString(),
+                    filename = StringUtil.randomString(10),
+                    "Camera", 0L,
+                    0,
+                    "",
+                    0L,
+                    0L
+                )))
+//            viewModel.onOpenCameraClicked()
         },
         onCreatePhotoClick = { type ->
             viewModel.onCreatePhotoClicked()
@@ -194,7 +214,7 @@ private fun DocumentInfoScreen(
     selectedColor: Color,
     colorFactory: ColorFactory,
     onOpenGalleryClick: () -> Unit,
-    onTakePhotoClick: () -> Unit,
+    onTakePhotoClick: (Uri) -> Unit,
     onCreatePhotoClick: (type: String) -> Unit,
     onReselectDocument: () -> Unit = {},
     onBackClick: () -> Unit,
@@ -546,6 +566,13 @@ private fun DocumentInfoScreen(
                     }
 
                 } else {
+                    val cameraLauncher = rememberLauncherForActivityResult(
+                        contract = ActivityResultContracts.TakePicture()
+                    ) { success ->
+                        if (success) {
+                            onTakePhotoClick(createImageUri(context))
+                        }
+                    }
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -579,7 +606,10 @@ private fun DocumentInfoScreen(
                         }
 
                         Button(
-                            onClick = onTakePhotoClick,
+                            onClick = {
+                                val uri = createImageUri(context)
+                                cameraLauncher.launch(uri)
+                            },
                             shape = RoundedCornerShape(24.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                             border = BorderStroke(2.dp, colors.primary),
