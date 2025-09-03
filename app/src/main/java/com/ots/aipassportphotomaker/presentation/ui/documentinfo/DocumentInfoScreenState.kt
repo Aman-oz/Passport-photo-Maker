@@ -1,5 +1,6 @@
 package com.ots.aipassportphotomaker.presentation.ui.documentinfo
 
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
 import com.ots.aipassportphotomaker.domain.bottom_nav.Page
@@ -35,6 +36,11 @@ class DocumentDetailsBundle @Inject constructor(
 sealed class DocumentInfoScreenNavigationState {
     data class SelectPhotoScreen(val documentId: Int, val type: String?) : DocumentInfoScreenNavigationState()
     data class TakePhotoScreen(val documentId: Int) : DocumentInfoScreenNavigationState()
-    data class ProcessingScreen(val documentId: Int) : DocumentInfoScreenNavigationState()
+    data class ProcessingScreen(
+        val documentId: Int,
+        val imagePath: String? = null,
+        val selectedDpi: String = "300",
+        val selectedBackgroundColor: Color? = null
+    ) : DocumentInfoScreenNavigationState()
 
 }

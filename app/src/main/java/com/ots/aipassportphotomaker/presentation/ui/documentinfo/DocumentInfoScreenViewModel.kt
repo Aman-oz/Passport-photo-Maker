@@ -2,9 +2,11 @@ package com.ots.aipassportphotomaker.presentation.ui.documentinfo
 
 import android.widget.Toast
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
+import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.domain.model.DocumentEntity
 import com.ots.aipassportphotomaker.domain.repository.ColorFactory
 import com.ots.aipassportphotomaker.domain.usecase.photoid.GetDocumentDetails
@@ -37,6 +39,7 @@ class DocumentInfoScreenViewModel @Inject constructor(
     val selectedColor = _selectedColor.asSharedFlow()
 
     val selectedImagesList = mutableStateListOf<AssetInfo>()
+    var selectedDpi: String = "300"
 
     private val documentId: Int = documentDetailsBundle.documentId
 
@@ -76,7 +79,15 @@ class DocumentInfoScreenViewModel @Inject constructor(
 //        _navigationState.tryEmit(PhotoIDScreenNavigationState.TakePhotoScreen(documentId))
     }
     fun onCreatePhotoClicked() {
-//        _navigationState.tryEmit(PhotoIDScreenNavigationState.ProcessingScreen(documentId))
+        Logger.i("DocumentInfoScreenViewModel", "onCreatePhotoClicked: selectedImagesList=$selectedImagesList")
+        _navigationState.tryEmit(
+            DocumentInfoScreenNavigationState.ProcessingScreen(
+                documentId = documentId,
+                imagePath = selectedImagesList.firstOrNull()?.uriString?.toString(),
+                selectedDpi = selectedDpi,
+                selectedBackgroundColor = selectedColor.replayCache.firstOrNull()
+
+            ))
     }
 
     fun onBackgroundOptionChanged(option: BackgroundOption) {

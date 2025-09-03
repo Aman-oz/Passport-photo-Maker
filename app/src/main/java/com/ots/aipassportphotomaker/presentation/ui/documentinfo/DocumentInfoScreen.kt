@@ -79,6 +79,7 @@ import com.ots.aipassportphotomaker.presentation.ui.components.CommonTopBar
 import com.ots.aipassportphotomaker.presentation.ui.components.DpiItem
 import com.ots.aipassportphotomaker.presentation.ui.components.ImageWithMeasurements
 import com.ots.aipassportphotomaker.presentation.ui.components.LoaderFullScreen
+import com.ots.aipassportphotomaker.presentation.ui.components.PremiumButton
 import com.ots.aipassportphotomaker.presentation.ui.components.RadioButtonSingleSelection
 import com.ots.aipassportphotomaker.presentation.ui.components.createImageUri
 import com.ots.aipassportphotomaker.presentation.ui.main.MainRouter
@@ -123,13 +124,20 @@ fun DocumentInfoPage(
             }
 
             is DocumentInfoScreenNavigationState.ProcessingScreen -> {
-//                mainRouter.navigateToPhotoIDDetailScreen(navigationState.type)
+                mainRouter.navigateToImageProcessingScreen(
+                    documentId = navigationState.documentId,
+                    imagePath = viewModel.selectedImagesList.firstOrNull()?.uriString?.toString(),
+                    selectedDpi = viewModel.selectedDpi,
+                    selectedBackgroundColor = if (colorFactory.isCustomColorSelected()) selectedColor else Color.White
+
+                )
             }
 
             is DocumentInfoScreenNavigationState.SelectPhotoScreen -> {
                 Log.d(TAG, "DocumentInfoPage: Navigate to Select Photo Screen")
                 mainRouter.navigateToSelectPhotoScreen(
-                    documentId = navigationState.documentId
+                    documentId = navigationState.documentId,
+
                 )
             }
         }
@@ -142,6 +150,9 @@ fun DocumentInfoPage(
         isImageSelected = isImageSelected,
         selectedColor = selectedColor,
         colorFactory = colorFactory,
+        onSelectDpi = { dpi ->
+            viewModel.selectedDpi = dpi
+        },
         onOpenGalleryClick = {
             showAssetPicker.value = true
         },
@@ -211,6 +222,7 @@ private fun DocumentInfoScreen(
     uiState: DocumentInfoScreenUiState,
     isImageSelected: Boolean = false,
     selectedColor: Color,
+    onSelectDpi: (dpi: String) -> Unit = {},
     colorFactory: ColorFactory,
     onOpenGalleryClick: () -> Unit,
     onTakePhotoClick: (Uri) -> Unit,
@@ -423,13 +435,18 @@ private fun DocumentInfoScreen(
                                 selectedColor = selectedColor,
                                 colorFactory = colorFactory,
                                 text = "Resolution",
-                                isChecked = true)
+                                isChecked = true,
+                                onSelectDpi = { dpi ->
+                                    onSelectDpi(dpi)
+                                }
+                            )
                             ChecklistItem(
                                 uiState,
                                 selectedColor = selectedColor,
                                 colorFactory = colorFactory,
                                 text = "Background",
                                 isChecked = true,
+                                onSetCustomColor = { color -> onSetCustomColor(color) },
                                 onBackgroundOptionChanged = {
                                         option -> onBackgroundOptionChanged(option)
                                 },
@@ -604,6 +621,7 @@ fun ChecklistItem(
     uiState: DocumentInfoScreenUiState,
     text: String,
     isChecked: Boolean,
+    onSelectDpi: (String) -> Unit = { "300" },
     selectedColor: Color = Color.White,
     colorFactory: ColorFactory,
     onSetCustomColor: (Color) -> Unit = {},
@@ -993,6 +1011,7 @@ fun ChecklistItem(
                     resolutionBottomSheetState.hide()
                 }
                 showResolutionBottomSheet = false
+                onSelectDpi(selectedDpi)
             },
             containerColor = colors.background,
             sheetState = resolutionBottomSheetState
@@ -1036,26 +1055,23 @@ fun ChecklistItem(
 
                 }
 
-                Button(
-                    onClick = {
-                        scope.launch {
-                            resolutionBottomSheetState.hide()
-                        }
-                        showResolutionBottomSheet = false
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = colors.primary)
-                ) {
-                    Text(
-                        text = "Apply",
-                        color = colors.onPrimary,
-                        fontSize = 16.sp
-                    )
+                PremiumButton {
+                    // go to premium
                 }
+
+                Spacer(modifier = Modifier.height(8.dp))
             }
+
+        }
+    }
+}
+
+@Preview("Light")
+@Preview("Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun PremiumButtonPreview2(modifier: Modifier = Modifier) {
+    PreviewContainer {
+        PremiumButton {
 
         }
     }

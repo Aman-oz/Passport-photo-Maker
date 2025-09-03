@@ -88,6 +88,7 @@ dependencies {
     implementation(libs.androidx.constraintlayout.compose)
 //    implementation(libs.compose.colorpicker)
     implementation ("io.mhssn:colorpicker:1.0.0")
+    implementation(libs.lottie.compose)
 
     // AndroidX
     implementation(libs.appcompat)

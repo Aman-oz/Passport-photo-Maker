@@ -31,6 +31,30 @@ fun determineOrientation(size: String?): DocumentSize {
     }
 }
 
+
+fun getDocumentWidthAndHeight(size: String?): DocumentSize {
+    return if (size != null && size.contains(" x ")) {
+        try {
+            val (widthStr, heightStr) = size.split(" x ")
+            val width = widthStr.toFloatOrNull() ?: 0f
+            val height = heightStr.toFloatOrNull() ?: 0f
+            val orientation = when {
+                width > height -> "Landscape"
+                height > width -> "Portrait"
+                else -> "Square"
+            }
+            DocumentSize(width, height, orientation)
+        } catch (e: Exception) {
+            // Log the error for debugging
+            Logger.e("determineOrientation", "Error parsing size: $size", e)
+            DocumentSize(0f, 0f, "Unknown")
+        }
+    } else {
+        Logger.w("determineOrientation", "Size is null or invalid: $size")
+        DocumentSize(0f, 0f, "Unknown")
+    }
+}
+
 @Composable
 fun determinePixels(pixels: String?): DocumentPixels {
     return if (pixels != null && pixels.contains("x")) {

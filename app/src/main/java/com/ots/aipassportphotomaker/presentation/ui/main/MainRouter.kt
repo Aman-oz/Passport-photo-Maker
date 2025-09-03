@@ -1,7 +1,9 @@
 package com.ots.aipassportphotomaker.presentation.ui.main
 
+import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavHostController
 import com.ots.aipassportphotomaker.domain.bottom_nav.Page
+import kotlin.toString
 
 // Created by amanullah on 25/07/2025.
 // Copyright (c) 2025 Ozi Publishing. All rights reserved.
@@ -27,6 +29,20 @@ class MainRouter(
 
     fun navigateToPhotoIDDetailScreen(type: String) {
         mainNavController.navigate(Page.PhotoIDDetailScreen(type = type))
+    }
+
+    fun navigateToImageProcessingScreen(
+        documentId: Int,
+        imagePath: String?,
+        selectedDpi: String,
+        selectedBackgroundColor: Color?
+    ) {
+        mainNavController.navigate(Page.ImageProcessingScreen(
+            documentId = documentId,
+            imagePath = imagePath,
+            selectedDpi = selectedDpi,
+            selectedBackgroundColor = selectedBackgroundColor?.toString()
+        ))
     }
 
     fun navigateToSelectPhotoScreen(documentId: Int) {

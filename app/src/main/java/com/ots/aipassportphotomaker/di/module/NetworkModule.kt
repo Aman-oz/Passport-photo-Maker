@@ -27,7 +27,7 @@ class NetworkModule {
             .addCallAdapterFactory(CoroutineCallAdapterFactory())
             .addConverterFactory(GsonConverterFactory.create())
             .client(client)
-            .baseUrl(BaseUrl.BASE_URL)
+            .baseUrl(BaseUrl.CROP_IMAGE_BASE_URL)
             .build()
     }
 

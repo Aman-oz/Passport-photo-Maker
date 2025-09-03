@@ -33,6 +33,14 @@ sealed class Page {
     data class DocumentInfoScreen(val documentId: Int) : Page()
 
     @Serializable
+    data class ImageProcessingScreen(
+        val documentId: Int,
+        val imagePath: String?,
+        val selectedDpi: String,
+        val selectedBackgroundColor: String?
+    ) : Page()
+
+    @Serializable
     data class SelectPhotoScreen(val id: Int) : Page()
 
     @Serializable
