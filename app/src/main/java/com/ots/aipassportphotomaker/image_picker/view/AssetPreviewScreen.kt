@@ -50,11 +50,11 @@ import coil.compose.rememberAsyncImagePainter
 import coil.decode.GifDecoder
 import coil.decode.ImageDecoderDecoder
 import coil.request.ImageRequest
-import kotlinx.coroutines.launch
 import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.image_picker.component.SelectedAssetImageItem
 import com.ots.aipassportphotomaker.image_picker.model.AssetInfo
 import com.ots.aipassportphotomaker.image_picker.util.vibration
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,88 +71,100 @@ fun AssetPreviewScreen(
 
     val scope = rememberCoroutineScope()
     val assetInfo = assets[pageState.currentPage]
-
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                modifier = Modifier.statusBarsPadding(),
-                title = {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    if (assets.isEmpty()) {
+        Scaffold(
+            topBar = {
+                CenterAlignedTopAppBar(
+                    modifier = Modifier.statusBarsPadding(),
+                    title = {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = if (assetInfo.isImage()) {
+                                    stringResource(id = R.string.preview_title_image)
+                                } else {
+                                    stringResource(id = R.string.preview_title_video)
+                                },
+                                style = MaterialTheme.typography.bodyLarge.copy(
+                                    fontSize = 18.sp,
+                                    color = Color.White
+                                )
+                            )
+                            Text(
+                                text = assetInfo.dateString,
+                                style = MaterialTheme.typography.bodyMedium.copy(color = Color.Gray)
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = Color.Black
+                    ),
+                    navigationIcon = {
+                        IconButton(onClick = navigateUp) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                tint = Color.White,
+                                contentDescription = ""
+                            )
+                        }
+                    },
+                    actions = {
                         Text(
-                            text = if (assetInfo.isImage()) {
-                                stringResource(id = R.string.preview_title_image)
-                            } else {
-                                stringResource(id = R.string.preview_title_video)
-                            },
-                            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp, color = Color.White)
+                            modifier = Modifier.padding(horizontal = 4.dp),
+                            text = "${pageState.currentPage + 1}/${assets.size}",
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontSize = 18.sp,
+                                color = Color.White
+                            )
                         )
-                        Text(
-                            text = assetInfo.dateString,
-                            style = MaterialTheme.typography.bodyMedium.copy(color = Color.Gray)
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color.Black
-                ),
-                navigationIcon = {
-                    IconButton(onClick = navigateUp) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, tint = Color.White, contentDescription = "")
-                    }
-                },
-                actions = {
-                    Text(
-                        modifier = Modifier.padding(horizontal = 4.dp),
-                        text = "${pageState.currentPage + 1}/${assets.size}",
-                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp, color = Color.White)
-                    )
-                },
-            )
-        },
-        bottomBar = {
-            SelectorBottomBar(selectedList = selectedList, assetInfo = assetInfo) {
-                navigateUp()
-                if (selectedList.isEmpty()) selectedList.add(it)
+                    },
+                )
+            },
+            bottomBar = {
+                SelectorBottomBar(selectedList = selectedList, assetInfo = assetInfo) {
+                    navigateUp()
+                    if (selectedList.isEmpty()) selectedList.add(it)
+                }
             }
-        }
-    ) {
-        val context = LocalContext.current
-
-        Box(
-            modifier = Modifier
-                .padding(it)
-                .background(Color.Black),
-            contentAlignment = Alignment.BottomCenter
         ) {
-            AssetPreview(assets = assets, pagerState = pageState)
+            val context = LocalContext.current
 
-            if (selectedList.isNotEmpty()) {
-                LazyRow(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color.Black.copy(alpha = 0.8F))
-                        .padding(horizontal = 2.dp, vertical = 2.dp)
-                ) {
-                    itemsIndexed(selectedList) { _, resource ->
-                        SelectedAssetImageItem(
-                            assetInfo = resource,
-                            isSelected = resource.id == assetInfo.id,
-                            resourceType = resource.resourceType,
-                            durationString = resource.formatDuration(),
-                            modifier = Modifier.size(64.dp),
-                            onClick = { asset -> // If index == -1, it means the asset exists at a different time
-                                val selectedIndex = assets.indexOfFirst { item -> item.id == asset.id }
-                                if (selectedIndex == -1) {
-                                    onSelectChanged(asset)
-                                    context.vibration(50L)
-                                    return@SelectedAssetImageItem
-                                }
+            Box(
+                modifier = Modifier
+                    .padding(it)
+                    .background(Color.Black),
+                contentAlignment = Alignment.BottomCenter
+            ) {
+                AssetPreview(assets = assets, pagerState = pageState)
 
-                                scope.launch {
-                                    pageState.animateScrollToPage(selectedIndex)
+                if (selectedList.isNotEmpty()) {
+                    LazyRow(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.Black.copy(alpha = 0.8F))
+                            .padding(horizontal = 2.dp, vertical = 2.dp)
+                    ) {
+                        itemsIndexed(selectedList) { _, resource ->
+                            SelectedAssetImageItem(
+                                assetInfo = resource,
+                                isSelected = resource.id == assetInfo.id,
+                                resourceType = resource.resourceType,
+                                durationString = resource.formatDuration(),
+                                modifier = Modifier.size(64.dp),
+                                onClick = { asset -> // If index == -1, it means the asset exists at a different time
+                                    val selectedIndex =
+                                        assets.indexOfFirst { item -> item.id == asset.id }
+                                    if (selectedIndex == -1) {
+                                        onSelectChanged(asset)
+                                        context.vibration(50L)
+                                        return@SelectedAssetImageItem
+                                    }
+
+                                    scope.launch {
+                                        pageState.animateScrollToPage(selectedIndex)
+                                    }
                                 }
-                            }
-                        )
+                            )
+                        }
                     }
                 }
             }
@@ -183,7 +195,11 @@ fun SelectorBottomBar(
                 size = 22.dp
             )
             Spacer(modifier = Modifier.width(6.dp))
-            Text(text = stringResource(R.string.text_asset_select), color = Color.White, fontSize = 14.sp)
+            Text(
+                text = stringResource(R.string.text_asset_select),
+                color = Color.White,
+                fontSize = 14.sp
+            )
         }
         Button(
             modifier = Modifier.defaultMinSize(minHeight = 1.dp, minWidth = 1.dp),
@@ -247,15 +263,15 @@ fun VideoPreview(
 ) {
     val context = LocalContext.current
 
-   /* val player = remember {
-        ExoPlayer.Builder(context).build().apply {
-            val dataSourceFactory: DataSource.Factory = DefaultDataSource.Factory(context)
-            val source = ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(MediaItem.fromUri(uriString))
-            setMediaSource(source)
+    /* val player = remember {
+         ExoPlayer.Builder(context).build().apply {
+             val dataSourceFactory: DataSource.Factory = DefaultDataSource.Factory(context)
+             val source = ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(MediaItem.fromUri(uriString))
+             setMediaSource(source)
 
-            prepare()
-        }
-    }*/
+             prepare()
+         }
+     }*/
 
     /*if (loading != null && player.isLoading) {
         loading()

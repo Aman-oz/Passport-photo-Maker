@@ -26,4 +26,5 @@
     <string name="text_done">Done</string>
     <string name="text_asset_select">Select</string>
     <string name="text_select_button">Next(%1$d/%2$d)</string>
+    <string name="button_select_photo">Select Photo (%d)</string>
 </resources>

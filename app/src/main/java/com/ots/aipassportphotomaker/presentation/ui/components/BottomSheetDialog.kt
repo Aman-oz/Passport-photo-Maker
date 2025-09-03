@@ -46,8 +46,9 @@ import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
 import com.ots.aipassportphotomaker.presentation.ui.theme.AppColors
 import com.ots.aipassportphotomaker.presentation.ui.theme.colors
+import com.ots.aipassportphotomaker.presentation.ui.theme.custom300
+import com.ots.aipassportphotomaker.presentation.ui.theme.onCustom300
 import com.ots.aipassportphotomaker.presentation.ui.theme.onCustom400
-import io.mhssn.colorpicker.ext.transparentBackground
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -99,7 +100,7 @@ fun BottomSheetDialogLayout(
                 isSelected = false,
                 showEyeDropper = true
 
-            ){  }
+            ) { }
 
             ColorItem(
                 modifier = Modifier
@@ -109,7 +110,7 @@ fun BottomSheetDialogLayout(
                 isSelected = true,
                 showTransparentBg = true
 
-            ){  }
+            ) { }
 
             ColorItem(
                 modifier = Modifier
@@ -118,7 +119,7 @@ fun BottomSheetDialogLayout(
                 isSelected = false,
                 ratio = 1.2f
 
-            ){  }
+            ) { }
 
             ColorItem(
                 modifier = Modifier
@@ -127,7 +128,7 @@ fun BottomSheetDialogLayout(
                 isSelected = false,
                 ratio = 1.2f
 
-            ){  }
+            ) { }
 
             ColorItem(
                 modifier = Modifier
@@ -136,7 +137,7 @@ fun BottomSheetDialogLayout(
                 isSelected = false,
                 ratio = 1.2f
 
-            ){  }
+            ) { }
 
             ColorItem(
                 modifier = Modifier
@@ -145,7 +146,7 @@ fun BottomSheetDialogLayout(
                 isSelected = false,
                 ratio = 1.2f
 
-            ){  }
+            ) { }
 
 
         }
@@ -196,7 +197,8 @@ fun ColorItem(
             }
     ) {
         val itemBgModifier = if (showTransparentBg) {
-            Modifier.fillMaxSize()
+            Modifier
+                .fillMaxSize()
                 .padding(start = 2.dp, end = 2.dp, top = 2.dp, bottom = 2.dp)
 //                .transparentBackground(verticalBoxesAmount = 20)
                 .background(
@@ -204,7 +206,8 @@ fun ColorItem(
                     shape = RoundedCornerShape(radius)
                 )
         } else {
-            Modifier.fillMaxSize()
+            Modifier
+                .fillMaxSize()
                 .padding(2.dp)
                 .background(
                     color,
@@ -247,6 +250,86 @@ fun ColorItem(
                     modifier = Modifier
                         .align(Alignment.Center)
                 )
+            }
+        }
+
+    }
+}
+
+@Composable
+fun DpiItem(
+    modifier: Modifier = Modifier,
+    value: String = "300 dpi",
+    radius: Dp = 8.dp,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+) {
+
+        Box(
+            modifier = modifier
+                .background(
+                    if (isSelected) colors.primary else colors.custom300,
+                    shape = RoundedCornerShape(radius)
+                )
+                .clickable(onClick = {
+                    onClick.invoke()
+                }),
+            contentAlignment = Alignment.Center
+        ) {
+
+            Row(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+
+            ) {
+// Show tick icon if selected
+                AnimatedVisibility(isSelected) {
+                    Icon(
+                        modifier = Modifier
+                            .size(20.dp)
+                            .align(Alignment.CenterVertically),
+                        painter = painterResource(id = R.drawable.tick_icon),
+                        contentDescription = "Selected",
+                        tint = if (isSelected) colors.onPrimary else colors.onCustom300,
+                    )
+                }
+                AnimatedVisibility(isSelected) {
+                    Spacer(modifier = Modifier.width(6.dp))
+                }
+
+                // assign first three char to text
+                Text(
+                    modifier = Modifier.align(Alignment.CenterVertically),
+                    text = "${value}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (isSelected) colors.onPrimary else colors.onCustom300
+                )
+            }
+
+        }
+}
+
+@Preview("Light")
+@Preview("Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun DpiItemPreview() {
+    PreviewContainer {
+        Row {
+            DpiItem(
+                modifier = Modifier,
+                value = "300 dpi",
+                isSelected = true
+            ) {
+
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            DpiItem(
+                modifier = Modifier,
+                value = "300 dpi",
+                isSelected = false
+            ) {
+
             }
         }
 

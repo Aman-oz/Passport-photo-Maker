@@ -76,6 +76,7 @@ import com.ots.aipassportphotomaker.image_picker.view.AssetPicker
 import com.ots.aipassportphotomaker.presentation.ui.bottom_nav.NavigationBarSharedViewModel
 import com.ots.aipassportphotomaker.presentation.ui.components.ColorItem
 import com.ots.aipassportphotomaker.presentation.ui.components.CommonTopBar
+import com.ots.aipassportphotomaker.presentation.ui.components.DpiItem
 import com.ots.aipassportphotomaker.presentation.ui.components.ImageWithMeasurements
 import com.ots.aipassportphotomaker.presentation.ui.components.LoaderFullScreen
 import com.ots.aipassportphotomaker.presentation.ui.components.RadioButtonSingleSelection
@@ -93,8 +94,6 @@ import io.mhssn.colorpicker.ColorPickerDialog
 import io.mhssn.colorpicker.ColorPickerType
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.collections.addAll
-import kotlin.text.clear
 
 @Composable
 fun DocumentInfoPage(
@@ -399,75 +398,32 @@ private fun DocumentInfoScreen(
                                 text = "Image Selection",
                                 isChecked = isImageSelected,
                                 selectedColor = selectedColor,
-                                colorFactory = colorFactory,
-                                onSetCustomColor = { color ->
-                                    onSetCustomColor(color)
-                                },
-                                onBackgroundOptionChanged = {
-                                    option -> onBackgroundOptionChanged(option)
-                                },
-                                selectPredefinedColor = { colorType: ColorFactory.ColorType ->
-                                    selectPredefinedColor(colorType)
-
-                                },
-                                onApplySelectedColor = { onApplySelectedColor() }
+                                colorFactory = colorFactory
                             )
                             ChecklistItem(
                                 uiState,
                                 selectedColor = selectedColor,
                                 colorFactory = colorFactory,
                                 text = "Document Size",
-                                isChecked = true,
-                                onBackgroundOptionChanged = {
-                                    option -> onBackgroundOptionChanged(option)
-                                },
-                                selectPredefinedColor = { colorType: ColorFactory.ColorType ->
-                                    selectPredefinedColor(colorType)
-
-                                },
-                                onApplySelectedColor = { onApplySelectedColor() })
+                                isChecked = true)
                             ChecklistItem(
                                 uiState,
                                 selectedColor = selectedColor,
                                 colorFactory = colorFactory,
                                 text = "Unit",
-                                isChecked = true,
-                                onBackgroundOptionChanged = {
-                                    option -> onBackgroundOptionChanged(option)
-                                },
-                                selectPredefinedColor = { colorType: ColorFactory.ColorType ->
-                                    selectPredefinedColor(colorType)
-
-                                },
-                                onApplySelectedColor = { onApplySelectedColor() })
+                                isChecked = true)
                             ChecklistItem(
                                 uiState,
                                 selectedColor = selectedColor,
                                 colorFactory = colorFactory,
                                 text = "Pixel",
-                                isChecked = true,
-                                onBackgroundOptionChanged = {
-                                        option -> onBackgroundOptionChanged(option)
-                                },
-                                selectPredefinedColor = { colorType: ColorFactory.ColorType ->
-                                    selectPredefinedColor(colorType)
-
-                                },
-                                onApplySelectedColor = { onApplySelectedColor() })
+                                isChecked = true)
                             ChecklistItem(
                                 uiState,
                                 selectedColor = selectedColor,
                                 colorFactory = colorFactory,
                                 text = "Resolution",
-                                isChecked = true,
-                                onBackgroundOptionChanged = {
-                                        option -> onBackgroundOptionChanged(option)
-                                },
-                                selectPredefinedColor = { colorType: ColorFactory.ColorType ->
-                                    selectPredefinedColor(colorType)
-
-                                },
-                                onApplySelectedColor = { onApplySelectedColor() })
+                                isChecked = true)
                             ChecklistItem(
                                 uiState,
                                 selectedColor = selectedColor,
@@ -535,6 +491,7 @@ private fun DocumentInfoScreen(
 
                         Button(
                             onClick = {
+                                Toast.makeText(context, "Create Photo for: ${uiState.documentType}", Toast.LENGTH_SHORT).show()
                                 onCreatePhotoClick(uiState.documentType)
                             },
                             shape = RoundedCornerShape(24.dp),
@@ -654,9 +611,14 @@ fun ChecklistItem(
     selectPredefinedColor: (ColorFactory.ColorType) -> Unit = {},
     onApplySelectedColor: () -> Unit = {},
 ) {
-    var showBottomSheet by rememberSaveable { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-    val bottomSheetState = rememberModalBottomSheetState()
+    var showColorPickerBottomSheet by rememberSaveable { mutableStateOf(false) }
+    val colorBottomSheetState = rememberModalBottomSheetState()
+
+    var showResolutionBottomSheet by rememberSaveable { mutableStateOf(false) }
+    val resolutionBottomSheetState = rememberModalBottomSheetState()
+
+    var selectedDpi by rememberSaveable { mutableStateOf("300") }
 
     var color by remember {
         mutableStateOf(Color.Red)
@@ -724,10 +686,10 @@ fun ChecklistItem(
                         )
                         .clickable {
                             scope.launch {
-                                bottomSheetState.show()
-                                bottomSheetState.expand()
+                                colorBottomSheetState.show()
+                                colorBottomSheetState.expand()
                             }
-                            showBottomSheet = true
+                            showColorPickerBottomSheet = true
                         }
                 ) {
 
@@ -751,6 +713,13 @@ fun ChecklistItem(
                         .background(colors.custom300, shape = RoundedCornerShape(6.dp))
                         .border(1.dp, colors.custom100, shape = RoundedCornerShape(6.dp))
                         .padding(horizontal = 8.dp, vertical = 4.dp)
+                        .clickable {
+                            scope.launch {
+                                resolutionBottomSheetState.show()
+                                resolutionBottomSheetState.expand()
+                            }
+                            showResolutionBottomSheet = true
+                        }
                 ) {
                     Row {
                         Image(
@@ -761,7 +730,7 @@ fun ChecklistItem(
                             colorFilter = ColorFilter.tint(colors.onCustom300)
                         )
                         Text(
-                            text = uiState.documentResolution ?: "300 DPI",
+                            text = "$selectedDpi DPI",
                             style = MaterialTheme.typography.bodyMedium,
                             color = colors.onCustom300
                         )
@@ -793,19 +762,19 @@ fun ChecklistItem(
 
     }
 
-    // Modal Bottom Sheet
-    if (showBottomSheet) {
+    // Color Picker Bottom Sheet
+    if (showColorPickerBottomSheet) {
         var showErrorText by remember { mutableStateOf(false) }
 
         ModalBottomSheet(
             onDismissRequest = {
                 scope.launch {
-                    bottomSheetState.hide()
+                    colorBottomSheetState.hide()
                 }
-                showBottomSheet = false
+                showColorPickerBottomSheet = false
             },
             containerColor = colors.background,
-            sheetState = bottomSheetState
+            sheetState = colorBottomSheetState
         ) {
             Column(
                 modifier = Modifier
@@ -993,10 +962,86 @@ fun ChecklistItem(
                 Button(
                     onClick = {
                         scope.launch {
-                            bottomSheetState.hide()
+                            colorBottomSheetState.hide()
                         }
-                        showBottomSheet = false
+                        showColorPickerBottomSheet = false
                         onApplySelectedColor()
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = colors.primary)
+                ) {
+                    Text(
+                        text = "Apply",
+                        color = colors.onPrimary,
+                        fontSize = 16.sp
+                    )
+                }
+            }
+
+        }
+    }
+
+    // Color Picker Bottom Sheet
+    if (showResolutionBottomSheet) {
+
+        ModalBottomSheet(
+            onDismissRequest = {
+                scope.launch {
+                    resolutionBottomSheetState.hide()
+                }
+                showResolutionBottomSheet = false
+            },
+            containerColor = colors.background,
+            sheetState = resolutionBottomSheetState
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Text(
+                    text = "Change resolution (DPI)",
+                    color = colors.onCustom400,
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Text(
+                    text = "Higher resolution means better image quality.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = colors.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                ) {
+
+                    // 1st: 300 DPI
+                    val dpiList = listOf("300", "350", "450", "600")
+                    dpiList.forEach { dpi ->
+                        DpiItem(
+                            modifier = Modifier,
+                            value = dpi,
+                            isSelected = dpi == selectedDpi,
+                            onClick = {
+                                selectedDpi = dpi
+                            }
+                        )
+                    }
+
+                }
+
+                Button(
+                    onClick = {
+                        scope.launch {
+                            resolutionBottomSheetState.hide()
+                        }
+                        showResolutionBottomSheet = false
                     },
                     modifier = Modifier
                         .fillMaxWidth()

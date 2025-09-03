@@ -86,6 +86,7 @@ fun AssetImageIndicator(
 //            .size(size)
 //            .then(if (border == null) Modifier else Modifier.border(border, shape = CircleShape))
 //            .background(color = color, shape = CircleShape)
+            .padding(6.dp)
             .clip(shape = CircleShape)
             .clickable {
                 val isSelected = !selected

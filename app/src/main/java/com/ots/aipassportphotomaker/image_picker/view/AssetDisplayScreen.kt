@@ -1,16 +1,16 @@
 package com.ots.aipassportphotomaker.image_picker.view
 
+import android.content.Context
 import android.content.res.Configuration
 import android.net.Uri
+import android.provider.MediaStore
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -31,14 +32,11 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -46,11 +44,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
@@ -63,6 +63,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -72,17 +73,17 @@ import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
+import com.ots.aipassportphotomaker.common.utils.SharedPrefUtils
 import com.ots.aipassportphotomaker.image_picker.component.AssetImageItem
 import com.ots.aipassportphotomaker.image_picker.model.AssetInfo
 import com.ots.aipassportphotomaker.image_picker.model.AssetResourceType
 import com.ots.aipassportphotomaker.image_picker.model.RequestType
 import com.ots.aipassportphotomaker.image_picker.viewmodel.AssetViewModel
 import com.ots.aipassportphotomaker.presentation.ui.theme.colors
-import com.ots.aipassportphotomaker.presentation.ui.theme.custom100
 import com.ots.aipassportphotomaker.presentation.ui.theme.custom300
+import com.ots.aipassportphotomaker.presentation.ui.theme.onCustom300
+import com.ots.aipassportphotomaker.presentation.ui.theme.onCustom400
 import kotlinx.coroutines.launch
-import kotlin.collections.forEachIndexed
-import kotlin.text.clear
 
 @Composable
 internal fun AssetDisplayScreen(
@@ -111,21 +112,46 @@ internal fun AssetDisplayScreen(
             )
         },
         bottomBar = {
-            DisplayBottomBar(viewModel, onPicked)
+//            DisplayBottomBar(viewModel, onPicked)
         }
-    ) {
+    ) { paddingValues ->
 
         // Showing only images
-        Box(modifier = Modifier
-            .padding(it)
-            .background(colors.background)
+        Box(
+            modifier = Modifier
+                .padding(paddingValues)
+                .background(colors.background)
+                .fillMaxSize()
         ) {
+
+            val maxAssets = LocalAssetConfig.current.maxAssets
             AssetContent(viewModel, RequestType.IMAGE)
+
+            if (viewModel.selectedList.isNotEmpty()) {
+                SelectPhotoButton(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
+                        .background(Color.Transparent)
+                        .pointerInput(Unit) {
+                            detectTapGestures(
+                                onTap = {
+                                    onPicked(viewModel.selectedList)
+                                    Log.d(
+                                        "AssetDisplayScreen",
+                                        "Settings icon tapped"
+                                    )
+                                }
+                            )
+                        },
+                    maxAssets
+                )
+            }
         }
 
         //currently not showing the tab for all, videos, images. If want to show just unwrap the bellow box
         if (showTab) {
-            Box(modifier = Modifier.padding(it)) {
+            Box(modifier = Modifier.padding(paddingValues)) {
                 val tabs = listOf(TabItem.All, TabItem.Video, TabItem.Image)
                 val pagerState = rememberPagerState(pageCount = tabs::size)
 
@@ -151,8 +177,7 @@ private fun DisplayTopAppBar(
     TopAppBar(
         modifier = Modifier
             .statusBarsPadding()
-            .background(colors.background)
-        ,
+            .background(colors.background),
         colors = TopAppBarDefaults.topAppBarColors(containerColor = colors.background),
         navigationIcon = {
             IconButton(onClick = { navigateUp(selectedList) }) {
@@ -197,7 +222,10 @@ private fun DisplayTopAppBar(
                     contentAlignment = Alignment.Center
                 ) {
 
-                    Icon(painter = painterResource(R.drawable.chevron_down), contentDescription = "")
+                    Icon(
+                        painter = painterResource(R.drawable.chevron_down),
+                        contentDescription = ""
+                    )
                 }
             }
         },
@@ -222,11 +250,43 @@ fun DisplayTopAppBarPreview() {
 }
 
 @Composable
+fun SelectPhotoButton(modifier: Modifier = Modifier, numOfSelectedImages: Int = 1) {
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(32.dp))
+            .background(colors.primary)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = stringResource(R.string.button_select_photo, numOfSelectedImages),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = colors.onPrimary,
+            fontSize = 16.sp
+        )
+    }
+}
+
+@Preview("Light")
+@Preview("Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun SelectPhotoButtonPreview() {
+    PreviewContainer {
+        SelectPhotoButton()
+    }
+}
+
+@Composable
 private fun DisplayBottomBar(viewModel: AssetViewModel, onPicked: (List<AssetInfo>) -> Unit) {
     var cameraUri: Uri? by remember { mutableStateOf(null) }
     val scope = rememberCoroutineScope()
 
-    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+    val cameraLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.TakePicture()
+    ) { success ->
         if (success) {
             cameraUri?.let { scope.launch { viewModel.initDirectories() } }
         } else {
@@ -246,7 +306,13 @@ private fun DisplayBottomBar(viewModel: AssetViewModel, onPicked: (List<AssetInf
                     cameraUri = viewModel.getUri()
                     cameraLauncher.launch(cameraUri!!)
                 },
-                content = { Text(text = stringResource(R.string.label_camera), fontSize = 16.sp, color = Color.Gray) }
+                content = {
+                    Text(
+                        text = stringResource(R.string.label_camera),
+                        fontSize = 16.sp,
+                        color = Color.Gray
+                    )
+                }
             )
             TextButton(
                 onClick = {},
@@ -261,7 +327,11 @@ private fun DisplayBottomBar(viewModel: AssetViewModel, onPicked: (List<AssetInf
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = stringResource(R.string.text_select_tip), fontSize = 12.sp, color = Color.Gray)
+            Text(
+                text = stringResource(R.string.text_select_tip),
+                fontSize = 12.sp,
+                color = Color.Gray
+            )
             AppBarButton(
                 size = viewModel.selectedList.size,
                 onPicked = { onPicked(viewModel.selectedList) }
@@ -270,8 +340,8 @@ private fun DisplayBottomBar(viewModel: AssetViewModel, onPicked: (List<AssetInf
     }
 }
 
-/*@Preview("Light")
-@Preview("Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)*/
+@Preview("Light")
+@Preview("Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun DisplayBottomBarPreview() {
     val isListEmpty by remember { mutableStateOf(true) }
@@ -289,11 +359,22 @@ fun DisplayBottomBarPreview() {
                     onClick = {
                         cameraUri = "viewModel.getUri()".toUri()
                     },
-                    content = { Text(text = stringResource(R.string.label_camera), fontSize = 16.sp, color = Color.Gray) }
+                    content = {
+                        Text(
+                            text = stringResource(R.string.label_camera),
+                            fontSize = 16.sp,
+                            color = Color.Gray
+                        )
+                    }
                 )
                 TextButton(
                     onClick = {},
-                    content = { Text(text = stringResource(R.string.label_album), fontSize = 16.sp) }
+                    content = {
+                        Text(
+                            text = stringResource(R.string.label_album),
+                            fontSize = 16.sp
+                        )
+                    }
                 )
             }
         } else {
@@ -304,10 +385,14 @@ fun DisplayBottomBarPreview() {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = stringResource(R.string.text_select_tip), fontSize = 12.sp, color = Color.Gray)
+                Text(
+                    text = stringResource(R.string.text_select_tip),
+                    fontSize = 12.sp,
+                    color = Color.Gray
+                )
                 AppBarButton(
                     size = 0,
-                    onPicked = {  }
+                    onPicked = { }
                 )
             }
         }
@@ -342,7 +427,7 @@ fun AssetTabPreview() {
     }
 }*/
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun AssetContent(viewModel: AssetViewModel, requestType: RequestType) {
     val assets = viewModel.getGroupedAssets(requestType)
@@ -350,8 +435,72 @@ private fun AssetContent(viewModel: AssetViewModel, requestType: RequestType) {
     val gridCount = LocalAssetConfig.current.gridCount
     val maxAssets = LocalAssetConfig.current.maxAssets
     val errorMessage = stringResource(R.string.message_selected_exceed, maxAssets)
+    val itemSize: Dp = (LocalConfiguration.current.screenWidthDp.dp / gridCount)
 
-    if (assets.isEmpty()) {
+    val sharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+    val isPhotoGuideShown = remember {
+        mutableStateOf(
+            sharedPreferences.getBoolean(
+                SharedPrefUtils.SHOW_PHOTO_GUIDE_DIALOG,
+                false
+            )
+        )
+    }
+
+    var showBottomSheet by rememberSaveable { mutableStateOf(false) }
+    val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+
+    var cameraUri: Uri? by remember { mutableStateOf(null) }
+    val scope = rememberCoroutineScope()
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success) {
+            cameraUri?.let { scope.launch { viewModel.initDirectories() } }
+        } else {
+            viewModel.deleteImage(cameraUri)
+        }
+    }
+
+    // Flatten the grouped assets into a single list
+    val allAssets = assets.values.flatten()
+
+    // Define sample images
+    val sampleImages = listOf(
+        AssetInfo(
+            id = -1L,
+            uriString = "android.resource://${context.packageName}/${R.drawable.sample_image_male}",
+            filepath = "",
+            filename = "Sample Male",
+            directory = "Samples",
+            mimeType = "image/png",
+            mediaType = MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE,
+            date = System.currentTimeMillis(),
+            duration = 0L,
+            size = 0L
+        ),
+        AssetInfo(
+            id = -2L,
+            uriString = "android.resource://${context.packageName}/${R.drawable.sample_image_female}",
+            filepath = "",
+            filename = "Sample Female",
+            directory = "Samples",
+            mimeType = "image/png",
+            mediaType = MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE,
+            date = System.currentTimeMillis(),
+            duration = 0L,
+            size = 0L
+        )
+    )
+
+    // Select the first sample image by default
+    /*if (viewModel.selectedList.isEmpty()) {
+        viewModel.toggleSelect(true, sampleImages[0])
+    }*/
+
+    if (allAssets.isEmpty()) {
         return Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
@@ -364,7 +513,89 @@ private fun AssetContent(viewModel: AssetViewModel, requestType: RequestType) {
     }
 
     LazyColumn {
-        assets.forEach { (dateString, resources) ->
+        item {
+            FlowRow(maxItemsInEachRow = gridCount) {
+                // Add Camera item
+                Box(
+                    modifier = Modifier
+                        .size(itemSize)
+                        .padding(horizontal = 4.dp, vertical = 4.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(colors.custom300)
+                        .clickable {
+
+                            if (!isPhotoGuideShown.value) {
+                                scope.launch {
+                                    bottomSheetState.expand()
+                                }
+
+                                showBottomSheet = true
+                                sharedPreferences.edit()
+                                    .putBoolean(SharedPrefUtils.SHOW_PHOTO_GUIDE_DIALOG, true)
+                                    .apply()
+                                isPhotoGuideShown.value = true
+
+                            } else {
+                                cameraUri = viewModel.getUri()
+                                cameraLauncher.launch(cameraUri!!)
+                            }
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column {
+                        Icon(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .align(Alignment.CenterHorizontally),
+                            painter = painterResource(R.drawable.camera_icon),
+                            contentDescription = stringResource(R.string.label_camera),
+                            tint = Color.Black
+                        )
+                        Text(
+                            text = stringResource(R.string.label_camera),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = colors.onCustom300,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center
+                        )
+
+                    }
+
+                }
+
+                // Add sample images
+                sampleImages.forEach { sampleImage ->
+                    AssetImage(
+                        modifier = Modifier
+                            .size(itemSize)
+                            .padding(horizontal = 1.dp, vertical = 1.dp),
+                        assetInfo = sampleImage,
+                        navigateToPreview = { selected ->
+                            viewModel.toggleSelect(selected, sampleImage)
+//                            viewModel.navigateToPreview(0, "", requestType)
+                        },
+                        selectedList = viewModel.selectedList,
+                        onLongClick = { selected -> viewModel.toggleSelect(selected, sampleImage) }
+                    )
+                }
+
+                allAssets.forEachIndexed { index, assetInfo ->
+                    AssetImage(
+                        modifier = Modifier
+                            .size(itemSize)
+                            .padding(horizontal = 1.dp, vertical = 1.dp),
+                        assetInfo = assetInfo,
+                        navigateToPreview = { selected ->
+                            viewModel.toggleSelect(selected, assetInfo)
+//                            viewModel.navigateToPreview(index, "", requestType)
+                        },
+                        selectedList = viewModel.selectedList,
+                        onLongClick = { selected -> viewModel.toggleSelect(selected, assetInfo) }
+                    )
+                }
+            }
+        }
+        /*assets.forEach { (dateString, resources) ->
             val allSelected = viewModel.isAllSelected(resources)
             val isAlreadyFull = viewModel.selectedList.size == maxAssets
             val hasSelected = viewModel.hasSelected(resources)
@@ -381,24 +612,6 @@ private fun AssetContent(viewModel: AssetViewModel, requestType: RequestType) {
                         text = dateString,
                         style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium)
                     )
-
-                    /*TextButton(onClick = {
-                        if (allSelected || (isAlreadyFull && hasSelected)) {
-                            viewModel.unSelectAll(resources)
-                        } else {
-                            if (viewModel.selectAll(resources, maxAssets)) {
-                                Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
-                            }
-                        }
-                    }) {
-                        Text(
-                            text = if (allSelected || (isAlreadyFull && hasSelected)) {
-                                stringResource(id = R.string.text_deselect_all)
-                            } else {
-                                stringResource(id = R.string.text_select_all)
-                            }
-                        )
-                    }*/
                 }
             }
 
@@ -418,6 +631,247 @@ private fun AssetContent(viewModel: AssetViewModel, requestType: RequestType) {
                     }
                 }
             }
+        }*/
+    }
+
+    if (showBottomSheet) {
+
+        ModalBottomSheet(
+            onDismissRequest = {
+                scope.launch {
+                    bottomSheetState.hide()
+                }
+                showBottomSheet = false
+            },
+            containerColor = colors.background,
+            sheetState = bottomSheetState
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+            ) {
+
+                // Header with Title and Close Button
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+
+                    Text(
+                        text = "Photo Guide",
+                        color = colors.onCustom400,
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+
+                    IconButton(onClick = {
+                        showBottomSheet = false
+                        scope.launch {
+                            bottomSheetState.hide()
+                        }
+                    }) {
+                        Icon(
+                            painter = painterResource(R.drawable.close_circled_icon),
+                            contentDescription = "Close",
+                        )
+                    }
+                }
+
+                Image(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    painter = painterResource(R.drawable.photo_guide_image),
+                    contentDescription = "Photo Guide",
+                )
+
+                // Spacer to ensure padding at the bottom
+                Spacer(modifier = Modifier.height(16.dp))
+                // Text Section with Heading
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    Text(
+                        style = MaterialTheme.typography.titleMedium,
+                        text = "Background:",
+                        fontWeight = FontWeight.SemiBold,
+                        color = colors.onCustom400,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    Text(
+                        text = buildAnnotatedString {
+                            append(" • Plain white or light-colored background.\n")
+                            append(" • No shadows, patterns, or objects behind you.\n")
+                        },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = colors.onSurfaceVariant,
+                        textAlign = TextAlign.Start
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        style = MaterialTheme.typography.titleMedium,
+                        text = "Face Position:",
+                        fontWeight = FontWeight.SemiBold,
+                        color = colors.onCustom400,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    Text(
+                        text = buildAnnotatedString {
+                            append(" • Face should be centered and fully visible.\n")
+                            append(" • Neutral expression (no smile, mouth closed).\n")
+                            append(" • Eyes open and clearly visible.\n")
+                        },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = colors.onSurfaceVariant,
+                        textAlign = TextAlign.Start
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        style = MaterialTheme.typography.titleMedium,
+                        text = "Glasses & Accessories:",
+                        fontWeight = FontWeight.SemiBold,
+                        color = colors.onCustom400,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    Text(
+                        text = buildAnnotatedString {
+                            append(" • No sunglasses.\n")
+                            append(" • If you wear glasses, ensure no glare.\n")
+                            append(" • No headphones covering the face.\n")
+                        },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = colors.onSurfaceVariant,
+                        textAlign = TextAlign.Start
+                    )
+                }
+
+            }
+
+        }
+    }
+}
+
+@Preview("Light")
+@Preview("Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun GuideDialogPreview() {
+    PreviewContainer {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+        ) {
+
+            // Header with Title and Close Button
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+
+                Text(
+                    text = "Photo Guide",
+                    color = colors.onCustom400,
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                IconButton(onClick = {
+
+                }) {
+                    Icon(
+                        painter = painterResource(R.drawable.close_circled_icon),
+                        contentDescription = "Close",
+                        tint = colors.onSurfaceVariant
+                    )
+                }
+            }
+            Image(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                painter = painterResource(R.drawable.photo_guide_image),
+                contentDescription = "Photo Guide",
+            )
+
+            // Spacer to ensure padding at the bottom
+            Spacer(modifier = Modifier.height(16.dp))
+            // Text Section with Heading
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    style = MaterialTheme.typography.titleMedium,
+                    text = "Background:",
+                    fontWeight = FontWeight.SemiBold,
+                    color = colors.onCustom400,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Text(
+                    text = buildAnnotatedString {
+                        append(" • Plain white or light-colored background.\n")
+                        append(" • No shadows, patterns, or objects behind you.\n")
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = colors.onSurfaceVariant,
+                    textAlign = TextAlign.Start
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    style = MaterialTheme.typography.titleMedium,
+                    text = "Face Position:",
+                    fontWeight = FontWeight.SemiBold,
+                    color = colors.onCustom400,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Text(
+                    text = buildAnnotatedString {
+                        append(" • Face should be centered and fully visible.\n")
+                        append(" • Neutral expression (no smile, mouth closed).\n")
+                        append(" • Eyes open and clearly visible.\n")
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = colors.onSurfaceVariant,
+                    textAlign = TextAlign.Start
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    style = MaterialTheme.typography.titleMedium,
+                    text = "Glasses & Accessories:",
+                    fontWeight = FontWeight.SemiBold,
+                    color = colors.onCustom400,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Text(
+                    text = buildAnnotatedString {
+                        append(" • No sunglasses.\n")
+                        append(" • If you wear glasses, ensure no glare.\n")
+                        append(" • No headphones covering the face.\n")
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = colors.onSurfaceVariant,
+                    textAlign = TextAlign.Start
+                )
+            }
+
+
         }
     }
 }
@@ -427,7 +881,7 @@ private fun AssetImage(
     modifier: Modifier = Modifier,
     assetInfo: AssetInfo,
     selectedList: SnapshotStateList<AssetInfo>,
-    navigateToPreview: () -> Unit,
+    navigateToPreview: (Boolean) -> Unit,
     onLongClick: (Boolean) -> Unit,
 ) {
     val selected = selectedList.any { it.id == assetInfo.id }
@@ -448,7 +902,16 @@ private fun AssetImage(
             isSelected = selected,
             resourceType = assetInfo.resourceType,
             durationString = assetInfo.formatDuration(),
-            navigateToPreview = navigateToPreview,
+            navigateToPreview = {
+                val isSelected = !selected
+                if (isSelected) {
+                    selectedList.clear()
+                    selectedList.add(assetInfo)
+                } else {
+                    selectedList.clear()
+                }
+                navigateToPreview(isSelected)
+            },
             onLongClick = {
 
                 val isSelected = !selected
@@ -506,7 +969,7 @@ fun AssetImagePreview() {
                 }
             )
             AssetImageIndicator(
-                assetInfo = AssetInfo(0L, "", "","","",0L,0,"", 0L,0L),
+                assetInfo = AssetInfo(0L, "", "", "", "", 0L, 0, "", 0L, 0L),
                 selected = true,
                 assetSelected = SnapshotStateList<AssetInfo>()
             )
@@ -518,9 +981,14 @@ private sealed class TabItem(
     @StringRes val resourceId: Int,
     val screen: @Composable (AssetViewModel) -> Unit,
 ) {
-    data object All : TabItem(R.string.tab_item_all, { viewModel -> AssetContent(viewModel, RequestType.COMMON) })
+    data object All :
+        TabItem(R.string.tab_item_all, { viewModel -> AssetContent(viewModel, RequestType.COMMON) })
 
-    data object Video : TabItem(R.string.tab_item_video, { viewModel -> AssetContent(viewModel, RequestType.VIDEO) })
+    data object Video : TabItem(
+        R.string.tab_item_video,
+        { viewModel -> AssetContent(viewModel, RequestType.VIDEO) })
 
-    data object Image : TabItem(R.string.tab_item_image, { viewModel -> AssetContent(viewModel, RequestType.IMAGE) })
+    data object Image : TabItem(
+        R.string.tab_item_image,
+        { viewModel -> AssetContent(viewModel, RequestType.IMAGE) })
 }

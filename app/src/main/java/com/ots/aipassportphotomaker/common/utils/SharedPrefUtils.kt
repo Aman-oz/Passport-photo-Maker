@@ -4,4 +4,5 @@ package com.ots.aipassportphotomaker.common.utils
 // Copyright (c) 2025 Ozi Publishing. All rights reserved.
 object SharedPrefUtils {
     const val DARK_MODE = "dark_mode"
+    const val SHOW_PHOTO_GUIDE_DIALOG = "show_photo_guide_dialog"
 }
