@@ -22,9 +22,9 @@ class ColorFactory @Inject constructor() {
     }
 
     // State holders
-    private val _selectedColorType = mutableStateOf(ColorType.WHITE)
-    private val _customColor = mutableStateOf(Color.White)
-    private val _selectedColor = mutableStateOf(Color.White)
+    private val _selectedColorType = mutableStateOf(ColorType.TRANSPARENT)
+    private val _customColor = mutableStateOf(Color.Transparent)
+    private val _selectedColor = mutableStateOf(Color.Transparent)
 
     // Public getters
     val selectedColorType get() = _selectedColorType.value
@@ -75,9 +75,9 @@ class ColorFactory @Inject constructor() {
 
     // Reset to default
     fun resetToDefault() {
-        _selectedColorType.value = ColorType.WHITE
-        _selectedColor.value = Color.White
-        _customColor.value = Color.White
+        _selectedColorType.value = ColorType.TRANSPARENT
+        _selectedColor.value = Color.Transparent
+        _customColor.value = Color.Transparent
     }
 
     // Check if custom color is selected and different from default colors

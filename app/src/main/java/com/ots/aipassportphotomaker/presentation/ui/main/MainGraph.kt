@@ -9,6 +9,8 @@ import com.ots.aipassportphotomaker.common.ext.composableHorizontalSlide
 import com.ots.aipassportphotomaker.common.ext.sharedViewModel
 import com.ots.aipassportphotomaker.domain.bottom_nav.Graph
 import com.ots.aipassportphotomaker.domain.bottom_nav.Page
+import com.ots.aipassportphotomaker.presentation.editimage.EditImagePage
+import com.ots.aipassportphotomaker.presentation.editimage.EditImageScreenViewModel
 import com.ots.aipassportphotomaker.presentation.ui.bottom_nav.NavigationBarScreen
 import com.ots.aipassportphotomaker.presentation.ui.bottom_nav.NavigationBarSharedViewModel
 import com.ots.aipassportphotomaker.presentation.ui.createid.PhotoIDDetailPage
@@ -102,6 +104,14 @@ fun MainGraph(
             ImageProcessingPage(
                 mainRouter = MainRouter(mainNavController),
                 viewModel = hiltViewModel<ImageProcessingScreenViewModel>(),
+                sharedViewModel = hiltViewModel<NavigationBarSharedViewModel>(),
+            )
+        }
+
+        composableHorizontalSlide<Page.EditImageScreen> {
+            EditImagePage(
+                mainRouter = MainRouter(mainNavController),
+                viewModel = hiltViewModel<EditImageScreenViewModel>(),
                 sharedViewModel = hiltViewModel<NavigationBarSharedViewModel>(),
             )
         }

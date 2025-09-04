@@ -106,7 +106,7 @@ fun DocumentInfoPage(
 
     val uiState by viewModel.uiState.collectAsState()
 
-    val selectedColor by viewModel.selectedColor.collectAsState(initial = Color.White)
+    val selectedColor by viewModel.selectedColor.collectAsState(initial = Color.Transparent)
     val colorFactory = viewModel.colorFactory
 
     val showAssetPicker = remember { mutableStateOf(false) }
@@ -128,7 +128,7 @@ fun DocumentInfoPage(
                     documentId = navigationState.documentId,
                     imagePath = viewModel.selectedImagesList.firstOrNull()?.uriString?.toString(),
                     selectedDpi = viewModel.selectedDpi,
-                    selectedBackgroundColor = if (colorFactory.isCustomColorSelected()) selectedColor else Color.White
+                    selectedBackgroundColor = selectedColor
 
                 )
             }
@@ -622,7 +622,7 @@ fun ChecklistItem(
     text: String,
     isChecked: Boolean,
     onSelectDpi: (String) -> Unit = { "300" },
-    selectedColor: Color = Color.White,
+    selectedColor: Color = Color.Transparent,
     colorFactory: ColorFactory,
     onSetCustomColor: (Color) -> Unit = {},
     onBackgroundOptionChanged: (BackgroundOption) -> Unit = {},

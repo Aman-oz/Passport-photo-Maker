@@ -12,6 +12,7 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
 // Created by amanullah on 24/07/2025.
@@ -31,9 +32,34 @@ class NetworkModule {
             .build()
     }
 
+    /*@Provides
+    @Singleton
+    fun provideOkHttpClient(
+        loggingInterceptor: HttpLoggingInterceptor
+    ): OkHttpClient {
+        return OkHttpClient.Builder()
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)  // Increase timeout for large files
+            .writeTimeout(60, TimeUnit.SECONDS) // Increase timeout for large files
+            .addInterceptor(loggingInterceptor)
+            .build()
+    }*/
+
     @Provides
     @Singleton
     fun provideOkHttpClient(): OkHttpClient = OkHttpClient.Builder()
+        .addInterceptor { chain ->
+            val request = chain.request().newBuilder()
+                .addHeader("Cache-Control", "no-cache, no-store, must-revalidate, max-age=0")
+                .addHeader("Pragma", "no-cache")
+                .addHeader("Expires", "0")
+                .build()
+            chain.proceed(request)
+        }
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .readTimeout(60, TimeUnit.SECONDS)  // Increase timeout for large files
+        .writeTimeout(60, TimeUnit.SECONDS) // Increase timeout for large files
+
         .addInterceptor(HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BASIC))
         .build()
 

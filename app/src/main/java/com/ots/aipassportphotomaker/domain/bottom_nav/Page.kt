@@ -41,6 +41,13 @@ sealed class Page {
     ) : Page()
 
     @Serializable
+    data class EditImageScreen(
+        val documentId: Int,
+        val imageUrl: String?,
+        val selectedBackgroundColor: String?
+    ) : Page()
+
+    @Serializable
     data class SelectPhotoScreen(val id: Int) : Page()
 
     @Serializable

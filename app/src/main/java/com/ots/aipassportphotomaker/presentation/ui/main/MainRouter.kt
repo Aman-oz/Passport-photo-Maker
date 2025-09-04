@@ -45,6 +45,18 @@ class MainRouter(
         ))
     }
 
+    fun navigateToEditImageScreen(
+        documentId: Int,
+        imageUrl: String?,
+        selectedBackgroundColor: Color?
+    ) {
+        mainNavController.navigate(Page.EditImageScreen(
+            documentId = documentId,
+            imageUrl = imageUrl,
+            selectedBackgroundColor = selectedBackgroundColor?.toString()
+        ))
+    }
+
     fun navigateToSelectPhotoScreen(documentId: Int) {
         mainNavController.navigate(Page.SelectPhotoScreen(documentId))
     }

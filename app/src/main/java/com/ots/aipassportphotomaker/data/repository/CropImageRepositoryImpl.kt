@@ -27,29 +27,37 @@ class CropImageRepositoryImpl @Inject constructor(
     ): Result<ApiResponse> = runCatching {
         Log.d(TAG, "cropImage: file=${file.name}, width=$width, height=$height, unit=$unit, dpi=$dpi")
 
-        // Prepare multipart file
-//        val filePart = MultipartBody.Part.createFormData(
-//            "file",
-//            file.name,
-//            okhttp3.RequestBody.create(MediaType.parse("image/*"), file)
-//        )
+        // Validate file
+        if (!file.exists() || file.length() == 0L) {
+            throw IllegalStateException("File is empty or does not exist: ${file.absolutePath}")
+        }
 
-        val filePart = MultipartBody.Part.createFormData(
-            "file",
-            file.name,
-            file.asRequestBody("image/*".toMediaTypeOrNull())
-        )
+        // Prepare multipart file with specific MIME type
+        val requestFile = file.asRequestBody("image/jpeg".toMediaTypeOrNull() ?: "image/*".toMediaTypeOrNull())
+        val filePart = MultipartBody.Part.createFormData("file", file.name, requestFile)
+
+        // Log request details
+        Log.d(TAG, "Request: width=$width, height=$height, unit=$unit, dpi=$dpi, requestId=${java.util.UUID.randomUUID()}, file=${file.name}")
 
         // Call Retrofit API
-        cropImageApi.cropImage(
-            width = width.toString(),
-            height = height.toString(),
+        val response = cropImageApi.cropImage(
+            width = width,
+            height = height,
             unit = unit,
-            dpi = dpi.toString(),
+            dpi = dpi,
             requestId = java.util.UUID.randomUUID().toString(),
             file = filePart
-        ).also {
-            Log.d("API_RESPONSE", "Deserialized: $it")
+        )
+
+        if (response.isSuccessful) {
+            response.body()?.also {
+                Log.d("API_RESPONSE", "Deserialized: $it")
+                return@runCatching it
+            } ?: throw IllegalStateException("Response body is null")
+        } else {
+            val errorBody = response.errorBody()?.string() ?: "No error details"
+            Log.e(TAG, "Server error: ${response.code()} - $errorBody")
+            throw retrofit2.HttpException(response)
         }
     }.onFailure { error ->
         Log.e(TAG, "Failed to crop image: ${error.message}", error)

@@ -5,12 +5,33 @@ import android.net.Uri
 import android.provider.MediaStore
 import java.io.File
 import java.io.FileOutputStream
+import java.io.IOException
 
 // Created by amanullah on 24/07/2025.
 // Copyright (c) 2025 Ozi Publishing. All rights reserved.
 object FileUtils {
 
     private const val TAG = "FileUtils"
+
+    fun uriToFile(context: Context, uri: Uri): File {
+        if (uri == Uri.EMPTY) {
+            throw IOException("Image URI is empty")
+        }
+        val file = File(context.cacheDir, "temp_image_${System.currentTimeMillis()}.jpg")
+        try {
+            context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                FileOutputStream(file).use { outputStream ->
+                    inputStream.copyTo(outputStream)
+                }
+            } ?: throw IOException("Failed to open input stream for URI: $uri")
+        } catch (e: IOException) {
+            throw IOException("Failed to convert URI to File: $uri", e)
+        }
+        if (!file.exists() || file.length() == 0L) {
+            throw IOException("Created file is empty or does not exist: $file")
+        }
+        return file
+    }
 
     fun getFileFromContentUri(context: Context, contentUri: Uri): File? {
         try {
