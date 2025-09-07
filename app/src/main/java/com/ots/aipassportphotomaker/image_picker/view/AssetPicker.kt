@@ -6,6 +6,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
@@ -15,6 +16,10 @@ import com.ots.aipassportphotomaker.image_picker.model.AssetPickerConfig
 import com.ots.aipassportphotomaker.image_picker.provider.AssetPickerRepository
 import com.ots.aipassportphotomaker.image_picker.viewmodel.AssetViewModel
 import com.ots.aipassportphotomaker.image_picker.viewmodel.AssetViewModelFactory
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun AssetPicker(
@@ -25,6 +30,7 @@ fun AssetPicker(
 ) {
     val context = LocalContext.current
     val navController = rememberNavController()
+    val coroutineScope = rememberCoroutineScope()
     val viewModel: AssetViewModel = viewModel(
         factory = AssetViewModelFactory(
             assetPickerRepository = AssetPickerRepository(context),
@@ -33,12 +39,23 @@ fun AssetPicker(
     )
     val isLoading = remember { mutableStateOf(true) }
 
-    LaunchedEffect(Unit) {
-        viewModel.initDirectories()
-        isLoading.value = false
+    /*LaunchedEffect(Unit) {
+        coroutineScope.launch {
+            viewModel.initDirectories()
+            isLoading.value = false
+        }
+    }*/
+
+    CompositionLocalProvider(LocalAssetConfig provides assetPickerConfig) {
+        AssetPickerRoute(
+            navController = navController,
+            viewModel = viewModel,
+            onPicked = onPicked,
+            onClose = onClose,
+        )
     }
 
-    when {
+    /*when {
         isLoading.value -> {
             onLoading?.invoke() ?: CircularProgressIndicator()
         }
@@ -52,5 +69,5 @@ fun AssetPicker(
                 )
             }
         }
-    }
+    }*/
 }

@@ -8,8 +8,13 @@ import com.ots.aipassportphotomaker.image_picker.model.RequestType
 internal class AssetPickerRepository(
     private val context: Context
 ) {
-    suspend fun getAssets(requestType: RequestType): List<AssetInfo> {
-        return AssetLoader.load(context, requestType)
+    suspend fun getAssets(requestType: RequestType, limit: Int = 100, offset: Int = 0): List<AssetInfo> {
+//        return AssetLoader.load(context, requestType)
+        return if (requestType == RequestType.IMAGE) {
+            AssetLoader.load(context, requestType, limit, offset)
+        } else {
+            emptyList()
+        }
     }
 
     fun insertImage(): Uri? {

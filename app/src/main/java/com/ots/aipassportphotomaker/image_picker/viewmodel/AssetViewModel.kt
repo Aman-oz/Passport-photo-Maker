@@ -21,25 +21,41 @@ internal class AssetViewModel(
     private val navController: NavController,
 ) : ViewModel() {
 
-    private val assets = mutableStateListOf<AssetInfo>()
-    private val _directoryGroup = mutableStateListOf<AssetDirectory>()
+//    private val assets = mutableStateListOf<AssetInfo>()
+    private val _assets = mutableStateListOf<AssetInfo>()
+    val assets: List<AssetInfo> get() = _assets
 
-    val directoryGroup: List<AssetDirectory>
-        get() = _directoryGroup
+    private val _directoryGroup = mutableStateListOf<AssetDirectory>()
+    val directoryGroup: List<AssetDirectory> get() = _directoryGroup
 
     val selectedList = mutableStateListOf<AssetInfo>()
     var directory by mutableStateOf(init_directory)
 
+    private var currentOffset = 0
+    private val batchSize = 100
+
     suspend fun initDirectories() {
-        initAssets(RequestType.COMMON)
+        currentOffset = 0
+        _assets.clear()
+        _directoryGroup.clear()
+        loadNextBatch()
+//        initAssets(RequestType.IMAGE)
         val directoryList = assets.groupBy {
             it.directory
         }.map {
             AssetDirectory(directory = it.key, assets = it.value)
         }
-        _directoryGroup.clear()
         _directoryGroup.add(AssetDirectory(directory = init_directory, assets = assets))
         _directoryGroup.addAll(directoryList)
+    }
+
+    private suspend fun loadNextBatch() {
+        val newAssets = assetPickerRepository.getAssets(RequestType.IMAGE, batchSize, currentOffset)
+        _assets.addAll(newAssets)
+        currentOffset += newAssets.size
+        if (newAssets.size == batchSize) {
+            loadNextBatch()
+        }
     }
 
     fun clear() {
@@ -54,7 +70,7 @@ internal class AssetViewModel(
         }
     }
 
-    fun getGroupedAssets(requestType: RequestType): Map<String, List<AssetInfo>> {
+    /*fun getGroupedAssets(requestType: RequestType): Map<String, List<AssetInfo>> {
         val assetList = _directoryGroup.first { it.directory == directory }.assets
 
         return assetList.filter {
@@ -65,6 +81,11 @@ internal class AssetViewModel(
             }
         }
             .sortedByDescending { it.date }
+            .groupBy { it.dateString }
+    }*/
+
+    fun getGroupedAssets(requestType: RequestType): Map<String, List<AssetInfo>> {
+        return _assets.sortedByDescending { it.date }
             .groupBy { it.dateString }
     }
 
@@ -105,8 +126,8 @@ internal class AssetViewModel(
         return maxAssets - selectedIds.size < newSelectedList.size
     }
 
-    private suspend fun initAssets(requestType: RequestType) {
+    /*private suspend fun initAssets(requestType: RequestType) {
         assets.clear()
         assets.addAll(assetPickerRepository.getAssets(requestType))
-    }
+    }*/
 }

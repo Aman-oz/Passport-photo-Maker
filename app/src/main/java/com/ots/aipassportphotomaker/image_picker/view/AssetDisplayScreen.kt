@@ -28,10 +28,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -46,6 +49,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -73,12 +77,14 @@ import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
+import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.common.utils.SharedPrefUtils
 import com.ots.aipassportphotomaker.image_picker.component.AssetImageItem
 import com.ots.aipassportphotomaker.image_picker.model.AssetInfo
 import com.ots.aipassportphotomaker.image_picker.model.AssetResourceType
 import com.ots.aipassportphotomaker.image_picker.model.RequestType
 import com.ots.aipassportphotomaker.image_picker.viewmodel.AssetViewModel
+import com.ots.aipassportphotomaker.presentation.ui.components.LoaderFullScreen
 import com.ots.aipassportphotomaker.presentation.ui.theme.colors
 import com.ots.aipassportphotomaker.presentation.ui.theme.custom300
 import com.ots.aipassportphotomaker.presentation.ui.theme.onCustom300
@@ -92,7 +98,19 @@ internal fun AssetDisplayScreen(
     onPicked: (List<AssetInfo>) -> Unit,
     onClose: (List<AssetInfo>) -> Unit,
 ) {
+
+    var isLoading by remember { mutableStateOf(true) }
     val showTab by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        isLoading = true
+        try {
+            viewModel.initDirectories()
+        } finally {
+            isLoading = false
+        }
+    }
+
     BackHandler {
         if (viewModel.selectedList.isNotEmpty()) {
             viewModel.clear()
@@ -123,29 +141,47 @@ internal fun AssetDisplayScreen(
                 .background(colors.background)
                 .fillMaxSize()
         ) {
+            if (isLoading) {
+                LoaderFullScreen()
+            } else {
+                val maxAssets = LocalAssetConfig.current.maxAssets
+                if (viewModel.assets.isEmpty()) {
+                    // No assets found message
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No images found",
+                            color = colors.onBackground,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+                } else {
+                    // Show assets when loaded
+                    AssetContent(viewModel, RequestType.IMAGE)
+                }
 
-            val maxAssets = LocalAssetConfig.current.maxAssets
-            AssetContent(viewModel, RequestType.IMAGE)
-
-            if (viewModel.selectedList.isNotEmpty()) {
-                SelectPhotoButton(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
-                        .background(Color.Transparent)
-                        .pointerInput(Unit) {
-                            detectTapGestures(
-                                onTap = {
-                                    onPicked(viewModel.selectedList)
-                                    Log.d(
-                                        "AssetDisplayScreen",
-                                        "Settings icon tapped"
-                                    )
-                                }
-                            )
-                        },
-                    maxAssets
-                )
+                if (viewModel.selectedList.isNotEmpty()) {
+                    SelectPhotoButton(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
+                            .background(Color.Transparent)
+                            .pointerInput(Unit) {
+                                detectTapGestures(
+                                    onTap = {
+                                        onPicked(viewModel.selectedList)
+                                        Log.d(
+                                            "AssetDisplayScreen",
+                                            "Settings icon tapped"
+                                        )
+                                    }
+                                )
+                            },
+                        maxAssets
+                    )
+                }
             }
         }
 
@@ -430,7 +466,7 @@ fun AssetTabPreview() {
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun AssetContent(viewModel: AssetViewModel, requestType: RequestType) {
-    val assets = viewModel.getGroupedAssets(requestType)
+    val assets = viewModel.getGroupedAssets(requestType).values.flatten()
     val context = LocalContext.current
     val gridCount = LocalAssetConfig.current.gridCount
     val maxAssets = LocalAssetConfig.current.maxAssets
@@ -464,8 +500,7 @@ private fun AssetContent(viewModel: AssetViewModel, requestType: RequestType) {
         }
     }
 
-    // Flatten the grouped assets into a single list
-    val allAssets = assets.values.flatten()
+    Logger.i("AssetContent", "All assets count: ${assets.size}, assets: $assets")
 
     // Define sample images
     val sampleImages = listOf(
@@ -500,7 +535,7 @@ private fun AssetContent(viewModel: AssetViewModel, requestType: RequestType) {
         viewModel.toggleSelect(true, sampleImages[0])
     }*/
 
-    if (allAssets.isEmpty()) {
+    /*if (allAssets.isEmpty()) {
         return Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
@@ -510,9 +545,9 @@ private fun AssetContent(viewModel: AssetViewModel, requestType: RequestType) {
                 textAlign = TextAlign.Center
             )
         }
-    }
+    }*/
 
-    LazyColumn {
+    /*LazyColumn {
         item {
             FlowRow(maxItemsInEachRow = gridCount) {
                 // Add Camera item
@@ -595,43 +630,72 @@ private fun AssetContent(viewModel: AssetViewModel, requestType: RequestType) {
                 }
             }
         }
-        /*assets.forEach { (dateString, resources) ->
-            val allSelected = viewModel.isAllSelected(resources)
-            val isAlreadyFull = viewModel.selectedList.size == maxAssets
-            val hasSelected = viewModel.hasSelected(resources)
-
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+    }*/
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(gridCount),
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        item {
+            Box(
+                modifier = Modifier
+                    .size(itemSize)
+                    .padding(horizontal = 4.dp, vertical = 4.dp)
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(colors.custom300)
+                    .clickable {
+                        if (!isPhotoGuideShown.value) {
+                            scope.launch { bottomSheetState.expand() }
+                            showBottomSheet = true
+                            sharedPreferences.edit()
+                                .putBoolean(SharedPrefUtils.SHOW_PHOTO_GUIDE_DIALOG, true)
+                                .apply()
+                            isPhotoGuideShown.value = true
+                        } else {
+                            cameraUri = viewModel.getUri()
+                            cameraLauncher.launch(cameraUri!!)
+                        }
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Column {
+                    Icon(
+                        modifier = Modifier.size(40.dp).align(Alignment.CenterHorizontally),
+                        painter = painterResource(R.drawable.camera_icon),
+                        contentDescription = stringResource(R.string.label_camera),
+                        tint = colors.onCustom300
+                    )
                     Text(
-                        text = dateString,
-                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium)
+                        text = stringResource(R.string.label_camera),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = colors.onCustom300,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center
                     )
                 }
             }
+        }
 
-            item {
-                val itemSize: Dp = (LocalConfiguration.current.screenWidthDp.dp / gridCount)
-                FlowRow(maxItemsInEachRow = gridCount) {
-                    resources.forEachIndexed { index, assetInfo ->
-                        AssetImage(
-                            modifier = Modifier
-                                .size(itemSize)
-                                .padding(horizontal = 1.dp, vertical = 1.dp),
-                            assetInfo = assetInfo,
-                            navigateToPreview = { viewModel.navigateToPreview(index, dateString, requestType) },
-                            selectedList = viewModel.selectedList,
-                            onLongClick = { selected -> viewModel.toggleSelect(selected, assetInfo) }
-                        )
-                    }
-                }
-            }
-        }*/
+        items(sampleImages.size) { index ->
+            AssetImage(
+                modifier = Modifier.size(itemSize),
+                assetInfo = sampleImages[index],
+                navigateToPreview = { selected -> viewModel.toggleSelect(selected, sampleImages[index]) },
+                selectedList = viewModel.selectedList,
+                onLongClick = { selected -> viewModel.toggleSelect(selected, sampleImages[index]) }
+            )
+        }
+
+        items(assets.size) { index ->
+            AssetImage(
+                modifier = Modifier.size(itemSize),
+                assetInfo = assets[index],
+                navigateToPreview = { selected -> viewModel.toggleSelect(selected, assets[index]) },
+                selectedList = viewModel.selectedList,
+                onLongClick = { selected -> viewModel.toggleSelect(selected, assets[index]) }
+            )
+        }
     }
 
     if (showBottomSheet) {
