@@ -218,8 +218,15 @@ class ImageProcessingScreenViewModel @Inject constructor(
                     break
                 } catch (error: Throwable) {
                     Logger.e("ImageProcessingScreenViewModel", "cropImage: Error during cropping: ${error.message}", error)
+                    Logger.i("ImageProcessingScreenViewModel","user image: ${file.absolutePath}")
                     _error.value = error.message
                     _processingStage.value = ProcessingStage.NONE
+                    lastCroppedUrl = imagePath
+                    _uiState.value = _uiState.value.copy(
+                        finalImageUrl = imagePath,
+                        showLoading = false
+                    )
+                    onImageCropped()
                     break
                 }
             }

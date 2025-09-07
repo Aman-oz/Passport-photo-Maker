@@ -1,8 +1,14 @@
 package com.ots.aipassportphotomaker.presentation.editimage
 
+import android.content.ContentValues
 import android.content.Context
+import android.graphics.Bitmap
 import android.net.Uri
+import android.os.Environment
+import android.provider.MediaStore
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
 import com.ots.aipassportphotomaker.common.utils.ColorUtils.parseColorFromString
 import com.ots.aipassportphotomaker.common.utils.FileUtils
@@ -108,6 +114,33 @@ class EditImageScreenViewModel @Inject constructor(
         }.onError { error ->
             Logger.e("EditImageScreenViewModel", "Failed to fetch document: ${error.message}", error)
             _error.value = "Failed to load document details"
+        }
+    }
+
+    fun saveEditedImage(editedBitmap: ImageBitmap) {
+        launch {
+            val editedUri = saveBitmapToMediaStore(context, editedBitmap.asAndroidBitmap(), "edited_${System.currentTimeMillis()}.png")
+            if (editedUri != null) {
+                _uiState.value = _uiState.value.copy(imageUrl = editedUri.toString())
+                Logger.i("EditImageScreenViewModel", "Saved edited image to $editedUri")
+            } else {
+                _error.value = "Failed to save edited image"
+            }
+        }
+    }
+
+    private fun saveBitmapToMediaStore(context: Context, bitmap: Bitmap, fileName: String): Uri? {
+        val contentValues = ContentValues().apply {
+            put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
+            put(MediaStore.Images.Media.MIME_TYPE, "image/png")
+            put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
+        }
+        return context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)?.let { uri ->
+            context.contentResolver.openOutputStream(uri)?.use { outputStream ->
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+                true
+            } ?: run { context.contentResolver.delete(uri, null, null); null }
+            uri
         }
     }
 

@@ -508,7 +508,6 @@ private fun DocumentInfoScreen(
 
                         Button(
                             onClick = {
-                                Toast.makeText(context, "Create Photo for: ${uiState.documentType}", Toast.LENGTH_SHORT).show()
                                 onCreatePhotoClick(uiState.documentType)
                             },
                             shape = RoundedCornerShape(24.dp),
