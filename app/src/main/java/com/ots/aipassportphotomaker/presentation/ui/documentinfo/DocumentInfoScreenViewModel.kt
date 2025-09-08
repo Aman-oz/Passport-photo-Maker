@@ -78,12 +78,14 @@ class DocumentInfoScreenViewModel @Inject constructor(
     fun onOpenCameraClicked() {
 //        _navigationState.tryEmit(PhotoIDScreenNavigationState.TakePhotoScreen(documentId))
     }
+
     fun onCreatePhotoClicked() {
         Logger.i("DocumentInfoScreenViewModel", "onCreatePhotoClicked: selectedImagesList=$selectedImagesList")
         _navigationState.tryEmit(
             DocumentInfoScreenNavigationState.ProcessingScreen(
                 documentId = documentId,
                 imagePath = selectedImagesList.firstOrNull()?.uriString?.toString(),
+                filePath = selectedImagesList.firstOrNull()?.filepath?.toString(),
                 selectedDpi = selectedDpi,
                 selectedBackgroundColor = selectedColor.replayCache.firstOrNull()
 

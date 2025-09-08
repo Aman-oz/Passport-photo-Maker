@@ -4,11 +4,14 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.work.WorkManager
 import com.ots.aipassportphotomaker.data.remote.api.CropImageApi
+import com.ots.aipassportphotomaker.data.remote.api.RemoveBackgroundApi
 import com.ots.aipassportphotomaker.data.repository.CropImageRepositoryImpl
+import com.ots.aipassportphotomaker.data.repository.RemoveBackgroundRepositoryImpl
 import com.ots.aipassportphotomaker.data.util.DiskExecutor
 import com.ots.aipassportphotomaker.data.util.NetworkMonitorImpl
 import com.ots.aipassportphotomaker.domain.permission.PermissionsHelper
 import com.ots.aipassportphotomaker.domain.repository.CropImageRepository
+import com.ots.aipassportphotomaker.domain.repository.RemoveBackgroundRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -51,5 +54,11 @@ class AppModule {
     @Provides
     fun provideCropImageRepository(cropImageApi: CropImageApi): CropImageRepository {
         return CropImageRepositoryImpl(cropImageApi)
+    }
+
+    @Provides
+    @Singleton
+    fun provideRemoveBackgroundRepository(api: RemoveBackgroundApi): RemoveBackgroundRepository {
+        return RemoveBackgroundRepositoryImpl(api)
     }
 }

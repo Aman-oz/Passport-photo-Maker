@@ -19,3 +19,7 @@ annotation class MainDispatcher
 @Qualifier
 @Retention(AnnotationRetention.RUNTIME)
 annotation class DefaultDispatcher
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class OziBackgroundRemoverService

@@ -476,8 +476,8 @@ open class GraphicOverlay(context: Context?, attrs: AttributeSet?) :
             } else {
                 drawViewWeakReference.get()?.apply {
                     imageBitmap = result
-                    undoButton!!.isEnabled = true
-                    loadingModal!!.visibility = INVISIBLE
+                    undoButton?.isEnabled = true
+                    loadingModal?.visibility = INVISIBLE
                     invalidate()
                 }
             }

@@ -127,6 +127,7 @@ fun DocumentInfoPage(
                 mainRouter.navigateToImageProcessingScreen(
                     documentId = navigationState.documentId,
                     imagePath = viewModel.selectedImagesList.firstOrNull()?.uriString?.toString(),
+                    filePath = viewModel.selectedImagesList.firstOrNull()?.filepath?.toString(),
                     selectedDpi = viewModel.selectedDpi,
                     selectedBackgroundColor = selectedColor
 

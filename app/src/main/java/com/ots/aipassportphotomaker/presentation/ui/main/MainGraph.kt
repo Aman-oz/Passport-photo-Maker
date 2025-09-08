@@ -9,8 +9,8 @@ import com.ots.aipassportphotomaker.common.ext.composableHorizontalSlide
 import com.ots.aipassportphotomaker.common.ext.sharedViewModel
 import com.ots.aipassportphotomaker.domain.bottom_nav.Graph
 import com.ots.aipassportphotomaker.domain.bottom_nav.Page
-import com.ots.aipassportphotomaker.presentation.editimage.EditImagePage
-import com.ots.aipassportphotomaker.presentation.editimage.EditImageScreenViewModel
+import com.ots.aipassportphotomaker.presentation.ui.editimage.EditImagePage
+import com.ots.aipassportphotomaker.presentation.ui.editimage.EditImageScreenViewModel
 import com.ots.aipassportphotomaker.presentation.ui.bottom_nav.NavigationBarScreen
 import com.ots.aipassportphotomaker.presentation.ui.bottom_nav.NavigationBarSharedViewModel
 import com.ots.aipassportphotomaker.presentation.ui.createid.PhotoIDDetailPage
@@ -19,6 +19,8 @@ import com.ots.aipassportphotomaker.presentation.ui.createid.PhotoIDPage
 import com.ots.aipassportphotomaker.presentation.ui.createid.PhotoIDPage2
 import com.ots.aipassportphotomaker.presentation.ui.createid.PhotoIDScreen2ViewModel
 import com.ots.aipassportphotomaker.presentation.ui.createid.PhotoIDScreenViewModel
+import com.ots.aipassportphotomaker.presentation.ui.cutout.CutOutImagePage
+import com.ots.aipassportphotomaker.presentation.ui.cutout.CutOutImageScreenViewModel
 import com.ots.aipassportphotomaker.presentation.ui.documentinfo.DocumentInfoPage
 import com.ots.aipassportphotomaker.presentation.ui.documentinfo.DocumentInfoScreenViewModel
 import com.ots.aipassportphotomaker.presentation.ui.home.HomePage
@@ -112,6 +114,14 @@ fun MainGraph(
             EditImagePage(
                 mainRouter = MainRouter(mainNavController),
                 viewModel = hiltViewModel<EditImageScreenViewModel>(),
+                sharedViewModel = hiltViewModel<NavigationBarSharedViewModel>(),
+            )
+        }
+
+        composableHorizontalSlide<Page.CutOutImageScreen> {
+            CutOutImagePage(
+                mainRouter = MainRouter(mainNavController),
+                viewModel = hiltViewModel<CutOutImageScreenViewModel>(),
                 sharedViewModel = hiltViewModel<NavigationBarSharedViewModel>(),
             )
         }

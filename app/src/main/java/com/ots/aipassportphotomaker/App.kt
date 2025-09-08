@@ -7,6 +7,9 @@ import coil.disk.DiskCache
 import coil.memory.MemoryCache
 import coil.request.CachePolicy
 import coil.util.DebugLogger
+import com.aman.downloader.DownloaderConfig
+import com.aman.downloader.OziDownloader
+import com.aman.downloader.OziDownloader.Companion.create
 import dagger.hilt.android.HiltAndroidApp
 
 // Created by amanullah on 25/07/2025.
@@ -14,8 +17,12 @@ import dagger.hilt.android.HiltAndroidApp
 @HiltAndroidApp
 class App: Application(), ImageLoaderFactory {
 
+    var oziDownloader: OziDownloader? = null
+
     override fun onCreate() {
         super.onCreate()
+
+        oziDownloader = create(applicationContext, DownloaderConfig())
     }
 
     override fun newImageLoader(): ImageLoader {

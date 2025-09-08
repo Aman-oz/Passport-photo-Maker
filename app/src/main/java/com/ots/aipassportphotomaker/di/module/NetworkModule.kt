@@ -4,6 +4,8 @@ import com.jakewharton.retrofit2.adapter.kotlin.coroutines.CoroutineCallAdapterF
 import com.ots.aipassportphotomaker.di.util.BaseUrl
 import com.ots.aipassportphotomaker.data.remote.api.CropImageApi
 import com.ots.aipassportphotomaker.data.remote.api.DocumentApi
+import com.ots.aipassportphotomaker.data.remote.api.RemoveBackgroundApi
+import com.ots.aipassportphotomaker.di.OziBackgroundRemoverService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -29,6 +31,17 @@ class NetworkModule {
             .addConverterFactory(GsonConverterFactory.create())
             .client(client)
             .baseUrl(BaseUrl.CROP_IMAGE_BASE_URL)
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    @OziBackgroundRemoverService
+    fun provideRetrofitForOziBgRemover(okHttpClient: OkHttpClient): Retrofit {
+        return Retrofit.Builder()
+            .baseUrl(BaseUrl.REMOVE_BG_BASE_URL)
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
 
@@ -71,7 +84,14 @@ class NetworkModule {
 
     @Singleton
     @Provides
+    fun provideRemoveBackgroundApi(retrofit: Retrofit): RemoveBackgroundApi {
+        return retrofit.create(RemoveBackgroundApi::class.java)
+    }
+
+    @Singleton
+    @Provides
     fun provideDocumentApi(retrofit: Retrofit): DocumentApi {
         return retrofit.create(DocumentApi::class.java)
     }
 }
+

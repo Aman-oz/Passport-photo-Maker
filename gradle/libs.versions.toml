@@ -40,6 +40,7 @@ material = "1.12.0"
 
 charisbanesComposeVersion = "2024.09.00"
 lottieVersion = "6.4.0"
+oziMediaDownloader = "v1.0.4"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -96,6 +97,7 @@ navigation-compose = { module = "androidx.navigation:navigation-compose", versio
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 accompanist-systemuicontroller = { module = "com.google.accompanist:accompanist-systemuicontroller", version.ref = "accompanistSystemuicontroller" }
 lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "lottieVersion" }
+media-downloader = { module = "com.github.Aman-oz:OziMediaDownloader", version.ref = "oziMediaDownloader" }
 
 compose-colorpicker = { module = "com.github.skydoves:colorpicker-compose", version.ref = "colorpicker" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }

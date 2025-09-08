@@ -2,20 +2,21 @@ package com.ots.aipassportphotomaker.presentation.ui.processimage
 
 import android.content.Context
 import android.net.Uri
-import android.util.Log
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
-import androidx.core.net.toUri
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.aman.downloader.OziDownloader
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
 import com.ots.aipassportphotomaker.common.utils.ColorUtils.parseColorFromString
 import com.ots.aipassportphotomaker.common.utils.FileUtils
 import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.data.model.ApiResponse
+import com.ots.aipassportphotomaker.data.model.RemoverApiResponse
 import com.ots.aipassportphotomaker.domain.model.DocumentEntity
 import com.ots.aipassportphotomaker.domain.model.ProcessingStage
 import com.ots.aipassportphotomaker.domain.repository.CropImageRepository
+import com.ots.aipassportphotomaker.domain.repository.RemoveBackgroundRepository
 import com.ots.aipassportphotomaker.domain.usecase.photoid.GetDocumentDetails
 import com.ots.aipassportphotomaker.domain.util.DispatchersProvider
 import com.ots.aipassportphotomaker.domain.util.NetworkMonitor
@@ -24,10 +25,6 @@ import com.ots.aipassportphotomaker.domain.util.getDocumentWidthAndHeight
 import com.ots.aipassportphotomaker.domain.util.onError
 import com.ots.aipassportphotomaker.domain.util.onSuccess
 import com.ots.aipassportphotomaker.presentation.ui.base.BaseViewModel
-import com.ots.aipassportphotomaker.presentation.ui.components.NoInternetConnectionBanner
-import com.ots.aipassportphotomaker.presentation.ui.documentinfo.DocumentDetailsBundle
-import com.ots.aipassportphotomaker.presentation.ui.documentinfo.DocumentInfoScreenNavigationState
-import com.ots.aipassportphotomaker.presentation.ui.documentinfo.DocumentInfoScreenUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.delay
@@ -38,11 +35,9 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
 import javax.inject.Inject
-import kotlin.sequences.ifEmpty
 
 // Created by amanullah on 27/08/2025.
 // Copyright (c) 2025 Ozi Publishing. All rights reserved.
@@ -52,8 +47,10 @@ class ImageProcessingScreenViewModel @Inject constructor(
     private val getDocumentDetails: GetDocumentDetails,
     imageProcessingBundle: ImageProcessingBundle,
     private val repository: CropImageRepository,
+    private val removeBackgroundRepository: RemoveBackgroundRepository,
     private val dispatcher: DispatchersProvider,
     private val networkMonitor: NetworkMonitor,
+    private val oziDownloader: OziDownloader,
     @ApplicationContext private val context: Context
 ) : BaseViewModel() {
 
@@ -74,8 +71,18 @@ class ImageProcessingScreenViewModel @Inject constructor(
     private val _processingStage = MutableStateFlow(ProcessingStage.NONE)
     val processingStage = _processingStage.asStateFlow()
 
+    private val _removerResult = MutableStateFlow<RemoverApiResponse?>(null)
+    val removerResult = _removerResult.asStateFlow()
+
+    private val _uploadResult = MutableLiveData<kotlin.Result<RemoverApiResponse>>()
+    val uploadResult: LiveData<kotlin.Result<RemoverApiResponse>> get() = _uploadResult
+
+    private val _isLoading = MutableStateFlow<Boolean>(false)
+    val isLoading: MutableStateFlow<Boolean> get() = _isLoading
+
     val documentId: Int = imageProcessingBundle.documentId
     val imagePath: String? = imageProcessingBundle.imagePath
+    val filePath: String? = imageProcessingBundle.filePath
     val selectedDpi: String = imageProcessingBundle.selectedDpi
     val selectedColor: String? = imageProcessingBundle.selectedColor
 
@@ -84,7 +91,7 @@ class ImageProcessingScreenViewModel @Inject constructor(
     var isPortrait: Boolean = true
 
     init {
-        Logger.i("ImageProcessingScreenViewModel"," initialized with documentId: $documentId, imagePath: $imagePath, selectedDpi: $selectedDpi, selectedColor: $selectedColor")
+        Logger.i("ImageProcessingScreenViewModel"," initialized with documentId: $documentId, imagePath: $imagePath, filePath: $filePath selectedDpi: $selectedDpi, selectedColor: $selectedColor")
         onInitialState()
         loadState(true)
     }
@@ -136,6 +143,8 @@ class ImageProcessingScreenViewModel @Inject constructor(
                 val dpi = selectedDpi.toIntOrNull() ?: 300
 
                 Logger.i("ImageProcessingScreenViewModel", "Starting crop with size: $size width=$width, height=$height, unit=$unit, dpi=$dpi")
+
+//                uploadFile(imageFile)
                 cropImage(imageFile, width, height, unit, dpi)
             } catch (e: Exception) {
                 Logger.e("ImageProcessingScreenViewModel", "Error processing image: ${e.message}", e)
@@ -182,7 +191,7 @@ class ImageProcessingScreenViewModel @Inject constructor(
                     apiResponse = repository.cropImage(file, width, height, unit, dpi).getOrThrow()
 
                     delay(2000)
-                    _processingStage.value = ProcessingStage.BACKGROUND_REMOVAL
+                    _processingStage.value = ProcessingStage.CROPPING_IMAGE
 
                     if (apiResponse.filename == null) {
                         Logger.e("ImageProcessingScreenViewModel","cropImage: Server returned null filename")
@@ -192,7 +201,7 @@ class ImageProcessingScreenViewModel @Inject constructor(
                     if (apiResponse.filename == lastCroppedUrl && attempts < maxAttempts - 1) {
                         Logger.w("ImageProcessingScreenViewModel","cropImage: Received same URL as last attempt, retrying... (attempt ${attempts + 1})")
                         attempts++
-                        kotlinx.coroutines.delay(500)
+                        delay(500)
                     } else {
                         delay(1500)
                         _processingStage.value = ProcessingStage.COMPLETED
@@ -214,13 +223,23 @@ class ImageProcessingScreenViewModel @Inject constructor(
                     val errorBody = error.response()?.errorBody()?.string() ?: "No details"
                     Logger.e("ImageProcessingScreenViewModel", "cropImage: Error during cropping: HTTP $errorCode - $errorBody", error)
                     _error.value = "HTTP $errorCode: $errorBody"
-                    _processingStage.value = ProcessingStage.NONE
+                    _processingStage.value = ProcessingStage.ERROR
+                    lastCroppedUrl = imagePath
+                    _uiState.value = _uiState.value.copy(
+                        finalImageUrl = imagePath,
+                        showLoading = false
+                    )
+                    /*lastCroppedUrl?.let { path ->
+
+                        uploadFile(File(path))
+                    }*/
+                    onImageCropped()
                     break
                 } catch (error: Throwable) {
                     Logger.e("ImageProcessingScreenViewModel", "cropImage: Error during cropping: ${error.message}", error)
                     Logger.i("ImageProcessingScreenViewModel","user image: ${file.absolutePath}")
                     _error.value = error.message
-                    _processingStage.value = ProcessingStage.NONE
+                    _processingStage.value = ProcessingStage.ERROR
                     lastCroppedUrl = imagePath
                     _uiState.value = _uiState.value.copy(
                         finalImageUrl = imagePath,
@@ -239,15 +258,182 @@ class ImageProcessingScreenViewModel @Inject constructor(
         }
     }
 
+    fun uploadFile(file: File) {
+        viewModelScope.launch {
+            _isLoading.value = true // Start loading
+            _uploadResult.value = removeBackgroundRepository.removeBackground(file)
+            _isLoading.value = false // End loading
+        }
+    }
+
     fun onImageCropped() {
-        Logger.i("DocumentInfoScreenViewModel", "onCreatePhotoClicked: final image url = $lastCroppedUrl")
-        _navigationState.tryEmit(
+        Logger.i("DocumentInfoScreenViewModel", "onImageCropped: final image url = $lastCroppedUrl")
+        viewModelScope.launch(dispatcher.io) {
+            try {
+                _loading.value = true
+                _processingStage.value = ProcessingStage.SAVING_IMAGE
+                // Save the image to local storage
+//                val localImagePath = saveImageToLocalStorage(lastCroppedUrl)
+
+                if (lastCroppedUrl != null) {
+                    Logger.i("ImageProcessingScreenViewModel", "Image saved locally at: $lastCroppedUrl")
+
+                    // Update the navigation with the local file path
+                    withContext(dispatcher.main) {
+                        _navigationState.tryEmit(
+                            ImageProcessingScreenNavigationState.EditImageScreen(
+                                documentId = documentId,
+                                imageUrl = lastCroppedUrl.toString(),
+                                selectedBackgroundColor = uiState.value.selectedColor
+                            )
+                        )
+                    }
+                } else {
+                    _error.value = "Failed to save image locally"
+                }
+            } catch (e: Exception) {
+                Logger.e("ImageProcessingScreenViewModel", "Error in onImageCropped: ${e.message}", e)
+                _error.value = "Failed to process image: ${e.message}"
+                _processingStage.value = ProcessingStage.ERROR
+            } finally {
+                _loading.value = false
+                _processingStage.value = ProcessingStage.COMPLETED
+            }
+        }
+        /*_navigationState.tryEmit(
             ImageProcessingScreenNavigationState.EditImageScreen(
                 documentId = documentId,
                 imageUrl = lastCroppedUrl,
                 selectedBackgroundColor = uiState.value.selectedColor
 
-            ))
+            ))*/
+    }
+
+    /**
+     * Downloads an image from a URL and saves it to the app's private storage
+     * Returns the local file path if successful
+     */
+    fun saveImageToLocalStorage(imageUrl: String?): String? {
+        if (imageUrl.isNullOrEmpty()) {
+            Logger.e("ImageProcessingScreenViewModel", "saveImageToLocalStorage: URL is null or empty")
+            return null
+        }
+
+        try {
+            // Generate a unique filename
+            val fileName = "cropped_${System.currentTimeMillis()}.jpg"
+
+            // Create directory if it doesn't exist
+            val cacheDir = File(context.filesDir, "images")
+            if (!cacheDir.exists()) {
+                cacheDir.mkdirs()
+            }
+
+            val filePath = File(cacheDir, fileName).absolutePath
+
+            // Build the download request
+            val request = oziDownloader.newRequestBuilder(
+                imageUrl, cacheDir.absolutePath, fileName
+            ).tag("ImageProcessing").build()
+
+            // Synchronously wait for download completion
+            var resultPath: String? = null
+            var downloadError: String? = null
+
+            val latch = java.util.concurrent.CountDownLatch(1)
+
+            oziDownloader.enqueue(
+                request,
+                onStart = {
+                    Logger.d("ImageProcessingScreenViewModel", "Download started")
+                    _processingStage.value = ProcessingStage.DOWNLOADING
+                },
+                onProgress = { progress ->
+                    Logger.d("ImageProcessingScreenViewModel", "Download progress: $progress%")
+                },
+                onCompleted = {
+                    Logger.i("ImageProcessingScreenViewModel", "Download completed: $filePath")
+                    resultPath = filePath
+                    latch.countDown()
+                },
+                onError = { error ->
+                    Logger.e("ImageProcessingScreenViewModel", "Download error: $error")
+                    downloadError = error
+                    latch.countDown()
+                }
+            )
+
+            // Wait for completion with timeout
+            if (!latch.await(30, java.util.concurrent.TimeUnit.SECONDS)) {
+                Logger.e("ImageProcessingScreenViewModel", "Download timed out")
+                return null
+            }
+
+            if (downloadError != null) {
+                Logger.e("ImageProcessingScreenViewModel", "Download failed: $downloadError")
+                return null
+            }
+
+            return resultPath
+        } catch (e: Exception) {
+            Logger.e("ImageProcessingScreenViewModel", "Error saving image: ${e.message}", e)
+            return null
+        }
+    }
+
+    fun downloadImage(imageUrl: String?) {
+        if (imageUrl.isNullOrEmpty()) {
+            Logger.e("ImageProcessingScreenViewModel", "downloadImage: URL is null or empty")
+            _error.value = "Image URL is empty"
+            return
+        }
+
+        try {
+            // Generate a unique filename
+            val fileName = "image_${System.currentTimeMillis()}.jpg"
+
+            // Create directory if it doesn't exist
+            val imageDir = File(context.filesDir, "images")
+            if (!imageDir.exists()) {
+                imageDir.mkdirs()
+            }
+
+            val filePath = File(imageDir, fileName).absolutePath
+
+            // Build the download request
+            val request = oziDownloader.newRequestBuilder(
+                imageUrl, imageDir.absolutePath, fileName
+            ).tag("ImageDownload").build()
+
+            oziDownloader.enqueue(
+                request,
+                onStart = {
+                    Logger.d("ImageProcessingScreenViewModel", "Download started")
+                    _loading.value = true
+                },
+                onProgress = { progress ->
+                    Logger.d("ImageProcessingScreenViewModel", "Download progress: $progress%")
+                    _processingStage.value = ProcessingStage.DOWNLOADING
+                },
+                onCompleted = {
+                    Logger.i("ImageProcessingScreenViewModel", "Download completed: $filePath")
+                    _loading.value = false
+                    _processingStage.value = ProcessingStage.COMPLETED
+                    // Handle the downloaded file
+                    _uiState.value = _uiState.value.copy(finalImageUrl = filePath)
+                },
+                onError = { error ->
+                    Logger.e("ImageProcessingScreenViewModel", "Download error: $error")
+                    _loading.value = false
+                    _error.value = "Download failed: $error"
+                    _processingStage.value = ProcessingStage.ERROR
+                }
+            )
+        } catch (e: Exception) {
+            Logger.e("ImageProcessingScreenViewModel", "Error in downloadImage: ${e.message}", e)
+            _loading.value = false
+            _error.value = "Failed to download image: ${e.message}"
+        }
     }
 
     fun clearPreviousResults() {

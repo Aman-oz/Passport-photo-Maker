@@ -38,7 +38,8 @@ sealed class DocumentInfoScreenNavigationState {
     data class TakePhotoScreen(val documentId: Int) : DocumentInfoScreenNavigationState()
     data class ProcessingScreen(
         val documentId: Int,
-        val imagePath: String? = null,
+        val imagePath: String? = null,// content uri path
+        val filePath: String? = null,// local file path /storage
         val selectedDpi: String = "300",
         val selectedBackgroundColor: Color? = null
     ) : DocumentInfoScreenNavigationState()

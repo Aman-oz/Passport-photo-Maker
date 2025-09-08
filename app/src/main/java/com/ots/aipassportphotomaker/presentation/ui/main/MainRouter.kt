@@ -34,12 +34,14 @@ class MainRouter(
     fun navigateToImageProcessingScreen(
         documentId: Int,
         imagePath: String?,
+        filePath: String?,
         selectedDpi: String,
         selectedBackgroundColor: Color?
     ) {
         mainNavController.navigate(Page.ImageProcessingScreen(
             documentId = documentId,
             imagePath = imagePath,
+            filePath = filePath,
             selectedDpi = selectedDpi,
             selectedBackgroundColor = selectedBackgroundColor?.toString()
         ))
@@ -51,6 +53,18 @@ class MainRouter(
         selectedBackgroundColor: Color?
     ) {
         mainNavController.navigate(Page.EditImageScreen(
+            documentId = documentId,
+            imageUrl = imageUrl,
+            selectedBackgroundColor = selectedBackgroundColor?.toString()
+        ))
+    }
+
+    fun navigateToCutOutScreen(
+        documentId: Int,
+        imageUrl: String?,
+        selectedBackgroundColor: Color?
+    ) {
+        mainNavController.navigate(Page.CutOutImageScreen(
             documentId = documentId,
             imageUrl = imageUrl,
             selectedBackgroundColor = selectedBackgroundColor?.toString()

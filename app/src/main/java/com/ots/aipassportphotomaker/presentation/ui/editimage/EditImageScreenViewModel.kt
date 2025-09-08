@@ -1,4 +1,4 @@
-package com.ots.aipassportphotomaker.presentation.editimage
+package com.ots.aipassportphotomaker.presentation.ui.editimage
 
 import android.content.ContentValues
 import android.content.Context
@@ -11,10 +11,9 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
 import com.ots.aipassportphotomaker.common.utils.ColorUtils.parseColorFromString
-import com.ots.aipassportphotomaker.common.utils.FileUtils
 import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.domain.model.DocumentEntity
-import com.ots.aipassportphotomaker.domain.repository.CropImageRepository
+import com.ots.aipassportphotomaker.domain.repository.ColorFactory
 import com.ots.aipassportphotomaker.domain.usecase.photoid.GetDocumentDetails
 import com.ots.aipassportphotomaker.domain.util.DispatchersProvider
 import com.ots.aipassportphotomaker.domain.util.NetworkMonitor
@@ -23,9 +22,8 @@ import com.ots.aipassportphotomaker.domain.util.getDocumentWidthAndHeight
 import com.ots.aipassportphotomaker.domain.util.onError
 import com.ots.aipassportphotomaker.domain.util.onSuccess
 import com.ots.aipassportphotomaker.presentation.ui.base.BaseViewModel
-import com.ots.aipassportphotomaker.presentation.ui.processimage.ImageProcessingBundle
-import com.ots.aipassportphotomaker.presentation.ui.processimage.ImageProcessingScreenNavigationState
-import com.ots.aipassportphotomaker.presentation.ui.processimage.ImageProcessingScreenUiState
+import com.ots.aipassportphotomaker.presentation.ui.documentinfo.BackgroundOption
+import com.ots.aipassportphotomaker.presentation.ui.documentinfo.DocumentInfoScreenNavigationState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -45,6 +43,7 @@ class EditImageScreenViewModel @Inject constructor(
     editImageScreenBundle: EditImageScreenBundle,
     private val dispatcher: DispatchersProvider,
     private val networkMonitor: NetworkMonitor,
+    val colorFactory: ColorFactory,
     @ApplicationContext private val context: Context
 ): BaseViewModel() {
 
@@ -66,6 +65,14 @@ class EditImageScreenViewModel @Inject constructor(
     val imageUrl: String? = editImageScreenBundle.imageUrl
     val selectedColor: String? = editImageScreenBundle.selectedColor
 
+    private var mParsedColor = Color.Unspecified
+
+
+
+
+    private val _localSelectedColor: MutableSharedFlow<Color> = singleSharedFlow()
+    val localSelectedColor = _localSelectedColor.asSharedFlow()
+
     init {
         Logger.i("EditImageScreenViewModel"," initialized with documentId: $documentId, imagePath: $imageUrl, selectedColor: $selectedColor")
         onInitialState()
@@ -77,6 +84,37 @@ class EditImageScreenViewModel @Inject constructor(
             Logger.i("EditImageScreenViewModel", "Fetched document details: $document")
             loadState(isLoading = false)
             val parsedColor = parseColorFromString(selectedColor) ?: Color.Unspecified
+            mParsedColor = parsedColor
+            when(parsedColor) {
+                Color.Transparent -> {
+                    selectColor(parsedColor, ColorFactory.ColorType.TRANSPARENT)
+                    Logger.i("EditImageScreenViewModel", "Parsed color is Transparent")
+                }
+                Color.Unspecified -> {
+                    selectColor(parsedColor, ColorFactory.ColorType.TRANSPARENT)
+                    Logger.i("EditImageScreenViewModel", "Parsed color is Unspecified")
+                }
+                Color.White -> {
+                    selectColor(parsedColor, ColorFactory.ColorType.WHITE)
+                    Logger.i("EditImageScreenViewModel", "Parsed color is White")
+                }
+                Color.Green -> {
+                    selectColor(parsedColor, ColorFactory.ColorType.GREEN)
+                    Logger.i("EditImageScreenViewModel", "Parsed color is Green")
+                }
+                Color.Blue -> {
+                    selectColor(parsedColor, ColorFactory.ColorType.BLUE)
+                    Logger.i("EditImageScreenViewModel", "Parsed color is Blue")
+                }
+                Color.Red -> {
+                    selectColor(parsedColor, ColorFactory.ColorType.RED)
+                    Logger.i("EditImageScreenViewModel", "Parsed color is Red")
+                }
+                else -> {
+                    selectColor(parsedColor, ColorFactory.ColorType.CUSTOM)
+                    Logger.i("EditImageScreenViewModel", "Parsed custom color: $parsedColor")
+                }
+            }
             _uiState.value = EditImageScreenUiState(
                 showLoading = false,
                 documentName = document.name,
@@ -115,6 +153,28 @@ class EditImageScreenViewModel @Inject constructor(
             Logger.e("EditImageScreenViewModel", "Failed to fetch document: ${error.message}", error)
             _error.value = "Failed to load document details"
         }
+    }
+
+    fun selectColor(color: Color, colorType: ColorFactory.ColorType) {
+        _uiState.value = _uiState.value.copy(selectedColor = color)
+        colorFactory.selectColor(colorType)
+        _localSelectedColor.tryEmit(color)
+    }
+
+    fun setCustomColor(color: Color) {
+        _uiState.value = _uiState.value.copy(selectedColor = color)
+        colorFactory.setCustomColor(color)
+        _localSelectedColor.tryEmit(colorFactory.selectedColor)
+    }
+
+    fun onCutoutClicked() {
+        _navigationState.tryEmit(
+            EditImageScreenNavigationState.CutOutScreen(
+                documentId = documentId,
+                imageUrl = imageUrl,
+                selectedBackgroundColor = mParsedColor
+
+            ))
     }
 
     fun saveEditedImage(editedBitmap: ImageBitmap) {
