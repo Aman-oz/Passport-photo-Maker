@@ -22,6 +22,7 @@ data class ImageProcessingScreenUiState(
     val documentType: String = "",
     val documentCompleted: String? = null,
     val selectedColor: Color = Color.Unspecified,
+    val currentImagePath: String? = null,
     val finalImageUrl: String? = null,
 
 )

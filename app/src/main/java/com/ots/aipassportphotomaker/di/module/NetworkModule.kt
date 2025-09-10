@@ -35,7 +35,6 @@ class NetworkModule {
     }
 
     @Provides
-    @Singleton
     @OziBackgroundRemoverService
     fun provideRetrofitForOziBgRemover(okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
@@ -59,7 +58,6 @@ class NetworkModule {
     }*/
 
     @Provides
-    @Singleton
     fun provideOkHttpClient(): OkHttpClient = OkHttpClient.Builder()
         .addInterceptor { chain ->
             val request = chain.request().newBuilder()
@@ -69,26 +67,24 @@ class NetworkModule {
                 .build()
             chain.proceed(request)
         }
-        .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(60, TimeUnit.SECONDS)  // Increase timeout for large files
-        .writeTimeout(60, TimeUnit.SECONDS) // Increase timeout for large files
+        .connectTimeout(60, TimeUnit.SECONDS)        // Connection timeout
+        .readTimeout(120, TimeUnit.SECONDS)          // Read timeout
+        .writeTimeout(120, TimeUnit.SECONDS)         // Write timeout (important for uploads)
+        .callTimeout(180, TimeUnit.SECONDS)
 
         .addInterceptor(HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BASIC))
         .build()
 
-    @Singleton
     @Provides
     fun provideCropImageApi(retrofit: Retrofit): CropImageApi {
         return retrofit.create(CropImageApi::class.java)
     }
 
-    @Singleton
     @Provides
     fun provideRemoveBackgroundApi(retrofit: Retrofit): RemoveBackgroundApi {
         return retrofit.create(RemoveBackgroundApi::class.java)
     }
 
-    @Singleton
     @Provides
     fun provideDocumentApi(retrofit: Retrofit): DocumentApi {
         return retrofit.create(DocumentApi::class.java)

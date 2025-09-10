@@ -7,12 +7,18 @@ import android.net.Uri
 import android.os.Environment
 import android.provider.MediaStore
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.lifecycle.viewModelScope
+import androidx.paging.CombinedLoadStates
+import androidx.paging.LoadState
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
 import com.ots.aipassportphotomaker.common.utils.ColorUtils.parseColorFromString
 import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.domain.model.DocumentEntity
+import com.ots.aipassportphotomaker.domain.model.DocumentListItem
+import com.ots.aipassportphotomaker.domain.model.SuitsEntity
 import com.ots.aipassportphotomaker.domain.repository.ColorFactory
 import com.ots.aipassportphotomaker.domain.usecase.photoid.GetDocumentDetails
 import com.ots.aipassportphotomaker.domain.util.DispatchersProvider
@@ -24,13 +30,16 @@ import com.ots.aipassportphotomaker.domain.util.onSuccess
 import com.ots.aipassportphotomaker.presentation.ui.base.BaseViewModel
 import com.ots.aipassportphotomaker.presentation.ui.documentinfo.BackgroundOption
 import com.ots.aipassportphotomaker.presentation.ui.documentinfo.DocumentInfoScreenNavigationState
+import com.ots.aipassportphotomaker.presentation.ui.usecase.suits.GetSuitsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 import kotlin.text.ifEmpty
 
@@ -44,8 +53,13 @@ class EditImageScreenViewModel @Inject constructor(
     private val dispatcher: DispatchersProvider,
     private val networkMonitor: NetworkMonitor,
     val colorFactory: ColorFactory,
+    private val getSuitsUseCase: GetSuitsUseCase,
     @ApplicationContext private val context: Context
 ): BaseViewModel() {
+
+    val suits: Flow<PagingData<SuitsEntity>> = getSuitsUseCase.suits(
+        pageSize = 20
+    ).cachedIn(viewModelScope)
 
     private val _uiState: MutableStateFlow<EditImageScreenUiState> =
         MutableStateFlow(EditImageScreenUiState())
@@ -67,9 +81,6 @@ class EditImageScreenViewModel @Inject constructor(
 
     private var mParsedColor = Color.Unspecified
 
-
-
-
     private val _localSelectedColor: MutableSharedFlow<Color> = singleSharedFlow()
     val localSelectedColor = _localSelectedColor.asSharedFlow()
 
@@ -77,6 +88,29 @@ class EditImageScreenViewModel @Inject constructor(
         Logger.i("EditImageScreenViewModel"," initialized with documentId: $documentId, imagePath: $imageUrl, selectedColor: $selectedColor")
         onInitialState()
         loadState(true)
+        observeSuitsLoadingState()
+    }
+
+    private fun observeSuitsLoadingState() {
+        launch {
+            suits.collect { pagingData ->
+                Logger.i("EditImageScreenViewModel", "Suits paging data updated: $pagingData")
+                _uiState.update { currentState ->
+                    currentState.copy(showLoading = false)
+                }
+            }
+        }
+    }
+
+    fun onLoadStateUpdate(loadState: CombinedLoadStates) {
+        val showLoading = loadState.refresh is LoadState.Loading
+
+        val error = when (val refresh = loadState.refresh) {
+            is LoadState.Error -> refresh.error.message
+            else -> null
+        }
+
+        _uiState.update { it.copy(showLoading = showLoading, errorMessage = error) }
     }
 
     private fun onInitialState() = launch {
@@ -130,6 +164,7 @@ class EditImageScreenViewModel @Inject constructor(
             )
 
             val size = getDocumentWidthAndHeight(document.size)
+            _uiState.value = _uiState.value.copy(ratio = size.width/size.height)
 
             if (imageUrl.isNullOrEmpty()) {
                 Logger.e("EditImageScreenViewModel", "No image path provided")
@@ -177,31 +212,16 @@ class EditImageScreenViewModel @Inject constructor(
             ))
     }
 
-    fun saveEditedImage(editedBitmap: ImageBitmap) {
-        launch {
-            val editedUri = saveBitmapToMediaStore(context, editedBitmap.asAndroidBitmap(), "edited_${System.currentTimeMillis()}.png")
-            if (editedUri != null) {
-                _uiState.value = _uiState.value.copy(imageUrl = editedUri.toString())
-                Logger.i("EditImageScreenViewModel", "Saved edited image to $editedUri")
-            } else {
-                _error.value = "Failed to save edited image"
-            }
-        }
-    }
+    fun onImageSaved(imagePath: String) {
 
-    private fun saveBitmapToMediaStore(context: Context, bitmap: Bitmap, fileName: String): Uri? {
-        val contentValues = ContentValues().apply {
-            put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
-            put(MediaStore.Images.Media.MIME_TYPE, "image/png")
-            put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
-        }
-        return context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)?.let { uri ->
-            context.contentResolver.openOutputStream(uri)?.use { outputStream ->
-                bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
-                true
-            } ?: run { context.contentResolver.delete(uri, null, null); null }
-            uri
-        }
+        Logger.i("EditImageScreenViewModel", "Image saved at path: $imagePath")
+        _uiState.value = uiState.value.copy(imagePath = imagePath)
+        _navigationState.tryEmit(
+            EditImageScreenNavigationState.SavedImageScreen(
+                documentId = documentId,
+                imagePath = imagePath
+
+            ))
     }
 
     private fun loadState(isLoading: Boolean) {

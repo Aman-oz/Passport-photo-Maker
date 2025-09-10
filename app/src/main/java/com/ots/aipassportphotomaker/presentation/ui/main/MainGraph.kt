@@ -27,6 +27,8 @@ import com.ots.aipassportphotomaker.presentation.ui.home.HomePage
 import com.ots.aipassportphotomaker.presentation.ui.home.HomeScreenViewModel
 import com.ots.aipassportphotomaker.presentation.ui.processimage.ImageProcessingPage
 import com.ots.aipassportphotomaker.presentation.ui.processimage.ImageProcessingScreenViewModel
+import com.ots.aipassportphotomaker.presentation.ui.savedimage.SavedImagePage
+import com.ots.aipassportphotomaker.presentation.ui.savedimage.SavedImageScreenViewModel
 
 // Created by amanullah on 25/07/2025.
 // Copyright (c) 2025 Ozi Publishing. All rights reserved.
@@ -122,6 +124,14 @@ fun MainGraph(
             CutOutImagePage(
                 mainRouter = MainRouter(mainNavController),
                 viewModel = hiltViewModel<CutOutImageScreenViewModel>(),
+                sharedViewModel = hiltViewModel<NavigationBarSharedViewModel>(),
+            )
+        }
+
+        composableHorizontalSlide<Page.SavedImageScreen> {
+            SavedImagePage(
+                mainRouter = MainRouter(mainNavController),
+                viewModel = hiltViewModel<SavedImageScreenViewModel>(),
                 sharedViewModel = hiltViewModel<NavigationBarSharedViewModel>(),
             )
         }

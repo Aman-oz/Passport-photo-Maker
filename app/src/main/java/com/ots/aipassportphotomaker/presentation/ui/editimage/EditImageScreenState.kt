@@ -11,6 +11,7 @@ import javax.inject.Inject
 data class EditImageScreenUiState(
     val showLoading: Boolean = true,
     val errorMessage: String? = null,
+    val showNoSuitsFound: Boolean = false,
     val documentId: Int = 0,
     val documentName: String = "",
     val documentSize: String = "",
@@ -21,7 +22,9 @@ data class EditImageScreenUiState(
     val documentType: String = "",
     val documentCompleted: String? = null,
     val selectedColor: Color = Color.Unspecified,
-    val imageUrl: String? = null
+    val imageUrl: String? = null,
+    val imagePath: String? = null,
+    val ratio: Float = 1f,
 
 )
 
@@ -38,6 +41,11 @@ sealed class EditImageScreenNavigationState {
         val documentId: Int,
         val imageUrl: String? = null,
         val selectedBackgroundColor: Color? = null
+    ) : EditImageScreenNavigationState()
+
+    data class SavedImageScreen(
+        val documentId: Int,
+        val imagePath: String? = null
     ) : EditImageScreenNavigationState()
 
 }

@@ -56,7 +56,12 @@ class MainRouter(
             documentId = documentId,
             imageUrl = imageUrl,
             selectedBackgroundColor = selectedBackgroundColor?.toString()
-        ))
+        )) {
+
+            popUpTo(Page.ImageProcessingScreen::class) {
+                inclusive = true
+            }
+        }
     }
 
     fun navigateToCutOutScreen(
@@ -69,6 +74,21 @@ class MainRouter(
             imageUrl = imageUrl,
             selectedBackgroundColor = selectedBackgroundColor?.toString()
         ))
+    }
+
+    fun navigateToSavedImageScreen(
+        documentId: Int,
+        imagePath: String?
+    ) {
+        mainNavController.navigate(Page.SavedImageScreen(
+            documentId = documentId,
+            imagePath = imagePath
+        )) {
+            // Clear entire processing flow
+            popUpTo(Page.DocumentInfoScreen::class) {
+                inclusive = true
+            }
+        }
     }
 
     fun navigateToSelectPhotoScreen(documentId: Int) {

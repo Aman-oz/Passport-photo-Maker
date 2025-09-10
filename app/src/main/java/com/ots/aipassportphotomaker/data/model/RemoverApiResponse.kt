@@ -5,6 +5,6 @@ import com.google.gson.annotations.SerializedName
 // Created by amanullah on 08/09/2025.
 // Copyright (c) 2025 ozi Publishing. All rights reserved.
 data class RemoverApiResponse(
-    @SerializedName("image_url")
+    @SerializedName("filename")
     val imageUrl: String
 )

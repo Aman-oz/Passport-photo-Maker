@@ -1,14 +1,17 @@
 package com.ots.aipassportphotomaker.presentation.ui.processimage
 
+import android.annotation.SuppressLint
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -16,11 +19,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -39,6 +45,7 @@ import kotlinx.coroutines.delay
 // Created by amanullah on 27/08/2025.
 // Copyright (c) 2025 Ozi Publishing. All rights reserved.
 
+@SuppressLint("ContextCastToActivity")
 @Composable
 fun ImageProcessingPage(
     mainRouter: MainRouter,
@@ -111,21 +118,21 @@ private fun ImageProcessingScreen(
                 )
                 val messageIndex by produceState(initialValue = 0) {
                     while (processingStage == ProcessingStage.PROCESSING) {
-                        delay(2000)
+                        delay(3000)
                         value = (value + 1) % processingMessages.size
                     }
                 }
                 processingMessages[messageIndex]
             }
-            ProcessingStage.CROPPING_IMAGE -> "💫 Removing background..."
+            ProcessingStage.CROPPING_IMAGE -> "💫 Cropping image..."
             ProcessingStage.COMPLETED -> {
                 "✅ Process completed successfully"
 
             }
             ProcessingStage.NONE -> ""
             ProcessingStage.NO_NETWORK_AVAILABLE -> "❌ No network connection"
-            ProcessingStage.ERROR -> "❌ An error occurred"
-            ProcessingStage.DOWNLOADING -> "⬇️ Downloading image..."
+            ProcessingStage.ERROR -> "❌ Something went wrong"
+            ProcessingStage.DOWNLOADING -> "⬇️ Applying Changes..."
             ProcessingStage.SAVING_IMAGE -> "💾 Saving image..."
             ProcessingStage.BACKGROUND_REMOVAL -> "🖼️ Removing background..."
         }
@@ -156,6 +163,7 @@ private fun ImageProcessingScreen(
             if (isLoading) {
                 LoaderFullScreen()
             } else {
+
                 Column(
                     modifier = Modifier
                         .background(colors.background)
@@ -203,6 +211,13 @@ private fun ImageProcessingScreen(
                         )
                     }
 
+                }
+
+                Box() {
+                    Box(
+                        modifier = Modifier
+                            .offset()
+                    )
                 }
             }
         }

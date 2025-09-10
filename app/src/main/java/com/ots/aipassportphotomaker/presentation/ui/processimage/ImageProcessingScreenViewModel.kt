@@ -94,6 +94,17 @@ class ImageProcessingScreenViewModel @Inject constructor(
         Logger.i("ImageProcessingScreenViewModel"," initialized with documentId: $documentId, imagePath: $imagePath, filePath: $filePath selectedDpi: $selectedDpi, selectedColor: $selectedColor")
         onInitialState()
         loadState(true)
+        if (imagePath != null) {
+            updateCurrentImagePath(imagePath)
+        } else {
+            _error.value = "No image path provided"
+        }
+    }
+
+    private fun updateCurrentImagePath(newPath: String) {
+        viewModelScope.launch(dispatcher.io) {
+            _uiState.value = _uiState.value.copy(currentImagePath = newPath)
+        }
     }
 
     private fun onInitialState() = launch {
@@ -240,29 +251,116 @@ class ImageProcessingScreenViewModel @Inject constructor(
                     Logger.i("ImageProcessingScreenViewModel","user image: ${file.absolutePath}")
                     _error.value = error.message
                     _processingStage.value = ProcessingStage.ERROR
-                    lastCroppedUrl = imagePath
+                    /*lastCroppedUrl = imagePath
                     _uiState.value = _uiState.value.copy(
                         finalImageUrl = imagePath,
                         showLoading = false
                     )
-                    onImageCropped()
+                    onImageCropped()*/
                     break
                 }
             }
 
             if (!success) {
                 Logger.e("ImageProcessingScreenViewModel","cropImage: Failed to get new cropped image after $maxAttempts attempts")
+                _processingStage.value = ProcessingStage.ERROR
                 _error.value = "Failed to get new cropped image after $maxAttempts attempts"
             }
             _loading.value = false
         }
     }
 
-    fun uploadFile(file: File) {
-        viewModelScope.launch {
-            _isLoading.value = true // Start loading
-            _uploadResult.value = removeBackgroundRepository.removeBackground(file)
-            _isLoading.value = false // End loading
+    fun removeBackground(file: File) {
+
+        viewModelScope.launch(dispatcher.io) {
+            _loading.value = true
+            _error.value = null
+            _processingStage.value = ProcessingStage.BACKGROUND_REMOVAL
+
+            val networkState = networkMonitor.networkState.first()
+
+            if (networkState.isOnline.not()) {
+                _error.value = "No internet connection. Please check your network settings."
+                _loading.value = false
+                _processingStage.value = ProcessingStage.NO_NETWORK_AVAILABLE
+                return@launch
+            }
+
+            var attempts = 0
+            val maxAttempts = 3
+            var success = false
+            var apiResponse: RemoverApiResponse? = null
+
+            while (attempts < maxAttempts && !success) {
+                try {
+                    delay(1500L)
+                    _processingStage.value = ProcessingStage.PROCESSING
+
+                    apiResponse = removeBackgroundRepository.removeBackground(file).getOrThrow()
+
+                    delay(2000)
+                    _processingStage.value = ProcessingStage.BACKGROUND_REMOVAL
+
+                    if (apiResponse.imageUrl == null) {
+                        Logger.e("ImageProcessingScreenViewModel","remove background: Server returned null filename")
+                        _error.value = "Server returned null filename"
+                        break
+                    }
+                    if (apiResponse.imageUrl == lastCroppedUrl && attempts < maxAttempts - 1) {
+                        Logger.w("ImageProcessingScreenViewModel","remove background: Received same URL as last attempt, retrying... (attempt ${attempts + 1})")
+                        attempts++
+                        delay(500)
+                    } else {
+                        delay(1500)
+                        _processingStage.value = ProcessingStage.COMPLETED
+
+                        lastCroppedUrl = apiResponse.imageUrl
+                        _uiState.value = _uiState.value.copy(
+                            finalImageUrl = apiResponse.imageUrl,
+                            showLoading = false
+                        )
+                        Logger.i("ImageProcessingScreenViewModel","Background removed successfully: ${apiResponse.imageUrl}")
+                        success = true
+
+                        delay(1000)
+
+                        onBackgroundRemoved()
+                    }
+                } catch (error: retrofit2.HttpException) {
+                    val errorCode = error.code()
+                    val errorBody = error.response()?.errorBody()?.string() ?: "No details"
+                    Logger.e("ImageProcessingScreenViewModel", "cropImage: Error during cropping: HTTP $errorCode - $errorBody", error)
+                    _error.value = "HTTP $errorCode: $errorBody"
+                    _processingStage.value = ProcessingStage.ERROR
+                    /*lastCroppedUrl = imagePath
+                    _uiState.value = _uiState.value.copy(
+                        finalImageUrl = imagePath,
+                        showLoading = false
+                    )
+
+                    onImageCropped()*/
+                    break
+                } catch (error: Throwable) {
+                    Logger.e("ImageProcessingScreenViewModel", "cropImage: Error during cropping: ${error.message}", error)
+                    Logger.i("ImageProcessingScreenViewModel","user image: ${file.absolutePath}")
+                    _error.value = error.message
+                    _processingStage.value = ProcessingStage.ERROR
+                    /*lastCroppedUrl = imagePath
+                    _uiState.value = _uiState.value.copy(
+                        finalImageUrl = imagePath,
+                        showLoading = false
+                    )
+                    onImageCropped()*/
+                    break
+                }
+            }
+
+            if (!success) {
+                Logger.e("ImageProcessingScreenViewModel","cropImage: Failed to get new cropped image after $maxAttempts attempts")
+                _processingStage.value = ProcessingStage.ERROR
+                _error.value = "Failed to get new cropped image after $maxAttempts attempts"
+            }
+            _loading.value = false
         }
     }
 
@@ -273,17 +371,62 @@ class ImageProcessingScreenViewModel @Inject constructor(
                 _loading.value = true
                 _processingStage.value = ProcessingStage.SAVING_IMAGE
                 // Save the image to local storage
-//                val localImagePath = saveImageToLocalStorage(lastCroppedUrl)
+                val localImagePath = saveImageToLocalStorage(lastCroppedUrl)
 
-                if (lastCroppedUrl != null) {
-                    Logger.i("ImageProcessingScreenViewModel", "Image saved locally at: $lastCroppedUrl")
+                if (localImagePath != null) {
+                    Logger.i("ImageProcessingScreenViewModel", "Image saved locally at: $localImagePath")
+                    updateCurrentImagePath(localImagePath)
+                    removeBackground(File(localImagePath))
+                    // Update the navigation with the local file path
+                    /*withContext(dispatcher.main) {
+                        _navigationState.tryEmit(
+                            ImageProcessingScreenNavigationState.EditImageScreen(
+                                documentId = documentId,
+                                imageUrl = localImagePath.toString(),
+                                selectedBackgroundColor = uiState.value.selectedColor
+                            )
+                        )
+                    }*/
+                } else {
+                    _error.value = "Failed to save image locally"
+                }
+            } catch (e: Exception) {
+                Logger.e("ImageProcessingScreenViewModel", "Error in onImageCropped: ${e.message}", e)
+                _error.value = "Failed to process image: ${e.message}"
+                _processingStage.value = ProcessingStage.ERROR
+            } finally {
+                _loading.value = false
+                _processingStage.value = ProcessingStage.COMPLETED
+            }
+        }
+        /*_navigationState.tryEmit(
+            ImageProcessingScreenNavigationState.EditImageScreen(
+                documentId = documentId,
+                imageUrl = lastCroppedUrl,
+                selectedBackgroundColor = uiState.value.selectedColor
 
+            ))*/
+    }
+
+    fun onBackgroundRemoved() {
+        Logger.i("DocumentInfoScreenViewModel", "onImageCropped: final image url = $lastCroppedUrl")
+        viewModelScope.launch(dispatcher.io) {
+            try {
+                _loading.value = true
+                _processingStage.value = ProcessingStage.COMPLETED
+                // Save the image to local storage
+                val localImagePath = saveImageToLocalStorage(lastCroppedUrl)
+
+                if (localImagePath != null) {
+                    Logger.i("ImageProcessingScreenViewModel", "Image saved locally at: $localImagePath")
+
+                    updateCurrentImagePath(localImagePath)
                     // Update the navigation with the local file path
                     withContext(dispatcher.main) {
                         _navigationState.tryEmit(
                             ImageProcessingScreenNavigationState.EditImageScreen(
                                 documentId = documentId,
-                                imageUrl = lastCroppedUrl.toString(),
+                                imageUrl = localImagePath.toString(),
                                 selectedBackgroundColor = uiState.value.selectedColor
                             )
                         )

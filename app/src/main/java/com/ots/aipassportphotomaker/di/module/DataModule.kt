@@ -13,6 +13,7 @@ import com.ots.aipassportphotomaker.data.repository.DocumentLocalDataSource
 import com.ots.aipassportphotomaker.data.repository.DocumentRemoteDataSource
 import com.ots.aipassportphotomaker.data.repository.DocumentRepositoryImpl
 import com.ots.aipassportphotomaker.data.repository.RemoveBackgroundRepositoryImpl
+import com.ots.aipassportphotomaker.data.repository.SuitsDataSource
 import com.ots.aipassportphotomaker.data.repository.favorite.FavoriteDocumentsDataSource
 import com.ots.aipassportphotomaker.data.repository.favorite.FavoriteDocumentsLocalDataSource
 import com.ots.aipassportphotomaker.data.util.DocumentRemoteMediator
@@ -89,6 +90,12 @@ class DataModule {
         documentRemoteKeyDao: DocumentRemoteKeyDao,
     ): DocumentDataSource.Local {
         return DocumentLocalDataSource(documentDao, documentRemoteKeyDao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSuitsDataSource(@ApplicationContext context: Context): SuitsDataSource {
+        return SuitsDataSource(context)
     }
 
     @Provides

@@ -22,7 +22,7 @@ class RemoveBackgroundRepositoryImpl @Inject constructor(
     override suspend fun removeBackground(file: File): Result<RemoverApiResponse> = runCatching {
         Log.d(
             TAG,
-            "cropImage: file=${file.name}"
+            "Remove Background: file=${file.name}"
         )
 
         // Validate file

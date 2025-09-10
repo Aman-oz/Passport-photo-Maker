@@ -56,6 +56,12 @@ sealed class Page {
     ) : Page()
 
     @Serializable
+    data class SavedImageScreen(
+        val documentId: Int,
+        val imagePath: String?
+    ) : Page()
+
+    @Serializable
     data class SelectPhotoScreen(val id: Int) : Page()
 
     @Serializable

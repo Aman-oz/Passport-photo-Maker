@@ -40,18 +40,7 @@ class DocumentRepositoryImpl(
             val pagingData = PagingData.from(documents)
             emit(pagingData)
         }
-    } /*= Pager(
-        config = PagingConfig(
-            pageSize = pageSize,
-            enablePlaceholders = false
-        ),
-        remoteMediator = remoteMediator,
-        pagingSourceFactory = {
-            local.documents()
-        }
-    ).flow.map { pagingData ->
-        pagingData.map { it.toDomain() }
-    }*/
+    }
 
     @OptIn(ExperimentalPagingApi::class)
     override fun documents(type: String, pageSize: Int): Flow<PagingData<DocumentEntity>> {
