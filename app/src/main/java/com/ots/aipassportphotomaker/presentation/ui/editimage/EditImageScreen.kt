@@ -14,6 +14,7 @@ import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,12 +35,14 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ExperimentalComposeApi
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -48,9 +51,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
@@ -61,6 +69,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
@@ -78,6 +88,7 @@ import com.ots.aipassportphotomaker.common.utils.ImageUtils.saveBitmapToGallery
 import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.domain.model.SuitsEntity
 import com.ots.aipassportphotomaker.domain.repository.ColorFactory
+import com.ots.aipassportphotomaker.domain.util.determinePixels
 import com.ots.aipassportphotomaker.presentation.ui.bottom_nav.NavigationBarSharedViewModel
 import com.ots.aipassportphotomaker.presentation.ui.components.ColorItem
 import com.ots.aipassportphotomaker.presentation.ui.components.CommonTopBar
@@ -86,6 +97,10 @@ import com.ots.aipassportphotomaker.presentation.ui.components.TextSwitch
 import com.ots.aipassportphotomaker.presentation.ui.main.MainRouter
 import com.ots.aipassportphotomaker.presentation.ui.theme.AppColors
 import com.ots.aipassportphotomaker.presentation.ui.theme.colors
+import dev.shreyaspatil.capturable.capturable
+import dev.shreyaspatil.capturable.controller.rememberCaptureController
+import io.mhssn.colorpicker.ColorPickerDialog
+import io.mhssn.colorpicker.ColorPickerType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
@@ -129,10 +144,10 @@ fun EditImagePage(
             )
 
             is EditImageScreenNavigationState.SavedImageScreen -> {
-                    mainRouter.navigateToSavedImageScreen(
-                        documentId = navigationState.documentId,
-                        imagePath = uiState.imagePath,
-                    )
+                mainRouter.navigateToSavedImageScreen(
+                    documentId = navigationState.documentId,
+                    imagePath = uiState.imagePath,
+                )
             }
         }
     }
@@ -160,7 +175,10 @@ fun EditImagePage(
     )
 }
 
-@OptIn(ExperimentalPermissionsApi::class)
+@OptIn(
+    ExperimentalPermissionsApi::class, ExperimentalComposeUiApi::class,
+    ExperimentalComposeApi::class
+)
 @SuppressLint("UseKtx")
 @Composable
 private fun EditImageScreen(
@@ -198,7 +216,17 @@ private fun EditImageScreen(
         val backgroundColor = uiState.selectedColor
         val imageUrl = uiState.imageUrl
         var showNoSuitsFound = uiState.showNoSuitsFound
-        
+
+        val captureController = rememberCaptureController()
+        val uiScope = rememberCoroutineScope()
+        var ticketBitmap: ImageBitmap? by remember { mutableStateOf(null) }
+        var suitUrl: String? by remember { mutableStateOf(null) }
+        var isSuitLoading by remember { mutableStateOf(false) } // Start with loading state
+
+        var showSaveLoading by remember { mutableStateOf(false) }
+        var isCreatingBitmap by remember { mutableStateOf(false) }
+
+
         showNoSuitsFound = suits.itemCount == 0
 
         Logger.i(
@@ -235,532 +263,683 @@ private fun EditImageScreen(
                 LoaderFullScreen()
             } else {
 
-                Column(
-                    modifier = Modifier
-                        .background(colors.background)
-                        .fillMaxSize()
-                        .pointerInput(Unit) {
-                            detectTapGestures(
-                                onTap = {
+                val pixelSize = determinePixels(uiState.documentPixels)
 
-                                })
-                        }
+                //custom color picker dialog
+                var showDialog by remember {
+                    mutableStateOf(false)
+                }
+
+                ColorPickerDialog(
+                    show = showDialog,
+                    type = ColorPickerType.Classic(),
+                    properties = DialogProperties(),
+                    onDismissRequest = {
+                        showDialog = false
+                    },
+                    onPickedColor = {
+                        showDialog = false
+
+                        onColorChange.invoke(
+                            it,
+                            ColorFactory.ColorType.CUSTOM
+                        )
+                        Logger.i("ChecklistItem", "Selected color: $it")
+                    },
+                )
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
                 ) {
+
+                    Column(
+                        modifier = Modifier
+                            .background(colors.background)
+                            .fillMaxSize()
+                            .pointerInput(Unit) {
+                                detectTapGestures(
+                                    onTap = {
+
+                                    })
+                            }
+                    ) {
 //                    if (!imageUrl.isNullOrEmpty()) {
 
-                    var flip by remember { mutableStateOf(false) }
-                    var offsetX by remember { mutableStateOf(0f) }
-                    var offsetY by remember { mutableStateOf(0f) }
-                    var scale by remember { mutableStateOf(1f) }
-                    val maxScale = 3f
-                    val minScale = 0.5f
+                        var flip by remember { mutableStateOf(false) }
+                        var offsetX by remember { mutableStateOf(0f) }
+                        var offsetY by remember { mutableStateOf(0f) }
+                        var scale by remember { mutableStateOf(1f) }
+                        val maxScale = 3f
+                        val minScale = 0.5f
 
-                    // Get the size of the parent Box
-                    val boxWidth = remember { mutableStateOf(0f) }
-                    val boxHeight = remember { mutableStateOf(0f) }
-                    var isLayoutReady by remember { mutableStateOf(false) }
+                        // Get the size of the parent Box
+                        val boxWidth = remember { mutableStateOf(0f) }
+                        val boxHeight = remember { mutableStateOf(0f) }
+                        var isLayoutReady by remember { mutableStateOf(false) }
 
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .aspectRatio(1f)
-                            .background(Color.LightGray)
-
-                    ) {
-                        // background layer
-                        Image(
-                            painter = painterResource(id = R.drawable.transparent_bg),
-                            contentDescription = "Transparent Background",
+                        Box(
                             modifier = Modifier
-                                .matchParentSize(),
-                            contentScale = ContentScale.Crop
-                        )
+                                .fillMaxWidth()
+                                .aspectRatio(1f)
+                                .background(Color.LightGray)
 
-                        var isImageLoading by remember { mutableStateOf(true) } // Start with loading state
-
-                        AsyncImage(
-                            model = ImageRequest.Builder(context)
-                                .data(imageUrl)
-                                .crossfade(true)
-                                .build(),
-                            contentDescription = "Edited Image",
-                            modifier = Modifier
-                                .padding(16.dp)
-                                .fillMaxHeight()
-                                .aspectRatio(uiState.ratio)
-                                .background(if (backgroundColor != Color.Unspecified) backgroundColor else colors.primary)
-                                .align(Alignment.Center)
-                                .clipToBounds()
-                                .onGloballyPositioned { coordinates ->
-                                    boxWidth.value = coordinates.size.width.toFloat()
-                                    boxHeight.value = coordinates.size.height.toFloat()
-
-                                    Logger.i("EditImageScreen", "Box width: ${boxWidth.value}, height: ${boxHeight.value}, Selected Document size: ${uiState.documentSize}")
-                                    if (!isLayoutReady) isLayoutReady = true
-                                }
-                                .graphicsLayer(scaleX = if (flip) -1f else 1f)
-                                /*.pointerInput(Unit) {
-                                    detectTransformGestures(
-                                    ) { centroid, pan, zoom, rotation ->
-                                        // Update scale first (but clamp to min/max values)
-                                        val newScale = (scale * zoom).coerceIn(minScale, maxScale)
-
-                                        // Calculate the bounds based on new scale - avoid using coerceIn with potentially invalid bounds
-                                        val scaledWidth = boxWidth.value * newScale
-                                        val scaledHeight = boxHeight.value * newScale
-
-                                        // Calculate max offset allowed (avoid negative bounds when box is smaller than container)
-                                        val maxOffsetX = maxOf(0f, (scaledWidth - boxWidth.value) / 2)
-                                        val maxOffsetY = maxOf(0f, (scaledHeight - boxHeight.value) / 2)
-
-                                        // Apply bounds safely
-                                        val newOffsetX = offsetX + pan.x / scale
-                                        offsetX = if (maxOffsetX > 0f) newOffsetX.coerceIn(-maxOffsetX, maxOffsetX) else 0f
-
-                                        val newOffsetY = offsetY + pan.y / scale
-                                        offsetY = if (maxOffsetY > 0f) newOffsetY.coerceIn(-maxOffsetY, maxOffsetY) else 0f
-
-                                        // Finally update the scale
-                                        scale = newScale
-                                    }
-                                }
-                                .pointerInput(Unit) {
-                                    detectDragGestures(
-                                        onDragStart = {  *//*Optional: Handle drag start*//*  },
-                                        onDragEnd = {  *//*Optional: Handle drag end*//*  }
-                                    ) { change, dragAmount ->
-
-                                        change.consume()
-                                        val scaledWidth = boxWidth.value * scale
-                                        val scaledHeight = boxHeight.value * scale
-
-                                        // Calculate max offset allowed (avoid negative bounds)
-                                        val maxOffsetX = maxOf(0f, (scaledWidth - boxWidth.value) / 2)
-                                        val maxOffsetY = maxOf(0f, (scaledHeight - boxHeight.value) / 2)
-
-                                        // Apply bounds safely
-                                        val newOffsetX = offsetX + dragAmount.x / scale
-                                        offsetX = if (maxOffsetX > 0f) newOffsetX.coerceIn(-maxOffsetX, maxOffsetX) else 0f
-
-                                        val newOffsetY = offsetY + dragAmount.y / scale
-                                        offsetY = if (maxOffsetY > 0f) newOffsetY.coerceIn(-maxOffsetY, maxOffsetY) else 0f
-                                    }
-                                }
-                                .pointerInput(Unit) {
-                                    detectTapGestures(
-                                        onDoubleTap = {
-                                            scale = 1f
-                                            offsetX = 0f
-                                            offsetY = 0f
-                                        }
-                                    )
-                                }*/,
-                            contentScale = ContentScale.Fit,
-                            onState = { state ->
-                                isImageLoading = state is AsyncImagePainter.State.Loading
-                            }
-                        )
-
-                        if (isImageLoading) {
-                            CircularProgressIndicator(
-                                modifier = Modifier
-                                    .align(Alignment.Center)
-                                    .size(48.dp),
-                                color = colors.primary
-                            )
-                        }
-
-                        // Add control buttons
-                        Column(
-                            modifier = Modifier
-                                .fillMaxHeight()
-                                .background(Color.Transparent)
-                                .align(Alignment.TopEnd)
-                                .padding(16.dp),
-                            verticalArrangement = Arrangement.SpaceBetween
                         ) {
-
-                            Card(
+                            // background layer
+                            Image(
+                                painter = painterResource(id = R.drawable.transparent_bg),
+                                contentDescription = "Transparent Background",
                                 modifier = Modifier
-                                    .align(Alignment.CenterHorizontally),
-                                shape = CircleShape,
-                                colors = CardDefaults.cardColors(containerColor = colors.primary),
-                                elevation = CardDefaults.cardElevation(10.dp),
-                                onClick = {
-                                    flip = !flip
-                                }
+                                    .matchParentSize(),
+                                contentScale = ContentScale.Crop
+                            )
+
+                            var isImageLoading by remember { mutableStateOf(true) } // Start with loading state
+
+                            var scale by remember { mutableStateOf(1f) }
+                            var rotation by remember { mutableStateOf(0f) }
+                            var offset by remember { mutableStateOf(Offset.Zero) }
+
+                            Box(
+                                modifier = Modifier
+                                    .padding(16.dp)
+                                    .fillMaxHeight()
+                                    .aspectRatio(uiState.ratio)
+                                    .align(Alignment.Center)
+                                    .capturable(captureController)
                             ) {
-                                Image(
-                                    painter = painterResource(id = R.drawable.flip_icon),
-                                    contentDescription = "Flip",
-                                    modifier = Modifier.padding(12.dp)
+
+                                AsyncImage(
+                                    model = ImageRequest.Builder(context)
+                                        .data(imageUrl)
+                                        .crossfade(true)
+                                        .build(),
+                                    contentDescription = "Edited Image",
+                                    modifier = Modifier
+                                        .fillMaxHeight()
+                                        .aspectRatio(uiState.ratio)
+                                        .background(if (backgroundColor != Color.Unspecified) backgroundColor else colors.primary)
+                                        .align(Alignment.Center)
+                                        .clipToBounds()
+                                        .onGloballyPositioned { coordinates ->
+                                            boxWidth.value = coordinates.size.width.toFloat()
+                                            boxHeight.value = coordinates.size.height.toFloat()
+
+                                            Logger.i(
+                                                "EditImageScreen",
+                                                "Box width: ${boxWidth.value}, height: ${boxHeight.value}, Selected Document size: ${uiState.documentSize}"
+                                            )
+                                            if (!isLayoutReady) isLayoutReady = true
+                                        }
+                                        .graphicsLayer(scaleX = if (flip) -1f else 1f),
+                                    contentScale = ContentScale.Fit,
+                                    onState = { state ->
+                                        isImageLoading = state is AsyncImagePainter.State.Loading
+                                    }
+                                )
+
+                                suitUrl?.let { url ->
+                                    AsyncImage(
+                                        model =
+                                            ImageRequest.Builder(context)
+                                                .data(url)
+                                                .crossfade(true)
+                                                .build(),
+                                        contentDescription = "Suit Image",
+                                        contentScale = ContentScale.Fit,
+                                        onState = { state ->
+                                            isSuitLoading = state is AsyncImagePainter.State.Loading
+                                        },
+                                        modifier = Modifier
+                                            .width(150.dp)
+                                            .aspectRatio(uiState.ratio)
+                                            .align(Alignment.BottomCenter)
+                                            .graphicsLayer(
+                                                scaleX = scale,
+                                                scaleY = scale,
+                                                rotationZ = rotation,
+                                                translationX = offset.x,
+                                                translationY = offset.y
+                                            )
+                                            .pointerInput(Unit) {
+                                                detectTransformGestures { _, pan, zoom, rotate ->
+                                                    scale *= zoom
+                                                    rotation += rotate
+                                                    offset += pan
+                                                }
+                                            }
+                                    )
+                                }
+                            }
+
+                            if (isImageLoading) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier
+                                        .align(Alignment.Center)
+                                        .size(48.dp),
+                                    color = colors.primary
                                 )
                             }
 
-                            Card(
-                                shape = CircleShape,
-                                colors = CardDefaults.cardColors(containerColor = colors.primary),
-                                elevation = CardDefaults.cardElevation(10.dp),
-                                onClick = {
-                                    onEraseClick.invoke()
-                                },
-                                modifier = Modifier.align(Alignment.CenterHorizontally)
+                            // Add control buttons
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxHeight()
+                                    .background(Color.Transparent)
+                                    .align(Alignment.TopEnd)
+                                    .padding(16.dp),
+                                verticalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Image(
-                                    painter = painterResource(id = R.drawable.eraser_icon),
-                                    contentDescription = "Eraser",
-                                    modifier = Modifier.padding(12.dp)
-                                )
+
+                                Card(
+                                    modifier = Modifier
+                                        .align(Alignment.CenterHorizontally),
+                                    shape = CircleShape,
+                                    colors = CardDefaults.cardColors(containerColor = colors.primary),
+                                    elevation = CardDefaults.cardElevation(10.dp),
+                                    onClick = {
+                                        flip = !flip
+                                    }
+                                ) {
+                                    Image(
+                                        painter = painterResource(id = R.drawable.flip_icon),
+                                        contentDescription = "Flip",
+                                        modifier = Modifier.padding(12.dp)
+                                    )
+                                }
+
+                                Card(
+                                    shape = CircleShape,
+                                    colors = CardDefaults.cardColors(containerColor = colors.primary),
+                                    elevation = CardDefaults.cardElevation(10.dp),
+                                    onClick = {
+                                        onEraseClick.invoke()
+                                    },
+                                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                                ) {
+                                    Image(
+                                        painter = painterResource(id = R.drawable.eraser_icon),
+                                        contentDescription = "Eraser",
+                                        modifier = Modifier.padding(12.dp)
+                                    )
+                                }
                             }
                         }
-                    }
 //                    }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                    val items = remember {
-                        listOf("Backdrop", "Add suit")
-                    }
-                    var selectedIndex by remember {
-                        mutableStateOf(0)
-                    }
-
-                    TextSwitch(
-                        modifier = Modifier
-                            .width(270.dp)
-                            .align(Alignment.CenterHorizontally),
-                        selectedIndex = selectedIndex,
-                        items = items,
-                        onSelectionChange = {
-                            selectedIndex = it
+                        val items = remember {
+                            listOf("Backdrop", "Add suit")
                         }
-                    )
+                        var selectedIndex by remember {
+                            mutableStateOf(0)
+                        }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                        TextSwitch(
+                            modifier = Modifier
+                                .width(270.dp)
+                                .align(Alignment.CenterHorizontally),
+                            selectedIndex = selectedIndex,
+                            items = items,
+                            onSelectionChange = {
+                                selectedIndex = it
+                            }
+                        )
 
-                    if (selectedIndex == 0) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.padding(bottom = 16.dp)
-                        ) {
+                        Spacer(modifier = Modifier.height(12.dp))
 
-                            Spacer(modifier = Modifier.width(40.dp))
+                        if (selectedIndex == 0) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                modifier = Modifier.padding(bottom = 16.dp)
+                            ) {
 
-                            // 1st: Custom Color (Color Picker)
-                            val isCustomSelected =
-                                colorFactory.selectedColorType == ColorFactory.ColorType.CUSTOM &&
-                                        colorFactory.customColor == selectedColor
+                                Spacer(modifier = Modifier.width(40.dp))
 
-                            ColorItem(
-                                modifier = Modifier.width(42.dp),
-                                color = Color.White,
-                                ratio = 1.2f,
-                                showEyeDropper = true,
-                                isSelected = isCustomSelected,
-                                onClick = {
-                                    onColorChange.invoke(Color.White, ColorFactory.ColorType.CUSTOM)
+                                // 1st: Custom Color (Color Picker)
+                                val isCustomSelected =
+                                    colorFactory.selectedColorType == ColorFactory.ColorType.CUSTOM &&
+                                            colorFactory.customColor == selectedColor
+
+                                ColorItem(
+                                    modifier = Modifier.width(42.dp),
+                                    color = Color.White,
+                                    ratio = 1.2f,
+                                    showEyeDropper = true,
+                                    isSelected = isCustomSelected,
+                                    onClick = {
+                                        showDialog = true
+                                    }
+                                )
+
+
+                                val isTransparentSelected =
+                                    colorFactory.selectedColorType == ColorFactory.ColorType.TRANSPARENT &&
+                                            colorFactory.getColorByType(ColorFactory.ColorType.TRANSPARENT) == selectedColor
+                                ColorItem(
+                                    modifier = Modifier
+                                        .width(42.dp),
+                                    color = Color.Transparent,
+                                    ratio = 1.2f,
+                                    showTransparentBg = true,
+                                    isSelected = isTransparentSelected,
+                                    onClick = {
+                                        onColorChange.invoke(
+                                            Color.Transparent,
+                                            ColorFactory.ColorType.TRANSPARENT
+                                        )
+                                    }
+
+                                )
+
+                                val isWhiteSelected =
+                                    colorFactory.selectedColorType == ColorFactory.ColorType.WHITE &&
+                                            colorFactory.getColorByType(ColorFactory.ColorType.WHITE) == selectedColor
+                                ColorItem(
+                                    modifier = Modifier
+                                        .width(42.dp),
+                                    color = Color.White,
+                                    ratio = 1.2f,
+                                    isSelected = isWhiteSelected,
+                                    onClick = {
+                                        onColorChange.invoke(
+                                            Color.White,
+                                            ColorFactory.ColorType.WHITE
+                                        )
+                                    }
+
+                                )
+
+                                val isGreenSelected =
+                                    colorFactory.selectedColorType == ColorFactory.ColorType.GREEN &&
+                                            colorFactory.getColorByType(ColorFactory.ColorType.GREEN) == selectedColor
+                                ColorItem(
+                                    modifier = Modifier
+                                        .width(42.dp),
+                                    color = Color.Green,
+                                    ratio = 1.2f,
+                                    isSelected = isGreenSelected,
+                                    onClick = {
+                                        onColorChange.invoke(
+                                            Color.Green,
+                                            ColorFactory.ColorType.GREEN
+                                        )
+                                    }
+
+                                )
+
+                                val isBlueSelected =
+                                    colorFactory.selectedColorType == ColorFactory.ColorType.BLUE &&
+                                            colorFactory.getColorByType(ColorFactory.ColorType.BLUE) == selectedColor
+                                ColorItem(
+                                    modifier = Modifier
+                                        .width(42.dp),
+                                    color = AppColors.LightPrimary,
+                                    ratio = 1.2f,
+                                    isSelected = isBlueSelected,
+                                    onClick = {
+                                        onColorChange.invoke(
+                                            AppColors.LightPrimary,
+                                            ColorFactory.ColorType.BLUE
+                                        )
+                                    }
+
+                                )
+
+                                val isRedSelected =
+                                    colorFactory.selectedColorType == ColorFactory.ColorType.RED &&
+                                            colorFactory.getColorByType(ColorFactory.ColorType.RED) == selectedColor
+                                ColorItem(
+                                    modifier = Modifier
+                                        .width(42.dp),
+                                    color = Color.Red,
+                                    ratio = 1.2f,
+                                    isSelected = isRedSelected,
+                                    onClick = {
+                                        onColorChange.invoke(Color.Red, ColorFactory.ColorType.RED)
+                                    }
+
+                                )
+                            }
+                        } else {
+                            SuitsList(
+                                suits = suits,
+                                onItemClick = { selectedSuit ->
+                                    selectedSuitId = selectedSuit._id
+                                    suitUrl = if (selectedSuitId == "none") {
+                                        null
+                                    } else {
+                                        isSuitLoading = true
+                                        selectedSuit.image
+                                    }
+                                },
+                                selectedSuitId = selectedSuitId,
+                                onSelectionChange = { suit, isSelected ->
+                                    {
+                                        selectedSuitId = if (isSelected) suit._id else "none"
+                                    }
                                 }
-                            )
-
-
-                            val isTransparentSelected =
-                                colorFactory.selectedColorType == ColorFactory.ColorType.TRANSPARENT &&
-                                        colorFactory.getColorByType(ColorFactory.ColorType.TRANSPARENT) == selectedColor
-                            ColorItem(
-                                modifier = Modifier
-                                    .width(42.dp),
-                                color = Color.Transparent,
-                                ratio = 1.2f,
-                                showTransparentBg = true,
-                                isSelected = isTransparentSelected,
-                                onClick = {
-                                    onColorChange.invoke(
-                                        Color.Transparent,
-                                        ColorFactory.ColorType.TRANSPARENT
-                                    )
-                                }
-
-                            )
-
-                            val isWhiteSelected =
-                                colorFactory.selectedColorType == ColorFactory.ColorType.WHITE &&
-                                        colorFactory.getColorByType(ColorFactory.ColorType.WHITE) == selectedColor
-                            ColorItem(
-                                modifier = Modifier
-                                    .width(42.dp),
-                                color = Color.White,
-                                ratio = 1.2f,
-                                isSelected = isWhiteSelected,
-                                onClick = {
-                                    onColorChange.invoke(Color.White, ColorFactory.ColorType.WHITE)
-                                }
-
-                            )
-
-                            val isGreenSelected =
-                                colorFactory.selectedColorType == ColorFactory.ColorType.GREEN &&
-                                        colorFactory.getColorByType(ColorFactory.ColorType.GREEN) == selectedColor
-                            ColorItem(
-                                modifier = Modifier
-                                    .width(42.dp),
-                                color = Color.Green,
-                                ratio = 1.2f,
-                                isSelected = isGreenSelected,
-                                onClick = {
-                                    onColorChange.invoke(Color.Green, ColorFactory.ColorType.GREEN)
-                                }
-
-                            )
-
-                            val isBlueSelected =
-                                colorFactory.selectedColorType == ColorFactory.ColorType.BLUE &&
-                                        colorFactory.getColorByType(ColorFactory.ColorType.BLUE) == selectedColor
-                            ColorItem(
-                                modifier = Modifier
-                                    .width(42.dp),
-                                color = AppColors.LightPrimary,
-                                ratio = 1.2f,
-                                isSelected = isBlueSelected,
-                                onClick = {
-                                    onColorChange.invoke(
-                                        AppColors.LightPrimary,
-                                        ColorFactory.ColorType.BLUE
-                                    )
-                                }
-
-                            )
-
-                            val isRedSelected =
-                                colorFactory.selectedColorType == ColorFactory.ColorType.RED &&
-                                        colorFactory.getColorByType(ColorFactory.ColorType.RED) == selectedColor
-                            ColorItem(
-                                modifier = Modifier
-                                    .width(42.dp),
-                                color = Color.Red,
-                                ratio = 1.2f,
-                                isSelected = isRedSelected,
-                                onClick = {
-                                    onColorChange.invoke(Color.Red, ColorFactory.ColorType.RED)
-                                }
-
                             )
                         }
-                    } else {
-                        SuitsList(
-                            suits = suits,
-                            onItemClick = { selectedSuit ->
-                                selectedSuitId = selectedSuit._id
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        ticketBitmap?.let { bitmap ->
+                            Dialog(onDismissRequest = { }) {
+                                Column(
+                                    modifier = Modifier
+                                        .background(colors.onBackground)
+                                        .padding(16.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        "Preview of Ticket image \uD83D\uDC47",
+                                        color = colors.background,
+                                        modifier = Modifier
+                                            .align(Alignment.CenterHorizontally),
+                                    )
+                                    Spacer(Modifier.size(16.dp))
+                                    Image(
+                                        bitmap = bitmap,
+                                        contentDescription = "Preview of ticket"
+                                    )
+                                    Spacer(Modifier.size(4.dp))
+                                    Row {
+                                        Button(onClick = { ticketBitmap = null }) {
+                                            Text("Close")
+                                        }
+
+                                        Button(onClick = {
+                                            val permissionsGranted =
+                                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                                                    true
+                                                } else {
+                                                    writeStorageAccessState.allPermissionsGranted
+                                                }
+
+                                            showSaveLoading = true
+
+                                            uiScope.launch {
+                                                if (permissionsGranted) {
+                                                    withContext(Dispatchers.IO) {
+                                                        val savedUri = saveBitmapToGallery(
+                                                            context,
+                                                            ticketBitmap?.asAndroidBitmap()
+                                                        )
+                                                        showSaveLoading = false
+                                                        withContext(Dispatchers.Main) {
+                                                            if (savedUri != null) {
+                                                                // Now you have the saved image URI
+                                                                ticketBitmap = null
+                                                                val imagePath = savedUri.toString()
+                                                                onImageSaved(imagePath)
+                                                                Logger.d(
+                                                                    "EditImageScreen",
+                                                                    "Image saved to: $imagePath"
+                                                                )
+                                                                Toast.makeText(
+                                                                    context,
+                                                                    "Image saved to gallery",
+                                                                    Toast.LENGTH_SHORT
+                                                                ).show()
+                                                            } else {
+                                                                Toast.makeText(
+                                                                    context,
+                                                                    "Failed to save image",
+                                                                    Toast.LENGTH_SHORT
+                                                                ).show()
+                                                            }
+                                                        }
+                                                    }
+                                                } else if (writeStorageAccessState.shouldShowRationale) {
+                                                    coroutineScope.launch {
+                                                        val result = snackbarHostState.showSnackbar(
+                                                            message = "The storage permission is needed to save the image",
+                                                            actionLabel = "Grant Access"
+                                                        )
+                                                        if (result == SnackbarResult.ActionPerformed) {
+                                                            writeStorageAccessState.launchMultiplePermissionRequest()
+                                                        }
+                                                    }
+                                                } else {
+                                                    writeStorageAccessState.launchMultiplePermissionRequest()
+                                                }
+                                            }
+
+                                        }) {
+                                            Text("Save")
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        Spacer(Modifier.size(8.dp))
+
+                        Button(
+                            onClick = {
+
+                                if (boxWidth.value <= 0 || boxHeight.value <= 0 || !isLayoutReady) {
+                                    Toast.makeText(
+                                        context,
+                                        "Layout not ready, please wait",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    return@Button
+                                }
+
+                                isCreatingBitmap = true
+
+                                uiScope.launch {
+                                    // Capture the screen content
+                                    val capturedBitmap = captureController.captureAsync().await()
+
+                                    // Create a new bitmap with source dimensions but containing captured content
+                                    val resultBitmap = Bitmap.createScaledBitmap(
+                                        capturedBitmap.asAndroidBitmap(),
+                                        pixelSize.width,
+                                        pixelSize.height,
+                                        false
+                                    )
+
+                                    // Assign the result to ticketBitmap
+                                    ticketBitmap = resultBitmap.asImageBitmap()
+                                    isCreatingBitmap = false
+                                }
+
+                                /* val permissionsGranted =
+                                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                                         true
+                                     } else {
+                                         writeStorageAccessState.allPermissionsGranted
+                                     }
+
+
+                                 if (!permissionsGranted) {
+
+                                     coroutineScope.launch {
+                                         try {
+                                             // Get the source image from the URL
+                                             val sourceBitmap =
+                                                 loadAndTransformBitmap(context, imageUrl) ?: run {
+                                                     Toast.makeText(
+                                                         context,
+                                                         "Could not load image",
+                                                         Toast.LENGTH_SHORT
+                                                     ).show()
+                                                     return@launch
+                                                 }
+
+                                             // Create a bitmap with exact dimensions of the source
+                                             val resultBitmap = Bitmap.createBitmap(
+                                                 sourceBitmap.width,
+                                                 sourceBitmap.height,
+                                                 Bitmap.Config.ARGB_8888
+                                             )
+                                             val canvas = android.graphics.Canvas(resultBitmap)
+
+                                             // Fill with background color
+                                             canvas.drawColor(backgroundColor.toArgb())
+
+                                             // Calculate the visible portion of the source image
+                                             // Scale factors determine how much of the image is visible
+                                             val scaleFactor = scale
+
+                                             // Create a matrix that applies all current transformations
+                                             val matrix = android.graphics.Matrix()
+
+                                             // Apply flip if needed
+                                             if (flip) {
+                                                 matrix.postScale(
+                                                     -1f,
+                                                     1f,
+                                                     sourceBitmap.width / 2f,
+                                                     sourceBitmap.height / 2f
+                                                 )
+                                             }
+
+                                             // The offsetX and offsetY values represent the translation in the view
+                                             // To apply them to the source bitmap, we need to adjust them relative to scale
+                                             // The center point of the view is where the image is anchored
+                                             val sourceWidthHalf = sourceBitmap.width / 2f
+                                             val sourceHeightHalf = sourceBitmap.height / 2f
+
+                                             // Adjust offsets to be relative to the source bitmap
+                                             // offsetX and offsetY values are in screen pixels, we need to convert to bitmap coordinates
+                                             val viewToBitmapScaleX =
+                                                 sourceBitmap.width.toFloat() / boxWidth.value
+                                             val viewToBitmapScaleY =
+                                                 sourceBitmap.height.toFloat() / boxHeight.value
+
+                                             // Calculate offset in bitmap coordinates
+                                             val bitmapOffsetX =
+                                                 -offsetX * viewToBitmapScaleX / scale
+                                             val bitmapOffsetY =
+                                                 -offsetY * viewToBitmapScaleY / scale
+
+                                             // Draw the bitmap in the center of the canvas
+                                             canvas.drawBitmap(sourceBitmap, matrix, null)
+
+                                             // Save to gallery
+                                             withContext(Dispatchers.IO) {
+                                                 val savedUri =
+                                                     saveBitmapToGallery(context, resultBitmap)
+                                                 withContext(Dispatchers.Main) {
+                                                     if (savedUri != null) {
+                                                         // Now you have the saved image URI
+                                                         val imagePath = savedUri.toString()
+                                                         onImageSaved(imagePath)
+                                                         Logger.d(
+                                                             "EditImageScreen",
+                                                             "Image saved to: $imagePath"
+                                                         )
+                                                         Toast.makeText(
+                                                             context,
+                                                             "Image saved to gallery",
+                                                             Toast.LENGTH_SHORT
+                                                         ).show()
+                                                     } else {
+                                                         Toast.makeText(
+                                                             context,
+                                                             "Failed to save image",
+                                                             Toast.LENGTH_SHORT
+                                                         ).show()
+                                                     }
+                                                 }
+                                             }
+
+                                         } catch (e: Exception) {
+                                             withContext(Dispatchers.Main) {
+                                                 Toast.makeText(
+                                                     context,
+                                                     "Error: ${e.message}",
+                                                     Toast.LENGTH_SHORT
+                                                 ).show()
+                                                 Log.e("EditImageScreen", "Error saving image", e)
+                                             }
+                                         }
+                                     }
+                                 } else if (writeStorageAccessState.shouldShowRationale) {
+                                     coroutineScope.launch {
+                                         val result = snackbarHostState.showSnackbar(
+                                             message = "The storage permission is needed to save the image",
+                                             actionLabel = "Grant Access"
+                                         )
+                                         if (result == SnackbarResult.ActionPerformed) {
+                                             writeStorageAccessState.launchMultiplePermissionRequest()
+                                         }
+                                     }
+                                 } else {
+                                     writeStorageAccessState.launchMultiplePermissionRequest()
+                                 }*/
                             },
-                            selectedSuitId = selectedSuitId,
-                            onSelectionChange = { suit, isSelected -> {
-                                selectedSuitId = if (isSelected) suit._id else "none"
-                            }}
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Button(
-                        onClick = {
-
-                            if (boxWidth.value <= 0 || boxHeight.value <= 0 || !isLayoutReady) {
-                                Toast.makeText(context, "Layout not ready, please wait", Toast.LENGTH_SHORT).show()
-                                return@Button
-                            }
-
-                            val permissionsGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                                true
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp)
+                                .padding(horizontal = 16.dp),
+                            shape = RoundedCornerShape(24.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = colors.primary)
+                        ) {
+                            if (isCreatingBitmap) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier
+                                        .size(24.dp),
+                                    color = colors.onPrimary,
+                                    strokeWidth = 2.dp
+                                )
                             } else {
-                                writeStorageAccessState.allPermissionsGranted
-                            }
-
-                            if (permissionsGranted) {
-                                /*coroutineScope.launch {
-                                    try {
-
-
-                                        // Get the source image from the URL
-                                        val sourceBitmap = loadAndTransformBitmap(context, imageUrl) ?: run {
-                                            Toast.makeText(context, "Could not load image", Toast.LENGTH_SHORT).show()
-                                            return@launch
-                                        }
-
-                                        val imageWidth = sourceBitmap.width * scale
-                                        val imageHeight = sourceBitmap.height * scale
-
-                                        // Create a bitmap with background color
-                                        val bitmap = Bitmap.createBitmap(
-                                            imageWidth.toInt(),
-                                            imageHeight.toInt(),
-                                            Bitmap.Config.ARGB_8888
-                                        )
-                                        val canvas = android.graphics.Canvas(bitmap)
-
-                                        // Fill with background color
-                                        canvas.drawColor(backgroundColor.toArgb())
-
-                                        // Apply transformations
-                                        val matrix = android.graphics.Matrix()
-                                        matrix.postScale(
-                                            if (flip) -1f else 1f,
-                                            1f
-                                        )
-
-                                        *//*matrix.postScale(
-                                            if (flip) -scale else scale,
-                                            scale,
-                                            sourceBitmap.width / 2f,
-                                            sourceBitmap.height / 2f
-                                        )*//*
-                                        // Position the image centered in our bitmap
-                                        val drawX = if (flip) imageWidth else 0f
-                                        matrix.postTranslate(drawX, 0f)
-
-                                        *//*matrix.postTranslate(
-                                            offsetX + (bitmap.width - sourceBitmap.width * scale) / 2,
-                                            offsetY + (bitmap.height - sourceBitmap.height * scale) / 2
-                                        )*//*
-
-                                        // Draw the image with transformations
-                                        canvas.drawBitmap(sourceBitmap, matrix, null)
-
-                                        // Save to gallery
-                                        withContext(Dispatchers.IO) {
-                                            val saved = saveBitmapToGallery(context, bitmap)
-                                            withContext(Dispatchers.Main) {
-                                                if (saved) {
-                                                    Toast.makeText(context, "Image saved to gallery", Toast.LENGTH_SHORT).show()
-                                                } else {
-                                                    Toast.makeText(context, "Failed to save image", Toast.LENGTH_SHORT).show()
-                                                }
-                                            }
-                                        }
-                                    } catch (e: Exception) {
-                                        withContext(Dispatchers.Main) {
-                                            Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
-                                            Log.e("EditImageScreen", "Error saving image", e)
-                                        }
-                                    }
-                                }*/
-
-                                coroutineScope.launch {
-                                    try {
-                                        // Get the source image from the URL
-                                        val sourceBitmap = loadAndTransformBitmap(context, imageUrl) ?: run {
-                                            Toast.makeText(context, "Could not load image", Toast.LENGTH_SHORT).show()
-                                            return@launch
-                                        }
-
-                                        // Create a bitmap with exact dimensions of the source
-                                        val resultBitmap = Bitmap.createBitmap(
-                                            sourceBitmap.width,
-                                            sourceBitmap.height,
-                                            Bitmap.Config.ARGB_8888
-                                        )
-                                        val canvas = android.graphics.Canvas(resultBitmap)
-
-                                        // Fill with background color
-                                        canvas.drawColor(backgroundColor.toArgb())
-
-                                        // Calculate the visible portion of the source image
-                                        // Scale factors determine how much of the image is visible
-                                        val scaleFactor = scale
-
-                                        // Create a matrix that applies all current transformations
-                                        val matrix = android.graphics.Matrix()
-
-                                        // Apply flip if needed
-                                        if (flip) {
-                                            matrix.postScale(-1f, 1f, sourceBitmap.width / 2f, sourceBitmap.height / 2f)
-                                        }
-
-                                        // The offsetX and offsetY values represent the translation in the view
-                                        // To apply them to the source bitmap, we need to adjust them relative to scale
-                                        // The center point of the view is where the image is anchored
-                                        val sourceWidthHalf = sourceBitmap.width / 2f
-                                        val sourceHeightHalf = sourceBitmap.height / 2f
-
-                                        // Adjust offsets to be relative to the source bitmap
-                                        // offsetX and offsetY values are in screen pixels, we need to convert to bitmap coordinates
-                                        val viewToBitmapScaleX = sourceBitmap.width.toFloat() / boxWidth.value
-                                        val viewToBitmapScaleY = sourceBitmap.height.toFloat() / boxHeight.value
-
-                                        // Calculate offset in bitmap coordinates
-                                        val bitmapOffsetX = -offsetX * viewToBitmapScaleX / scale
-                                        val bitmapOffsetY = -offsetY * viewToBitmapScaleY / scale
-
-                                        // Draw the bitmap in the center of the canvas
-                                        canvas.drawBitmap(sourceBitmap, matrix, null)
-
-                                        // Save to gallery
-                                        /*withContext(Dispatchers.IO) {
-                                            val saved = saveBitmapToGallery(context, resultBitmap)
-                                            withContext(Dispatchers.Main) {
-                                                if (saved) {
-                                                    onImageSaved(resultBitmap.asImageBitmap())
-                                                    Toast.makeText(context, "Image saved to gallery", Toast.LENGTH_SHORT).show()
-                                                } else {
-                                                    Toast.makeText(context, "Failed to save image", Toast.LENGTH_SHORT).show()
-                                                }
-                                            }
-                                        }*/
-
-                                        // Save to gallery
-                                        withContext(Dispatchers.IO) {
-                                            val savedUri = saveBitmapToGallery(context, resultBitmap)
-                                            withContext(Dispatchers.Main) {
-                                                if (savedUri != null) {
-                                                    // Now you have the saved image URI
-                                                    val imagePath = savedUri.toString()
-                                                    onImageSaved(imagePath)
-                                                    Logger.d("EditImageScreen", "Image saved to: $imagePath")
-                                                    Toast.makeText(context, "Image saved to gallery", Toast.LENGTH_SHORT).show()
-                                                } else {
-                                                    Toast.makeText(context, "Failed to save image", Toast.LENGTH_SHORT).show()
-                                                }
-                                            }
-                                        }
-
-                                    } catch (e: Exception) {
-                                        withContext(Dispatchers.Main) {
-                                            Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
-                                            Log.e("EditImageScreen", "Error saving image", e)
-                                        }
-                                    }
-                                }
-                            } else if (writeStorageAccessState.shouldShowRationale) {
-                                coroutineScope.launch {
-                                    val result = snackbarHostState.showSnackbar(
-                                        message = "The storage permission is needed to save the image",
-                                        actionLabel = "Grant Access"
+                                Row {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.download_icon),
+                                        contentDescription = "Save Icon",
+                                        tint = colors.onPrimary,
+                                        modifier = Modifier
+                                            .size(20.dp)
                                     )
-                                    if (result == SnackbarResult.ActionPerformed) {
-                                        writeStorageAccessState.launchMultiplePermissionRequest()
-                                    }
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "Save to Gallery",
+                                        color = colors.onPrimary,
+                                        fontSize = 16.sp
+                                    )
                                 }
-                            } else {
-                                writeStorageAccessState.launchMultiplePermissionRequest()
                             }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp)
-                            .padding(horizontal = 16.dp),
-                        shape = RoundedCornerShape(24.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = colors.primary)
-                    ) {
-                        Text(
-                            text = "Save to Gallery",
-                            color = colors.onPrimary,
-                            fontSize = 16.sp
+                        }
+
+                        // Add SnackbarHost to display permission rationale
+                        SnackbarHost(
+                            hostState = snackbarHostState,
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
                         )
+
                     }
 
-                    // Add SnackbarHost to display permission rationale
-                    SnackbarHost(
-                        hostState = snackbarHostState,
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
-                    )
+                    if (showSaveLoading) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color.Black.copy(alpha = 0.5f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column {
+                                CircularProgressIndicator(
+                                    modifier = Modifier
+                                        .align(Alignment.CenterHorizontally)
+                                        .size(48.dp),
+                                    color = colors.primary
+                                )
+                                Text(
+                                    text = "Saving image, please wait...",
+                                    color = Color.White
+                                )
+                            }
+
+                        }
+
+
+                    }
+
                 }
 
             }

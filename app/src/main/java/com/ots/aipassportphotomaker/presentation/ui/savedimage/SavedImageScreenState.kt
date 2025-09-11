@@ -21,6 +21,7 @@ data class SavedImageScreenUiState(
     val documentCompleted: String? = null,
     val imagePath: String? = null,
     val ratio: Float = 1f,
+    val fileSize: String = ""
 
 )
 

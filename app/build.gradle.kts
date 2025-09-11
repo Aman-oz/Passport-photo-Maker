@@ -86,6 +86,7 @@ dependencies {
     implementation ("io.github.farimarwat:permissionmate-compose:1.1")
     implementation(libs.media.downloader)
     implementation(libs.accompanist.permission)
+    implementation(libs.compose.capturable)
 
     implementation(libs.androidx.constraintlayout.compose)
 //    implementation(libs.compose.colorpicker)

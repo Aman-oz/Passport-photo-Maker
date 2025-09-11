@@ -39,6 +39,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
+import androidx.core.net.toUri
 import coil.ImageLoader
 import coil.request.ImageRequest
 import com.ots.aipassportphotomaker.R
@@ -211,8 +212,12 @@ object ImageUtils {
         }
     }
 
-    fun saveBitmapToGallery(context: Context, bitmap: Bitmap): Uri? {
+    fun saveBitmapToGallery(context: Context, bitmap: Bitmap?): Uri? {
         return try {
+            if (bitmap == null) {
+                Logger.e("ImageUtils", "Bitmap is null, cannot save to gallery")
+                return null
+            }
             val filename = "passportphoto_${System.currentTimeMillis()}.jpg"
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -225,7 +230,7 @@ object ImageUtils {
                 val uri = context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
                 uri?.let {
                     context.contentResolver.openOutputStream(it)?.use { stream ->
-                        bitmap.compress(Bitmap.CompressFormat.JPEG, 95, stream)
+                        bitmap?.compress(Bitmap.CompressFormat.JPEG, 95, stream)
                     }
                     Logger.i("ImageUtils", "Image saved to gallery: $it")
                     it
@@ -238,7 +243,7 @@ object ImageUtils {
 
                 val file = File(directory, filename)
                 FileOutputStream(file).use { stream ->
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 95, stream)
+                    bitmap?.compress(Bitmap.CompressFormat.JPEG, 95, stream)
                 }
 
                 // Scan the file to make it immediately visible in gallery
@@ -287,6 +292,27 @@ object ImageUtils {
         outputStream().use { out ->
             bitmap.compress(format, quality, out)
             out.flush()
+        }
+    }
+
+    fun getFileSizeInfo(context: Context, imagePath: String?): String {
+        if (imagePath.isNullOrEmpty()) return ""
+
+        try {
+            val uri = imagePath.toUri()
+            val fileDescriptor = context.contentResolver.openFileDescriptor(uri, "r")
+            val fileSize = fileDescriptor?.statSize ?: 0
+            fileDescriptor?.close()
+
+            return when {
+                fileSize < 1024 -> "$fileSize B"
+                fileSize < 1024 * 1024 -> String.format("%.1f KB", fileSize / 1024f)
+                fileSize < 1024 * 1024 * 1024 -> String.format("%.2f MB", fileSize / (1024f * 1024f))
+                else -> String.format("%.2f GB", fileSize / (1024f * 1024f * 1024f))
+            }
+        } catch (e: Exception) {
+            Logger.e("SavedImageScreenViewModel", "Error getting file size: ${e.message}", e)
+            return ""
         }
     }
 }

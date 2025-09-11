@@ -180,7 +180,7 @@ private fun ImageProcessingScreen(
                         modifier = Modifier
                             .padding(16.dp)
                             .align(Alignment.CenterHorizontally),
-                        imagePath = imagePath,
+                        imagePath = uiState.currentImagePath ?: imagePath,
 //                        isPortrait = isPortrait,
                         onTap = {}
                     )

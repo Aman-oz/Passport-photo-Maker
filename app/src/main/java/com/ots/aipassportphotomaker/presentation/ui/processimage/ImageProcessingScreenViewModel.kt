@@ -94,9 +94,9 @@ class ImageProcessingScreenViewModel @Inject constructor(
         Logger.i("ImageProcessingScreenViewModel"," initialized with documentId: $documentId, imagePath: $imagePath, filePath: $filePath selectedDpi: $selectedDpi, selectedColor: $selectedColor")
         onInitialState()
         loadState(true)
-        if (imagePath != null) {
-            updateCurrentImagePath(imagePath)
-        } else {
+        imagePath?.let { path ->
+            updateCurrentImagePath(path)
+        } ?: run {
             _error.value = "No image path provided"
         }
     }
@@ -219,6 +219,7 @@ class ImageProcessingScreenViewModel @Inject constructor(
 
                         lastCroppedUrl = apiResponse.filename
                         _uiState.value = _uiState.value.copy(
+
                             finalImageUrl = apiResponse.filename,
                             showLoading = false
                         )
@@ -322,7 +323,7 @@ class ImageProcessingScreenViewModel @Inject constructor(
                         Logger.i("ImageProcessingScreenViewModel","Background removed successfully: ${apiResponse.imageUrl}")
                         success = true
 
-                        delay(1000)
+                        delay(1500)
 
                         onBackgroundRemoved()
                     }

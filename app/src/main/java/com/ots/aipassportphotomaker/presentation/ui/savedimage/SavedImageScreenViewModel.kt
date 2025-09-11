@@ -1,14 +1,19 @@
 package com.ots.aipassportphotomaker.presentation.ui.savedimage
 
 import android.content.Context
-import android.content.Intent
 import android.net.Uri
-import android.widget.Toast
-import androidx.core.app.ShareCompat
+import android.os.Build
 import androidx.core.net.toUri
+import androidx.lifecycle.viewModelScope
 import androidx.paging.CombinedLoadStates
 import androidx.paging.LoadState
+import com.ots.aipassportphotomaker.common.ext.FacebookPackage
+import com.ots.aipassportphotomaker.common.ext.InstagramPackage
+import com.ots.aipassportphotomaker.common.ext.SharePackage
+import com.ots.aipassportphotomaker.common.ext.WhatsappPackage
+import com.ots.aipassportphotomaker.common.ext.shareMedia
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
+import com.ots.aipassportphotomaker.common.utils.ImageUtils.getFileSizeInfo
 import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.domain.model.DocumentEntity
 import com.ots.aipassportphotomaker.domain.usecase.photoid.GetDocumentDetails
@@ -20,12 +25,16 @@ import com.ots.aipassportphotomaker.domain.util.onSuccess
 import com.ots.aipassportphotomaker.presentation.ui.base.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
 import javax.inject.Inject
 
 // Created by amanullah on 04/09/2025.
@@ -90,6 +99,12 @@ class SavedImageScreenViewModel @Inject constructor(
                 imagePath = imagePath
             )
 
+            val fileSize = getFileSizeInfo(context,imagePath)
+
+            _uiState.value = _uiState.value.copy(
+                fileSize = fileSize
+            )
+
             val size = getDocumentWidthAndHeight(document.size)
             _uiState.value = _uiState.value.copy(ratio = size.width/size.height)
 
@@ -129,88 +144,54 @@ class SavedImageScreenViewModel @Inject constructor(
 
 
     fun shareToWhatsApp(context: Context,imagePath: String) {
-        try {
-            val imageUri = Uri.parse(imagePath)
-            val intent = Intent(Intent.ACTION_SEND).apply {
-                type = "image/*"
-                putExtra(Intent.EXTRA_STREAM, imageUri)
-                putExtra(Intent.EXTRA_TEXT, "Check out my passport photo!")
-                setPackage("com.whatsapp")
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
-
-            if (intent.resolveActivity(context.packageManager) != null) {
-                context.startActivity(intent)
-            } else {
-                // WhatsApp not installed, fall back to general sharing
-                shareToOthers(context,imagePath)
-                Toast.makeText(context, "WhatsApp not installed. Opening other options.", Toast.LENGTH_SHORT).show()
-            }
-
-        } catch (e: Exception) {
-            Toast.makeText(context, "Error sharing to WhatsApp: ${e.message}", Toast.LENGTH_SHORT).show()
-            Logger.e("SavedImageScreen", "WhatsApp share error", e)
-        }
+        shareMedia(context, imagePath.toUri(), WhatsappPackage)
     }
 
     fun shareToInstagram(context: Context,imagePath: String) {
-        try {
-            val imageUri = Uri.parse(imagePath)
-            val intent = Intent(Intent.ACTION_SEND).apply {
-                type = "image/*"
-                putExtra(Intent.EXTRA_STREAM, imageUri)
-                setPackage("com.instagram.android")
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
-
-            if (intent.resolveActivity(context.packageManager) != null) {
-                context.startActivity(intent)
-            } else {
-                // Instagram not installed, fall back to general sharing
-                shareToOthers(context,imagePath)
-                Toast.makeText(context, "Instagram not installed. Opening other options.", Toast.LENGTH_SHORT).show()
-            }
-        } catch (e: Exception) {
-            Toast.makeText(context, "Error sharing to Instagram: ${e.message}", Toast.LENGTH_SHORT).show()
-            Logger.e("SavedImageScreen", "Instagram share error", e)
-        }
+        shareMedia(context, imagePath.toUri(), InstagramPackage)
     }
 
     fun shareToFacebook(context: Context,imagePath: String) {
-        try {
-            val imageUri = Uri.parse(imagePath)
-            val intent = Intent(Intent.ACTION_SEND).apply {
-                type = "image/*"
-                putExtra(Intent.EXTRA_STREAM, imageUri)
-                putExtra(Intent.EXTRA_TEXT, "Check out my passport photo!")
-                setPackage("com.facebook.katana")
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
-
-            if (intent.resolveActivity(context.packageManager) != null) {
-                context.startActivity(intent)
-            } else {
-                // Facebook not installed, fall back to general sharing
-                shareToOthers(context,imagePath)
-                Toast.makeText(context, "Facebook not installed. Opening other options.", Toast.LENGTH_SHORT).show()
-            }
-        } catch (e: Exception) {
-            Toast.makeText(context, "Error sharing to Facebook: ${e.message}", Toast.LENGTH_SHORT).show()
-            Logger.e("SavedImageScreen", "Facebook share error", e)
-        }
+        shareMedia(context, imagePath.toUri(), FacebookPackage)
     }
 
     fun shareToOthers(context: Context,imagePath: String) {
-        try {
-            ShareCompat.IntentBuilder(context)
-                .setType("image/jpeg")
-                .addStream(imagePath.toUri())
-                .setChooserTitle("Share image")
-                .setSubject("Shared image")
-                .startChooser()
-        } catch (e: Exception) {
-            Toast.makeText(context, "Error sharing image: ${e.message}", Toast.LENGTH_SHORT).show()
-            Logger.e("SavedImageScreen", "General share error", e)
+        shareMedia(context, imagePath.toUri(), SharePackage)
+    }
+
+    fun deleteImage(imagePath: String?, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        if (imagePath.isNullOrEmpty()) {
+            onError("No image to delete")
+            return
+        }
+
+        viewModelScope.launch(dispatcher.io) {
+            try {
+                val uri = Uri.parse(imagePath)
+
+                val result = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    // For Android 10+
+                    val numRowsDeleted = context.contentResolver.delete(uri, null, null)
+                    numRowsDeleted > 0
+                } else {
+                    // For older Android versions
+                    val file = File(uri.path ?: "")
+                    file.exists() && file.delete()
+                }
+
+                withContext(dispatcher.main) {
+                    if (result) {
+                        onSuccess()
+                    } else {
+                        onError("Failed to delete image")
+                    }
+                }
+            } catch (e: Exception) {
+                Logger.e("SavedImageScreenViewModel", "Error deleting image: ${e.message}", e)
+                withContext(dispatcher.main) {
+                    onError("Error deleting image: ${e.message}")
+                }
+            }
         }
     }
 

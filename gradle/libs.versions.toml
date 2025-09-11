@@ -42,6 +42,7 @@ charisbanesComposeVersion = "2024.09.00"
 lottieVersion = "6.4.0"
 oziMediaDownloader = "v1.0.4"
 permissions = "0.37.3"
+captureVersion = "2.1.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -100,6 +101,7 @@ accompanist-systemuicontroller = { module = "com.google.accompanist:accompanist-
 lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "lottieVersion" }
 media-downloader = { module = "com.github.Aman-oz:OziMediaDownloader", version.ref = "oziMediaDownloader" }
 accompanist-permission = { module = "com.google.accompanist:accompanist-permissions", version.ref = "permissions" }
+compose-capturable = { module = "dev.shreyaspatil:capturable", version.ref = "captureVersion" }
 
 compose-colorpicker = { module = "com.github.skydoves:colorpicker-compose", version.ref = "colorpicker" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }

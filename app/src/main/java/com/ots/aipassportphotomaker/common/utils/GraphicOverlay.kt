@@ -15,6 +15,8 @@ import com.ots.aipassportphotomaker.common.utils.BitmapUtils.isMemorySufficient
 import java.lang.ref.WeakReference
 import java.nio.ByteBuffer
 import java.util.*
+import kotlin.text.get
+import kotlin.times
 
 /**
  * Created by Hamza Chaudhary
@@ -375,13 +377,23 @@ open class GraphicOverlay(context: Context?, attrs: AttributeSet?) :
     }
 
     fun setBitmap(bitmap: Bitmap?) {
-        imageBitmap = bitmap
+
         if (bitmap != null) {
-            imageWidth = bitmap.width
-            imageHeight = bitmap.height
+            // Convert to a format that supports pixel manipulation if needed
+            imageBitmap = if (bitmap.config == Bitmap.Config.HARDWARE) {
+                bitmap.copy(Bitmap.Config.ARGB_8888, true)
+            } else {
+                bitmap
+            }
+
+            imageWidth = imageBitmap!!.width
+            imageHeight = imageBitmap!!.height
             needUpdateTransformation = true
+            invalidate()
+        } else {
+            imageBitmap = null
+            invalidate()
         }
-        invalidate()
     }
 
     fun getCurrentBitmap(): Bitmap? {
@@ -419,15 +431,27 @@ open class GraphicOverlay(context: Context?, attrs: AttributeSet?) :
         override fun doInBackground(vararg points: Int?): Bitmap? {
             return try {
                 val oldBitmap = drawViewWeakReference.get()?.imageBitmap
-                    ?: throw IllegalStateException("Bitmap is null")
+                    ?: return null
 
-                val colorToReplace = oldBitmap.getPixel(points[0]!!, points[1]!!)
-                val width = oldBitmap.width
-                val height = oldBitmap.height
-                val pixels = IntArray(width * height)
-                if (!oldBitmap.isRecycled) {
-                    oldBitmap.getPixels(pixels, 0, width, 0, 0, width, height)
+                // Convert HARDWARE bitmap to a mutable format
+                val mutableBitmap = if (oldBitmap.config == Bitmap.Config.HARDWARE) {
+                    oldBitmap.copy(Bitmap.Config.ARGB_8888, true)
+                } else {
+                    oldBitmap
                 }
+
+                // Check if coordinates are within bitmap bounds
+                if (points[0] == null || points[1] == null ||
+                    points[0]!! < 0 || points[0]!! >= mutableBitmap.width ||
+                    points[1]!! < 0 || points[1]!! >= mutableBitmap.height) {
+                    return null
+                }
+
+                val colorToReplace = mutableBitmap.getPixel(points[0]!!, points[1]!!)
+                val width = mutableBitmap.width
+                val height = mutableBitmap.height
+                val pixels = IntArray(width * height)
+                mutableBitmap.getPixels(pixels, 0, width, 0, 0, width, height)
 
                 val rA = Color.alpha(colorToReplace)
                 val rR = Color.red(colorToReplace)
@@ -459,19 +483,17 @@ open class GraphicOverlay(context: Context?, attrs: AttributeSet?) :
                 newBitmap.setPixels(pixels, 0, width, 0, 0, width, height)
                 newBitmap
             } catch (e: Exception) {
-                // Log the error
                 Log.e("doInBackground", "Error processing bitmap: ${e.message}", e)
-
-                // Return a fallback or null if an error occurs
                 null
             }
         }
 
 
-        override fun onPostExecute(result: Bitmap) {
+        override fun onPostExecute(result: Bitmap?) {
             super.onPostExecute(result)
+            drawViewWeakReference.get()?.loadingModal?.visibility = INVISIBLE
+
             if (result == null) {
-                drawViewWeakReference.get()?.loadingModal?.visibility = INVISIBLE
                 Log.e("AsyncTask", "Failed to process bitmap")
             } else {
                 drawViewWeakReference.get()?.apply {

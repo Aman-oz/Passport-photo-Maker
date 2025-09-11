@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -38,6 +39,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -58,11 +60,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.toUpperCase
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.app.ShareCompat
-import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import coil.compose.AsyncImagePainter
@@ -71,6 +72,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
+import com.ots.aipassportphotomaker.common.ext.segmentedShadow
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
 import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.presentation.ui.bottom_nav.NavigationBarSharedViewModel
@@ -81,6 +83,7 @@ import com.ots.aipassportphotomaker.presentation.ui.theme.colors
 import com.ots.aipassportphotomaker.presentation.ui.theme.custom100
 import com.ots.aipassportphotomaker.presentation.ui.theme.custom300
 import com.ots.aipassportphotomaker.presentation.ui.theme.custom400
+import com.ots.aipassportphotomaker.presentation.ui.theme.customError
 import com.ots.aipassportphotomaker.presentation.ui.theme.onCustom300
 import com.ots.aipassportphotomaker.presentation.ui.theme.onCustom400
 
@@ -118,7 +121,16 @@ fun SavedImagePage(
 
         },
         onDeleteClick = {
-
+            viewModel.deleteImage(
+                imagePath = uiState.imagePath,
+                onSuccess = {
+                    Toast.makeText(context, "Image deleted successfully", Toast.LENGTH_SHORT).show()
+                    mainRouter.goBack()
+                },
+                onError = { errorMessage ->
+                    Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+                }
+            )
         },
         onWhatsAppShare = {
             viewModel.shareToWhatsApp(context,it)
@@ -165,6 +177,8 @@ private fun SavedImageScreen(
         }
     )
 
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
     val socialItemList = listOf(
         R.drawable.whatsapp_icons to "WhatsApp",
         R.drawable.insta_icon to "Instagram",
@@ -193,6 +207,30 @@ private fun SavedImageScreen(
                         })
                 }
         ) {
+
+            if (showDeleteDialog) {
+                AlertDialog(
+                    onDismissRequest = { showDeleteDialog = false },
+                    title = { Text("Delete Image") },
+                    text = { Text("Are you sure you want to delete this image?") },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                showDeleteDialog = false
+                                onDeleteClick()
+                            }
+                        ) {
+                            Text("Delete", color = colors.customError)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showDeleteDialog = false }) {
+                            Text("Cancel")
+                        }
+                    }
+                )
+            }
+
             FinalScreenTopBar(
                 title = "Edit image",
                 showGetProButton = true,
@@ -205,7 +243,7 @@ private fun SavedImageScreen(
 
                 },
                 onDeleteClick = {
-
+                    showDeleteDialog = true
                 }
             )
 
@@ -232,11 +270,15 @@ private fun SavedImageScreen(
                             .background(
                                 color = colors.background,
                             )
+                            .segmentedShadow(
+                                color = colors.background,
+                                shadowWidth = 6.dp
+                            )
 
                             .shadow(
                                 elevation = 4.dp,
-                                ambientColor = DefaultShadowColor,
-                                spotColor = DefaultShadowColor,
+                                ambientColor = colors.background,
+                                spotColor = colors.onBackground,
                             )
                             .align(Alignment.CenterHorizontally)
 
@@ -412,7 +454,7 @@ private fun SavedImageScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -446,7 +488,7 @@ private fun SavedImageScreen(
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     Button(
                         onClick = {
@@ -518,8 +560,8 @@ private fun ChecklistItem(
         ) {
             Text(
                 text = when (text) {
-                    "Printable" -> "$selectedDpi DPI" ?: "300 DPI"
-                    "Compressed" -> "433 KB" ?: "400 KB"
+                    "Printable" -> "${selectedDpi.uppercase()}" ?: "300 DPI"
+                    "Compressed" -> "${uiState.fileSize}" ?: "400 KB"
                     else -> ""
                 },
                 style = MaterialTheme.typography.bodyMedium,

@@ -27,10 +27,12 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieConstants
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
@@ -66,14 +68,17 @@ fun ImageWithLottieScan(
         // assign image path to Image composable if available else use placeholder
 
         AsyncImage(
-            model = imagePath,
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(imagePath)
+                .crossfade(true)
+                .build(),
             contentDescription = null,
             modifier = Modifier
                 .fillMaxSize()
                 .background(color = Color.LightGray, shape = RoundedCornerShape(16.dp))
                 .clip(RoundedCornerShape(16.dp)),
             contentScale = ContentScale.Crop,
-            placeholder = painterResource(id = R.drawable.scan_image_male)
+            placeholder = painterResource(id = R.drawable.transparent_bg)
 
         )
         // Image as the background

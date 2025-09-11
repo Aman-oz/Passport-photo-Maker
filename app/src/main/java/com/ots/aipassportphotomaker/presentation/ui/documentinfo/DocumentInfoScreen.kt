@@ -642,6 +642,7 @@ fun ChecklistItem(
         mutableStateOf(Color.Red)
     }
 
+    //custom color picker dialog
     var showDialog by remember {
         mutableStateOf(false)
     }

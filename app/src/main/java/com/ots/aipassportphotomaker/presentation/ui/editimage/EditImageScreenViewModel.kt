@@ -166,6 +166,7 @@ class EditImageScreenViewModel @Inject constructor(
             val size = getDocumentWidthAndHeight(document.size)
             _uiState.value = _uiState.value.copy(ratio = size.width/size.height)
 
+
             if (imageUrl.isNullOrEmpty()) {
                 Logger.e("EditImageScreenViewModel", "No image path provided")
                 _error.value = "No image was selected"
