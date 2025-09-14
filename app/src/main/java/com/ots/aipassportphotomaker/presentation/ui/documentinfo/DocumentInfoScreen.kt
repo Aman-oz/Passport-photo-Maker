@@ -381,21 +381,25 @@ private fun DocumentInfoScreen(
     val galleryPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions(),
 
-        onResult = { perms ->
+        /*onResult = { perms ->
             permissionsToRequest.forEach { permission ->
+                val isGranted = perms[permission] == true
+                if (isGranted)
                 onPermissionResult(permission, perms[permission] == true)
             }
-        }
-        /*onResult = { permissions ->
+        }*/
+        onResult = { permissions ->
             val allGranted = permissions.all { it.value }
             if (allGranted) {
                 Logger.i(TAG, "Gallery permissions granted")
                 onOpenGalleryClick()
             } else {
+                val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) Manifest.permission.READ_MEDIA_IMAGES else Manifest.permission.READ_EXTERNAL_STORAGE
+                onPermissionResult(permission, allGranted)
                 Logger.w(TAG, "Some gallery permissions denied")
-                Toast.makeText(context, "Storage permissions are required to access photos", Toast.LENGTH_SHORT).show()
+//                Toast.makeText(context, "Storage permissions are required to access photos", Toast.LENGTH_SHORT).show()
             }
-        }*/
+        }
     )
 
 
