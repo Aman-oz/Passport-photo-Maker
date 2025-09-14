@@ -68,9 +68,11 @@ class EditImageScreenViewModel @Inject constructor(
     val error: StateFlow<String?> = _error.asStateFlow()
 
     val documentId: Int = editImageScreenBundle.documentId
-    val imageUrl: String? = editImageScreenBundle.imageUrl
+    var imageUrl: String? = editImageScreenBundle.imageUrl
     val selectedColor: String? = editImageScreenBundle.selectedColor
     val sourceScreen: String = editImageScreenBundle.sourceScreen
+    val editPosition: Int = editImageScreenBundle.editPosition
+    val selectedDpi: String = editImageScreenBundle.selectedDpi
 
     private var mParsedColor = Color.Unspecified
 
@@ -80,8 +82,7 @@ class EditImageScreenViewModel @Inject constructor(
     init {
         Logger.i(
             "EditImageScreenViewModel",
-            " initialized with documentId: $documentId, imagePath: $imageUrl, selectedColor: $selectedColor, sourceScreen: $sourceScreen"
-        )
+            " initialized with documentId: $documentId, imagePath: $imageUrl, selectedColor: $selectedColor, sourceScreen: $sourceScreen, editPosition: $editPosition, selectedDpi: $selectedDpi")
         if (sourceScreen == "HomeScreen") {
             loadState(false)
         } else {
@@ -94,6 +95,7 @@ class EditImageScreenViewModel @Inject constructor(
 
     fun updateImageUrl(newImageUrl: String) {
         launch {
+            imageUrl = newImageUrl
             _uiState.value = _uiState.value.copy(imageUrl = newImageUrl)
             Logger.i("EditImageScreenViewModel", "Updated image URL: $newImageUrl")
         }
@@ -122,6 +124,7 @@ class EditImageScreenViewModel @Inject constructor(
     }
 
     private fun onInitialState() = launch {
+
         if (sourceScreen == "HomeScreen") {
             if (imageUrl.isNullOrEmpty()) {
                 Logger.e("EditImageScreenViewModel", "No image path provided from HomeScreen")
@@ -146,14 +149,14 @@ class EditImageScreenViewModel @Inject constructor(
             val options = android.graphics.BitmapFactory.Options().apply {
                 inJustDecodeBounds = true
             }
-            android.graphics.BitmapFactory.decodeFile(imageUrl, options)
+            android.graphics.BitmapFactory.decodeFile(imageFile.path, options)
 
             val imageWidth = options.outWidth
             val imageHeight = options.outHeight
             val aspectRatio = imageWidth.toFloat() / imageHeight.toFloat()
 
-            Logger.i("CutOutImageScreenViewModel", "Image file exists: $imageUrl, size: ${imageFile.length()} bytes")
-            Logger.i("CutOutImageScreenViewModel", "Image dimensions: ${imageWidth}x${imageHeight}, ratio: $aspectRatio")
+            Logger.i("EditImageScreenViewModel", "Image file exists: ${imageFile.path}, size: ${imageFile.length()} bytes")
+            Logger.i("EditImageScreenViewModel", "Image dimensions: ${imageWidth}x${imageHeight}, ratio: $aspectRatio")
 
             _uiState.value = EditImageScreenUiState(
                 showLoading = false,
@@ -161,13 +164,15 @@ class EditImageScreenViewModel @Inject constructor(
                 documentSize = "${imageWidth} x ${imageHeight}",
                 documentUnit = "px",
                 documentPixels = "${imageWidth}x${imageHeight} px",
-                documentResolution = "72 dpi", // Default DPI
+                documentResolution = selectedDpi ?: "72 dpi", // Default DPI
                 documentImage = "",
                 documentType = "custom",
                 documentCompleted = "",
                 selectedColor = Color.Unspecified,
-                imageUrl = imageFile.toString(),
-                sourceScreen = sourceScreen
+                imageUrl = imageFile.path.toString(),
+                ratio = imageWidth/imageHeight.toFloat(),
+                sourceScreen = sourceScreen,
+                editPosition = editPosition
             )
 
             return@launch
@@ -220,12 +225,13 @@ class EditImageScreenViewModel @Inject constructor(
                 documentSize = document.size,
                 documentUnit = document.unit,
                 documentPixels = document.pixels,
-                documentResolution = document.resolution,
+                documentResolution = selectedDpi ?: document.resolution,
                 documentImage = document.image,
                 documentType = document.type,
                 documentCompleted = document.completed,
                 selectedColor = parsedColor,
-                imageUrl = imageUrl
+                imageUrl = imageUrl,
+                editPosition = editPosition
             )
 
             val size = getDocumentWidthAndHeight(document.size)
@@ -293,7 +299,8 @@ class EditImageScreenViewModel @Inject constructor(
         _navigationState.tryEmit(
             EditImageScreenNavigationState.SavedImageScreen(
                 documentId = documentId,
-                imagePath = imagePath
+                imagePath = imagePath,
+                selectedDpi = selectedDpi
 
             )
         )

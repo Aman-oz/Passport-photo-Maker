@@ -2,6 +2,8 @@ package com.ots.aipassportphotomaker.presentation.ui.history
 
 import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -11,12 +13,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
 import com.ots.aipassportphotomaker.domain.bottom_nav.Page
 import com.ots.aipassportphotomaker.presentation.ui.bottom_nav.NavigationBarSharedViewModel
+import com.ots.aipassportphotomaker.presentation.ui.components.EmptyStateIcon
+import com.ots.aipassportphotomaker.presentation.ui.components.EmptyStateView
 import com.ots.aipassportphotomaker.presentation.ui.components.LoaderFullScreen
 import com.ots.aipassportphotomaker.presentation.ui.home.HomeCardItem
 import com.ots.aipassportphotomaker.presentation.ui.home.mainItems
@@ -70,26 +78,21 @@ private fun HistoryScreen(
         if (uiState.showLoading) {
             LoaderFullScreen()
         } else {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                state = lazyGridState,
-                modifier = Modifier
-                    .background(colors.background)
-            ) {
-                val itemsList = mainItems
-                items(itemsList.size) { index ->
-                    val item = itemsList[index]
-                    HomeCardItem(
-                        title = item.title,
-                        description = item.description,
-                        backgroundColor = item.backgroundColor,
-                        textColor = item.textColor,
-                        backgroundImage = item.backgroundImage,
-                        sparkleImage = item.sparkleImage,
-                        onClick = { onItemClick(item.name) }
-                    )
-                }
-            }
+            EmptyStateView(
+                title = stringResource(id = R.string.no_search_results_title),
+                icon = EmptyStateIcon(
+                    iconRes = R.drawable.history_empty,
+                    size = 100.dp,
+                    spacing = 12.dp
+                ),
+                subtitle = stringResource(
+                    id = R.string.no_history_found_subtitle
+                ),
+                titleTextSize = 20.sp,
+                subtitleTextSize = 16.sp,
+                verticalArrangement = Arrangement.Top,
+                modifier = Modifier.padding(top = 80.dp, start = 24.dp, end = 24.dp)
+            )
         }
     }
 }

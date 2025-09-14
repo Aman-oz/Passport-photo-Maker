@@ -123,8 +123,9 @@ class ImageProcessingScreenViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(currentImagePath = imagePath)
             return@launch
         }
+
         getDocumentById(documentId).onSuccess { document ->
-            Logger.i("ImageProcessingScreenViewModel", "Fetched document details: $document")
+            Logger.i("ImageProcessingScreenViewModel", "Fetched document details: $document, customSelectedDpi= $selectedDpi")
             loadState(isLoading = false)
             val parsedColor = parseColorFromString(selectedColor) ?: Color.Unspecified
             _uiState.value = ImageProcessingScreenUiState(
@@ -133,7 +134,7 @@ class ImageProcessingScreenViewModel @Inject constructor(
                 documentSize = document.size,
                 documentUnit = document.unit,
                 documentPixels = document.pixels,
-                documentResolution = document.resolution,
+                documentResolution = selectedDpi ?: document.resolution,
                 documentImage = document.image,
                 documentType = document.type,
                 documentCompleted = document.completed,
@@ -426,6 +427,7 @@ class ImageProcessingScreenViewModel @Inject constructor(
                                 documentId = documentId,
                                 imageUrl = localImagePath.toString(),
                                 selectedBackgroundColor = uiState.value.selectedColor,
+                                selectedDpi = selectedDpi,
                                 sourceScreen = "ImageProcessingScreen"
                             )
                         )
@@ -488,11 +490,15 @@ class ImageProcessingScreenViewModel @Inject constructor(
                 },
                 onCompleted = {
                     Logger.i("ImageProcessingScreenViewModel", "Download completed: $filePath")
+
+                    _processingStage.value = ProcessingStage.COMPLETED
                     resultPath = filePath
                     latch.countDown()
                 },
                 onError = { error ->
                     Logger.e("ImageProcessingScreenViewModel", "Download error: $error")
+
+                    _processingStage.value = ProcessingStage.ERROR
                     downloadError = error
                     latch.countDown()
                 }
@@ -500,17 +506,21 @@ class ImageProcessingScreenViewModel @Inject constructor(
 
             // Wait for completion with timeout
             if (!latch.await(30, java.util.concurrent.TimeUnit.SECONDS)) {
+                _processingStage.value = ProcessingStage.ERROR
                 Logger.e("ImageProcessingScreenViewModel", "Download timed out")
                 return null
             }
 
             if (downloadError != null) {
+
+                _processingStage.value = ProcessingStage.ERROR
                 Logger.e("ImageProcessingScreenViewModel", "Download failed: $downloadError")
                 return null
             }
 
             return resultPath
         } catch (e: Exception) {
+            _processingStage.value = ProcessingStage.ERROR
             Logger.e("ImageProcessingScreenViewModel", "Error saving image: ${e.message}", e)
             return null
         }

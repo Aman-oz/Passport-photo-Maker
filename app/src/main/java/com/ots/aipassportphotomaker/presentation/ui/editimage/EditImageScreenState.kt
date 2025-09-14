@@ -25,6 +25,7 @@ data class EditImageScreenUiState(
     val imageUrl: String? = null,
     val imagePath: String? = null,
     val ratio: Float = 1f,
+    val editPosition: Int = 0,
     val sourceScreen: String = "",
 
 )
@@ -36,6 +37,8 @@ class EditImageScreenBundle @Inject constructor(
     val imageUrl: String? = savedStateHandle.toRoute<Page.EditImageScreen>().imageUrl
     val selectedColor: String? = savedStateHandle.toRoute<Page.EditImageScreen>().selectedBackgroundColor
     val sourceScreen: String = savedStateHandle.toRoute<Page.EditImageScreen>().sourceScreen
+    val editPosition: Int = savedStateHandle.toRoute<Page.EditImageScreen>().editPosition
+    val selectedDpi: String = savedStateHandle.toRoute<Page.EditImageScreen>().selectedDpi
 }
 
 sealed class EditImageScreenNavigationState {
@@ -48,7 +51,8 @@ sealed class EditImageScreenNavigationState {
 
     data class SavedImageScreen(
         val documentId: Int,
-        val imagePath: String? = null
+        val imagePath: String? = null,
+        val selectedDpi: String
     ) : EditImageScreenNavigationState()
 
 }

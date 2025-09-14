@@ -47,6 +47,8 @@ sealed class Page {
         val documentId: Int,
         val imageUrl: String?,
         val selectedBackgroundColor: String?,
+        val editPosition: Int = 0,
+        val selectedDpi: String,
         val sourceScreen: String
     ) : Page()
 
@@ -62,6 +64,7 @@ sealed class Page {
     data class SavedImageScreen(
         val documentId: Int,
         val imagePath: String?,
+        val selectedDpi: String,
         val sourceScreen: String
     ) : Page()
 

@@ -1,6 +1,8 @@
 package com.ots.aipassportphotomaker.presentation.ui.documentinfo
 
+import android.os.Build
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
@@ -21,6 +23,7 @@ import com.ots.aipassportphotomaker.image_picker.model.AssetInfo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.update
 
 @HiltViewModel
 class DocumentInfoScreenViewModel @Inject constructor(
@@ -42,6 +45,27 @@ class DocumentInfoScreenViewModel @Inject constructor(
     var selectedDpi: String = "300"
 
     private val documentId: Int = documentDetailsBundle.documentId
+
+
+    //*********************Permission***************//
+    val visiblePermissionDialogQueue = mutableStateListOf<String>()
+
+    @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
+    fun dismissDialog() {
+        visiblePermissionDialogQueue.removeFirst()
+    }
+
+    fun onPermissionResult(
+        permission: String,
+        isGranted: Boolean
+    ) {
+        if(!isGranted && !visiblePermissionDialogQueue.contains(permission)) {
+            visiblePermissionDialogQueue.add(permission)
+        }
+    }
+
+    //********************************************//
+
 
     init {
         onInitialState()
@@ -72,8 +96,10 @@ class DocumentInfoScreenViewModel @Inject constructor(
         }
     }
 
-    fun onSelectPhotoClicked() {
-//        _navigationState.tryEmit(PhotoIDScreenNavigationState.SelectPhotoScreen(documentId))
+    fun onUpdateDpi(newDpi: String) {
+        selectedDpi = newDpi
+        Logger.i("DocumentInfoScreenViewModel", "onUpdateDpi: selectedDpi=$selectedDpi")
+        _uiState.update { it.copy(documentResolution = newDpi) }
     }
     fun onOpenCameraClicked() {
 //        _navigationState.tryEmit(PhotoIDScreenNavigationState.TakePhotoScreen(documentId))

@@ -31,6 +31,7 @@ class SavedImageScreenBundle @Inject constructor(
 ) {
     val documentId: Int = savedStateHandle.toRoute<Page.SavedImageScreen>().documentId
     val imagePath: String? = savedStateHandle.toRoute<Page.SavedImageScreen>().imagePath
+    val selectedDpi: String = savedStateHandle.toRoute<Page.SavedImageScreen>().selectedDpi
     val sourceScreen: String = savedStateHandle.toRoute<Page.SavedImageScreen>().sourceScreen
 }
 

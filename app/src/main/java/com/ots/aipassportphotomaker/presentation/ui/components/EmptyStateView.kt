@@ -2,6 +2,7 @@ package com.ots.aipassportphotomaker.presentation.ui.components
 
 import android.content.res.Configuration
 import androidx.annotation.DrawableRes
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -44,6 +45,7 @@ fun EmptyStateView (
     icon: EmptyStateIcon = EmptyStateIcon(),
     title: String? = null,
     subtitle: String? = null,
+    isShowCreateButton: Boolean = false,
     titleTextSize: TextUnit = 22.sp,
     subtitleTextSize: TextUnit = 20.sp,
     verticalArrangement: Arrangement.Vertical = Arrangement.Center,
@@ -80,20 +82,23 @@ fun EmptyStateView (
 
         Spacer(modifier = Modifier.padding(8.dp))
 
-        CustomElevatedButton(
-            modifier = Modifier
-                .background(colors.background),
-            buttonText = stringResource(R.string.create_id),
-            iconContentDescription = "Button Icon",
-            cornerRadius = 40.dp,
-            onClick = {
-                Logger.i("EmptyStateView", "Create ID Button clicked")
-            },
-            buttonColor = colors.primary,
-            contentColor = colors.onPrimary,
-            disabledContainerColor = colors.surface,
-            disabledContentColor = colors.onSurface.copy(alpha = 0.38f)
-        )
+        AnimatedVisibility(isShowCreateButton) {
+            CustomElevatedButton(
+                modifier = Modifier
+                    .background(colors.background),
+                buttonText = stringResource(R.string.create_id),
+                iconContentDescription = "Button Icon",
+                cornerRadius = 40.dp,
+                onClick = {
+                    Logger.i("EmptyStateView", "Create ID Button clicked")
+                },
+                buttonColor = colors.primary,
+                contentColor = colors.onPrimary,
+                disabledContainerColor = colors.surface,
+                disabledContentColor = colors.onSurface.copy(alpha = 0.38f)
+            )
+        }
+
 
     }
 }

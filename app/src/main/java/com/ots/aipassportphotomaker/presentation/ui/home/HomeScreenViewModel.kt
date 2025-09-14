@@ -9,6 +9,7 @@ import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
 import com.ots.aipassportphotomaker.domain.util.NetworkMonitor
 import com.ots.aipassportphotomaker.image_picker.model.AssetInfo
 import com.ots.aipassportphotomaker.presentation.ui.base.BaseViewModel
+import com.ots.aipassportphotomaker.presentation.ui.createid.PhotoIDScreenNavigationState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -76,14 +77,34 @@ class HomeScreenViewModel  @Inject constructor(
                 )
             }
             "ChangeBG" -> {
+                _uiState.value = _uiState.value.copy(editPosition = 0)
                 _navigationState.tryEmit(
                     HomeScreenNavigationState.EditImageScreen(
                         documentId = 0,
                         imageUrl = selectedImage,
                         selectedBackgroundColor = Color.Unspecified,
+                        editPosition = 0,
                         sourceScreen = "HomeScreen"
                     )
                 )
+            }
+            "AddSuits" -> {
+                _uiState.value = _uiState.value.copy(editPosition = 1)
+                _navigationState.tryEmit(
+                    HomeScreenNavigationState.EditImageScreen(
+                        documentId = 0,
+                        imageUrl = selectedImage,
+                        selectedBackgroundColor = Color.Unspecified,
+                        editPosition = 1,
+                        sourceScreen = "HomeScreen"
+                    )
+                )
+            }
+
+
+
+            "SocialProfile" -> {
+                _navigationState.tryEmit(HomeScreenNavigationState.PhotoIDDetails("Profile"))
             }
         }
     }

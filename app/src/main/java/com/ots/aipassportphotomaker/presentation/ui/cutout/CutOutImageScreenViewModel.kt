@@ -88,7 +88,7 @@ class CutOutImageScreenViewModel @Inject constructor(
 
     private fun onInitialState() = launch {
         Logger.i("CutOutImageScreenViewModel", "onInitialState called with documentId: $documentId, imageUrl: $imageUrl, selectedColor: $selectedColor, sourceScreen: $sourceScreen")
-        if (sourceScreen == "HomeScreen") {
+        if (sourceScreen == "HomeScreen" || documentId == 0) {
             if (imageUrl.isNullOrEmpty()) {
                 Logger.e("CutOutImageScreenViewModel", "No image path provided from HomeScreen")
                 _error.value = "No image was selected"

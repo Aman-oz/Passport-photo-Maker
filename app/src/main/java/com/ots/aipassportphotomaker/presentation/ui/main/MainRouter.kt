@@ -54,6 +54,8 @@ class MainRouter(
         documentId: Int,
         imageUrl: String?,
         selectedBackgroundColor: Color?,
+        editPosition: Int = 0,
+        selectedDpi: String,
         sourceScreen: String
     ) {
         mainNavController.navigate(
@@ -61,6 +63,8 @@ class MainRouter(
                 documentId = documentId,
                 imageUrl = imageUrl,
                 selectedBackgroundColor = selectedBackgroundColor?.toString(),
+                editPosition = editPosition,
+                selectedDpi = selectedDpi,
                 sourceScreen = sourceScreen
             )
         ) {
@@ -75,6 +79,8 @@ class MainRouter(
         documentId: Int,
         imageUrl: String?,
         selectedBackgroundColor: Color?,
+        editPosition: Int = 0,
+        selectedDpi: String,
         sourceScreen: String
     ) {
         mainNavController.navigate(
@@ -82,6 +88,8 @@ class MainRouter(
                 documentId = documentId,
                 imageUrl = imageUrl,
                 selectedBackgroundColor = selectedBackgroundColor?.toString(),
+                editPosition = editPosition,
+                selectedDpi = selectedDpi,
                 sourceScreen = sourceScreen
             )
         )
@@ -120,12 +128,14 @@ class MainRouter(
     fun navigateToSavedImageScreen(
         documentId: Int,
         imagePath: String?,
+        selectedDpi: String,
         sourceScreen: String
     ) {
         mainNavController.navigate(
             Page.SavedImageScreen(
                 documentId = documentId,
                 imagePath = imagePath,
+                selectedDpi = selectedDpi,
                 sourceScreen = sourceScreen
             )
         ) {
@@ -145,6 +155,7 @@ class MainRouter(
             Page.SavedImageScreen(
                 documentId = documentId,
                 imagePath = imagePath,
+                selectedDpi = "300",
                 sourceScreen = sourceScreen
             )
         ) {

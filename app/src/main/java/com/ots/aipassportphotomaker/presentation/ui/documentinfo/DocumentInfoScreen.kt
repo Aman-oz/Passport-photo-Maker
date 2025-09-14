@@ -1,11 +1,15 @@
 package com.ots.aipassportphotomaker.presentation.ui.documentinfo
 
+import android.Manifest
 import android.content.res.Configuration
 import android.net.Uri
+import android.os.Build
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
@@ -74,15 +78,19 @@ import com.ots.aipassportphotomaker.image_picker.model.AssetPickerConfig
 import com.ots.aipassportphotomaker.image_picker.util.StringUtil
 import com.ots.aipassportphotomaker.image_picker.view.AssetPicker
 import com.ots.aipassportphotomaker.presentation.ui.bottom_nav.NavigationBarSharedViewModel
+import com.ots.aipassportphotomaker.presentation.ui.components.CameraPermissionTextProvider
 import com.ots.aipassportphotomaker.presentation.ui.components.ColorItem
 import com.ots.aipassportphotomaker.presentation.ui.components.CommonTopBar
 import com.ots.aipassportphotomaker.presentation.ui.components.DpiItem
 import com.ots.aipassportphotomaker.presentation.ui.components.ImageWithMeasurements
 import com.ots.aipassportphotomaker.presentation.ui.components.LoaderFullScreen
+import com.ots.aipassportphotomaker.presentation.ui.components.PermissionDialog
 import com.ots.aipassportphotomaker.presentation.ui.components.PremiumButton
 import com.ots.aipassportphotomaker.presentation.ui.components.RadioButtonSingleSelection
+import com.ots.aipassportphotomaker.presentation.ui.components.StoragePermissionTextProvider
 import com.ots.aipassportphotomaker.presentation.ui.components.createImageUri
 import com.ots.aipassportphotomaker.presentation.ui.main.MainRouter
+import com.ots.aipassportphotomaker.presentation.ui.main.openAppSettings
 import com.ots.aipassportphotomaker.presentation.ui.theme.AppColors
 import com.ots.aipassportphotomaker.presentation.ui.theme.colors
 import com.ots.aipassportphotomaker.presentation.ui.theme.custom100
@@ -95,7 +103,9 @@ import io.mhssn.colorpicker.ColorPickerDialog
 import io.mhssn.colorpicker.ColorPickerType
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.text.compareTo
 
+@RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
 @Composable
 fun DocumentInfoPage(
     mainRouter: MainRouter,
@@ -105,6 +115,8 @@ fun DocumentInfoPage(
     val TAG = "DocumentInfoPage"
 
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    val activityContext = context as ComponentActivity
 
     val selectedColor by viewModel.selectedColor.collectAsState(initial = Color.Transparent)
     val colorFactory = viewModel.colorFactory
@@ -146,6 +158,37 @@ fun DocumentInfoPage(
     }
 
 
+    val dialogQueue = viewModel.visiblePermissionDialogQueue
+    //Camera and Read External Storage for android 13 and below
+    val permissionsForAndroid13AndBelow = listOf(
+        Manifest.permission.CAMERA,
+        Manifest.permission.READ_EXTERNAL_STORAGE,
+        Manifest.permission.WRITE_EXTERNAL_STORAGE
+    )
+    //Camera and Read Media Images for android 14 and above
+    val permissionsForAndroid14AndAbove = listOf(
+        Manifest.permission.CAMERA,
+        Manifest.permission.READ_MEDIA_IMAGES
+    )
+
+    val permissionsToRequest: List<String>
+     = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+        permissionsForAndroid14AndAbove
+    } else {
+        permissionsForAndroid13AndBelow
+    }
+    val multiplePermissionResultLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions(),
+        onResult = { perms ->
+            permissionsToRequest.forEach { permission ->
+                viewModel.onPermissionResult(
+                    permission = permission,
+                    isGranted = perms[permission] == true
+                )
+            }
+        }
+    )
+
 
     DocumentInfoScreen(
         uiState = uiState,
@@ -153,7 +196,7 @@ fun DocumentInfoPage(
         selectedColor = selectedColor,
         colorFactory = colorFactory,
         onSelectDpi = { dpi ->
-            viewModel.selectedDpi = dpi
+            viewModel.onUpdateDpi(dpi)
         },
         onOpenGalleryClick = {
             showAssetPicker.value = true
@@ -197,6 +240,13 @@ fun DocumentInfoPage(
         },
         onApplySelectedColor = {
             viewModel.applySelectedColor()
+        },
+        onPermissionResult = { permission, isGranted ->
+            viewModel.onPermissionResult(
+                permission = permission,
+                isGranted = isGranted
+            )
+            Log.d(TAG, "Permission result: $permission granted: $isGranted")
         }
     )
 
@@ -219,6 +269,36 @@ fun DocumentInfoPage(
         )
     }
 
+    dialogQueue
+        .reversed()
+        .forEach { permission ->
+            PermissionDialog(
+                permissionTextProvider = when (permission) {
+                    Manifest.permission.CAMERA -> {
+                        CameraPermissionTextProvider()
+                    }
+                    Manifest.permission.READ_MEDIA_IMAGES,
+                    Manifest.permission.READ_EXTERNAL_STORAGE -> {
+                        StoragePermissionTextProvider()
+                    }
+                    else -> return@forEach
+                },
+                isPermanentlyDeclined = !activityContext.shouldShowRequestPermissionRationale(
+                    permission
+                ),
+                onDismiss = {
+                    viewModel.dismissDialog()
+                },
+                onOkClick = {
+                    viewModel.dismissDialog()
+                    multiplePermissionResultLauncher.launch(
+                        arrayOf(permission)
+                    )
+                },
+                onGoToAppSettingsClick = { activityContext.openAppSettings() }
+            )
+        }
+
 }
 
 
@@ -238,14 +318,93 @@ private fun DocumentInfoScreen(
     selectPredefinedColor: (ColorFactory.ColorType) -> Unit = {},
     onBackgroundOptionChanged: (BackgroundOption) -> Unit = {},
     onApplySelectedColor: () -> Unit = {},
+    onPermissionResult: (String, Boolean) -> Unit = { _, _ -> }
 ) {
+
+    val TAG = "DocumentInfoScreen"
+
+    val context = LocalContext.current
+
+    // Define permissions based on Android version
+    val permissionsToRequest: List<String> = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        listOf(
+            Manifest.permission.CAMERA,
+            Manifest.permission.READ_MEDIA_IMAGES
+        )
+    } else {
+        listOf(
+            Manifest.permission.CAMERA,
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+        )
+    }
+    // Camera launcher
+    var preparedUri: Uri? by remember { mutableStateOf(null) }
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success) {
+            preparedUri?.let {
+                Logger.i(TAG, "Photo captured successfully: $it")
+                onTakePhotoClick(it)
+            }
+        } else {
+            Logger.w(TAG, "Photo capture canceled or failed")
+        }
+    }
+
+
+    // Camera-specific permission launcher
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            if (isGranted) {
+                // Camera permission granted, prepare URI and launch camera
+                preparedUri = createImageUri(context)
+                if (preparedUri != null) {
+                    cameraLauncher.launch(preparedUri!!)
+                    Logger.i(TAG, "Camera URI: $preparedUri")
+                } else {
+                    Logger.e(TAG, "Failed to create image URI")
+                    Toast.makeText(context, "Failed to prepare camera", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+
+                onPermissionResult(Manifest.permission.CAMERA, isGranted)
+                Logger.w(TAG, "Camera permission denied")
+                //Toast.makeText(context, "Camera permission is required to take photos", Toast.LENGTH_SHORT).show()
+            }
+        }
+    )
+
+    // Gallery permission launcher
+    val galleryPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions(),
+
+        onResult = { perms ->
+            permissionsToRequest.forEach { permission ->
+                onPermissionResult(permission, perms[permission] == true)
+            }
+        }
+        /*onResult = { permissions ->
+            val allGranted = permissions.all { it.value }
+            if (allGranted) {
+                Logger.i(TAG, "Gallery permissions granted")
+                onOpenGalleryClick()
+            } else {
+                Logger.w(TAG, "Some gallery permissions denied")
+                Toast.makeText(context, "Storage permissions are required to access photos", Toast.LENGTH_SHORT).show()
+            }
+        }*/
+    )
+
+
 
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = colors.background
     ) {
 
-        val context = LocalContext.current
         val isLoading = uiState.showLoading
         val errorMessage = uiState.errorMessage
 
@@ -562,7 +721,13 @@ private fun DocumentInfoScreen(
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
                         Button(
-                            onClick = onOpenGalleryClick,
+                            onClick = {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    galleryPermissionLauncher.launch(arrayOf(Manifest.permission.READ_MEDIA_IMAGES))
+                                } else {
+                                    galleryPermissionLauncher.launch(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE))
+                                }
+                            },
                             colors = ButtonDefaults.buttonColors(containerColor = colors.primary), // Blue color from image
                             shape = RoundedCornerShape(24.dp),
                             modifier = Modifier
@@ -588,11 +753,12 @@ private fun DocumentInfoScreen(
 
                         Button(
                             onClick = {
-                                preparedUri = createImageUri(context)
+                                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                                /*preparedUri = createImageUri(context)
                                 preparedUri?.let { uri ->
                                     cameraLauncher.launch(uri)
                                     Logger.i("DocumentInfoScreen", "Camera URI: $uri")
-                                }
+                                }*/
                             },
                             shape = RoundedCornerShape(24.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),

@@ -141,7 +141,7 @@ fun EditImagePage(
         when (navigationState) {
             is EditImageScreenNavigationState.CutOutScreen -> mainRouter.navigateToCutOutScreen(
                 documentId = navigationState.documentId,
-                imageUrl = imageUrl,
+                imageUrl = uiState.imageUrl,
                 selectedBackgroundColor = localSelectedColor,
                 sourceScreen = "EditImageScreen"
             )
@@ -150,6 +150,7 @@ fun EditImagePage(
                 mainRouter.navigateToSavedImageScreen(
                     documentId = navigationState.documentId,
                     imagePath = uiState.imagePath,
+                    selectedDpi = viewModel.selectedDpi,
                     sourceScreen = "EditImageScreen"
                 )
             }
@@ -497,7 +498,7 @@ private fun EditImageScreen(
                             listOf("Backdrop", "Add suit")
                         }
                         var selectedIndex by remember {
-                            mutableStateOf(0)
+                            mutableStateOf(uiState.editPosition)
                         }
 
                         TextSwitch(

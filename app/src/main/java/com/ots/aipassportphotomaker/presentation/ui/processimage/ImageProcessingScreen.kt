@@ -73,6 +73,8 @@ fun ImageProcessingPage(
                 documentId = navigationState.documentId,
                 imageUrl = uiState.finalImageUrl,
                 selectedBackgroundColor = uiState.selectedColor,
+                editPosition = 0,
+                selectedDpi = viewModel.selectedDpi,
                 sourceScreen = "ImageProcessingScreen"
             )
         }

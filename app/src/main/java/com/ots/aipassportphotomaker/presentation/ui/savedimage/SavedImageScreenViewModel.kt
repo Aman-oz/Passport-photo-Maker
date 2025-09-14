@@ -66,6 +66,7 @@ class SavedImageScreenViewModel @Inject constructor(
 
     val documentId: Int = savedImageScreenBundle.documentId
     val imagePath: String? = savedImageScreenBundle.imagePath
+    val selectedDpi : String = savedImageScreenBundle.selectedDpi
     val sourceScreen: String = savedImageScreenBundle.sourceScreen
 
     init {
@@ -93,7 +94,7 @@ class SavedImageScreenViewModel @Inject constructor(
 
     private fun onInitialState() = launch {
 
-        if (sourceScreen == "CutOutImageScreen") {
+        if (sourceScreen == "CutOutImageScreen" || documentId == 0) {
             if (imagePath.isNullOrEmpty()) {
                 Logger.e("CutOutImageScreenViewModel", "No image path provided from HomeScreen")
                 _error.value = "No image was selected"
@@ -126,7 +127,7 @@ class SavedImageScreenViewModel @Inject constructor(
                 documentSize = document.size,
                 documentUnit = document.unit,
                 documentPixels = document.pixels,
-                documentResolution = document.resolution,
+                documentResolution = selectedDpi ?: document.resolution,
                 documentImage = document.image,
                 documentType = document.type,
                 documentCompleted = document.completed,

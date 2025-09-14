@@ -44,6 +44,7 @@ sealed class ImageProcessingScreenNavigationState {
         val documentId: Int,
         val imageUrl: String? = null,
         val selectedBackgroundColor: Color? = null,
+        val selectedDpi: String,
         val sourceScreen: String
     ) : ImageProcessingScreenNavigationState()
 

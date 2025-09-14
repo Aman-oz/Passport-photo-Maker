@@ -323,7 +323,7 @@ private fun SavedImageScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     // Checklist Card
-                    if (sourceScreen != "CutOutImageScreen") {
+                    if (/*(sourceScreen != "CutOutImageScreen" || sourceScreen != "EditImageScreen") && */uiState.documentName.isNotEmpty()) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -568,7 +568,7 @@ private fun ChecklistItem(
         ) {
             Text(
                 text = when (text) {
-                    "Printable" -> "${selectedDpi.uppercase()}" ?: "300 DPI"
+                    "Printable" -> "${selectedDpi.uppercase()} DPI" ?: "300 DPI"
                     "Compressed" -> "${uiState.fileSize}" ?: "400 KB"
                     else -> ""
                 },
