@@ -1,10 +1,13 @@
 package com.ots.aipassportphotomaker.presentation.ui.home
 
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewModelScope
 import androidx.paging.CombinedLoadStates
 import androidx.paging.LoadState
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
 import com.ots.aipassportphotomaker.domain.util.NetworkMonitor
+import com.ots.aipassportphotomaker.image_picker.model.AssetInfo
 import com.ots.aipassportphotomaker.presentation.ui.base.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -30,10 +33,20 @@ class HomeScreenViewModel  @Inject constructor(
     private val _refreshListState: MutableSharedFlow<Unit> = singleSharedFlow()
     val refreshListState = _refreshListState.asSharedFlow()
 
+    val selectedImagesList = mutableStateListOf<AssetInfo>()
+    val selectedImage: String? = null
+
     init {
         observeNetworkStatus()
         loadData()
     }
+
+    fun updateImagePath(imagePath: String) {
+
+        _uiState.value = _uiState.value.copy(imagePath = imagePath)
+//        _uiState.update { it.copy(imagePath = imagePath) }
+    }
+
     private fun loadData() {
         launch {
             _uiState.value = _uiState.value.copy(showLoading = false, errorMessage = null)
@@ -50,8 +63,30 @@ class HomeScreenViewModel  @Inject constructor(
         _uiState.update { it.copy(showLoading = showLoading, errorMessage = error) }
     }
 
-    fun onItemClick(name: String) =
-        _navigationState.tryEmit(HomeScreenNavigationState.PhotoID(name))
+    fun onItemClick(name: String) {
+
+        when(name) {
+            "PhotoID" -> _navigationState.tryEmit(HomeScreenNavigationState.PhotoID(name))
+            "Cutout" -> {
+                _navigationState.tryEmit(
+                    HomeScreenNavigationState.CutOutScreen(
+                        imagePath = selectedImage,
+                        sourceScreen = "HomeScreen"
+                    )
+                )
+            }
+            "ChangeBG" -> {
+                _navigationState.tryEmit(
+                    HomeScreenNavigationState.EditImageScreen(
+                        documentId = 0,
+                        imageUrl = selectedImage,
+                        selectedBackgroundColor = Color.Unspecified,
+                        sourceScreen = "HomeScreen"
+                    )
+                )
+            }
+        }
+    }
 
     private fun observeNetworkStatus() {
         networkMonitor.networkState

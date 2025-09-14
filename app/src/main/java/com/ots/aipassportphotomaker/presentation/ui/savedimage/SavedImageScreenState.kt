@@ -21,7 +21,8 @@ data class SavedImageScreenUiState(
     val documentCompleted: String? = null,
     val imagePath: String? = null,
     val ratio: Float = 1f,
-    val fileSize: String = ""
+    val fileSize: String = "",
+    val sourceScreen: String = ""
 
 )
 
@@ -30,6 +31,7 @@ class SavedImageScreenBundle @Inject constructor(
 ) {
     val documentId: Int = savedStateHandle.toRoute<Page.SavedImageScreen>().documentId
     val imagePath: String? = savedStateHandle.toRoute<Page.SavedImageScreen>().imagePath
+    val sourceScreen: String = savedStateHandle.toRoute<Page.SavedImageScreen>().sourceScreen
 }
 
 sealed class SavedImageScreenNavigationState {

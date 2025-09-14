@@ -1,6 +1,7 @@
 package com.ots.aipassportphotomaker.presentation.ui.editimage
 
 import android.Manifest
+import android.R.attr.label
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
@@ -11,6 +12,8 @@ import android.os.Build
 import android.os.Environment
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.ComponentActivity
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -60,7 +63,6 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -83,7 +85,6 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
-import com.ots.aipassportphotomaker.common.utils.ImageUtils.loadAndTransformBitmap
 import com.ots.aipassportphotomaker.common.utils.ImageUtils.saveBitmapToGallery
 import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.domain.model.SuitsEntity
@@ -97,6 +98,7 @@ import com.ots.aipassportphotomaker.presentation.ui.components.TextSwitch
 import com.ots.aipassportphotomaker.presentation.ui.main.MainRouter
 import com.ots.aipassportphotomaker.presentation.ui.theme.AppColors
 import com.ots.aipassportphotomaker.presentation.ui.theme.colors
+import com.ots.aipassportphotomaker.presentation.viewmodel.SharedViewModel
 import dev.shreyaspatil.capturable.capturable
 import dev.shreyaspatil.capturable.controller.rememberCaptureController
 import io.mhssn.colorpicker.ColorPickerDialog
@@ -115,12 +117,12 @@ import java.io.File
 fun EditImagePage(
     mainRouter: MainRouter,
     viewModel: EditImageScreenViewModel = hiltViewModel(),
-    sharedViewModel: NavigationBarSharedViewModel,
+    sharedViewModel: NavigationBarSharedViewModel
 ) {
     val TAG = "EditImagePage"
 
     val uiState by viewModel.uiState.collectAsState()
-
+    val context = LocalContext.current
 
     val suitsPaging = viewModel.suits.collectAsLazyPagingItems()
 
@@ -140,15 +142,31 @@ fun EditImagePage(
             is EditImageScreenNavigationState.CutOutScreen -> mainRouter.navigateToCutOutScreen(
                 documentId = navigationState.documentId,
                 imageUrl = imageUrl,
-                selectedBackgroundColor = localSelectedColor
+                selectedBackgroundColor = localSelectedColor,
+                sourceScreen = "EditImageScreen"
             )
 
             is EditImageScreenNavigationState.SavedImageScreen -> {
                 mainRouter.navigateToSavedImageScreen(
                     documentId = navigationState.documentId,
                     imagePath = uiState.imagePath,
+                    sourceScreen = "EditImageScreen"
                 )
             }
+        }
+    }
+
+    // Get the activity-scoped SharedViewModel
+    val activity = context as ComponentActivity
+    val commonSharedViewModel: SharedViewModel = hiltViewModel(activity)
+    val editedImageResult by commonSharedViewModel.editedImageResult.collectAsState()
+
+    LaunchedEffect(editedImageResult) {
+        Logger.i(TAG, "LaunchedEffect triggered with: $editedImageResult")
+        editedImageResult?.let { editedImageUrl ->
+            Logger.i(TAG, "Received edited image URL: $editedImageUrl")
+            viewModel.updateImageUrl(editedImageUrl)
+            commonSharedViewModel.clearResult()
         }
     }
 
@@ -225,6 +243,11 @@ private fun EditImageScreen(
 
         var showSaveLoading by remember { mutableStateOf(false) }
         var isCreatingBitmap by remember { mutableStateOf(false) }
+
+        val animatedColor by animateColorAsState(
+            if (backgroundColor != Color.Unspecified) backgroundColor else colors.primary,
+            label = "color"
+        )
 
 
         showNoSuitsFound = suits.itemCount == 0
@@ -358,7 +381,7 @@ private fun EditImageScreen(
                                     modifier = Modifier
                                         .fillMaxHeight()
                                         .aspectRatio(uiState.ratio)
-                                        .background(if (backgroundColor != Color.Unspecified) backgroundColor else colors.primary)
+                                        .background(animatedColor)
                                         .align(Alignment.Center)
                                         .clipToBounds()
                                         .onGloballyPositioned { coordinates ->
@@ -436,22 +459,23 @@ private fun EditImageScreen(
                                         .align(Alignment.CenterHorizontally),
                                     shape = CircleShape,
                                     colors = CardDefaults.cardColors(containerColor = colors.primary),
-                                    elevation = CardDefaults.cardElevation(10.dp),
+                                    elevation = CardDefaults.cardElevation(16.dp),
                                     onClick = {
                                         flip = !flip
                                     }
                                 ) {
-                                    Image(
-                                        painter = painterResource(id = R.drawable.flip_icon),
+                                    Icon(
+                                        painter = painterResource(id = if (flip) R.drawable.flip_icon_left else R.drawable.flip_icon),
                                         contentDescription = "Flip",
-                                        modifier = Modifier.padding(12.dp)
+                                        modifier = Modifier.padding(12.dp),
+                                        tint = colors.onPrimary
                                     )
                                 }
 
                                 Card(
                                     shape = CircleShape,
                                     colors = CardDefaults.cardColors(containerColor = colors.primary),
-                                    elevation = CardDefaults.cardElevation(10.dp),
+                                    elevation = CardDefaults.cardElevation(16.dp),
                                     onClick = {
                                         onEraseClick.invoke()
                                     },
@@ -649,6 +673,8 @@ private fun EditImageScreen(
                                         Button(onClick = { ticketBitmap = null }) {
                                             Text("Close")
                                         }
+
+                                        Spacer(Modifier.size(6.dp))
 
                                         Button(onClick = {
                                             val permissionsGranted =

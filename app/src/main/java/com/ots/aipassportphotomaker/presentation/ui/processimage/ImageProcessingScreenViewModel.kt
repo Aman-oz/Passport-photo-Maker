@@ -85,15 +85,18 @@ class ImageProcessingScreenViewModel @Inject constructor(
     val filePath: String? = imageProcessingBundle.filePath
     val selectedDpi: String = imageProcessingBundle.selectedDpi
     val selectedColor: String? = imageProcessingBundle.selectedColor
+    val sourceScreen: String = imageProcessingBundle.sourceScreen
 
 
     private var lastCroppedUrl: String? = null
     var isPortrait: Boolean = true
 
     init {
-        Logger.i("ImageProcessingScreenViewModel"," initialized with documentId: $documentId, imagePath: $imagePath, filePath: $filePath selectedDpi: $selectedDpi, selectedColor: $selectedColor")
-        onInitialState()
+        Logger.i("ImageProcessingScreenViewModel"," initialized with documentId: $documentId, imagePath: $imagePath, sourceScreen: $sourceScreen selectedDpi: $selectedDpi, selectedColor: $selectedColor")
+
         loadState(true)
+
+        onInitialState()
         imagePath?.let { path ->
             updateCurrentImagePath(path)
         } ?: run {
@@ -108,6 +111,18 @@ class ImageProcessingScreenViewModel @Inject constructor(
     }
 
     private fun onInitialState() = launch {
+        //will do if needed
+        if (sourceScreen == "HomeScreen") {
+            if (imagePath.isNullOrEmpty()) {
+                Logger.e("ImageProcessingScreenViewModel", "No image path provided from HomeScreen")
+                _error.value = "No image was selected"
+                loadState(isLoading = false)
+                return@launch
+            }
+
+            _uiState.value = _uiState.value.copy(currentImagePath = imagePath)
+            return@launch
+        }
         getDocumentById(documentId).onSuccess { document ->
             Logger.i("ImageProcessingScreenViewModel", "Fetched document details: $document")
             loadState(isLoading = false)
@@ -241,10 +256,7 @@ class ImageProcessingScreenViewModel @Inject constructor(
                         finalImageUrl = imagePath,
                         showLoading = false
                     )
-                    /*lastCroppedUrl?.let { path ->
 
-                        uploadFile(File(path))
-                    }*/
                     onImageCropped()
                     break
                 } catch (error: Throwable) {
@@ -378,16 +390,6 @@ class ImageProcessingScreenViewModel @Inject constructor(
                     Logger.i("ImageProcessingScreenViewModel", "Image saved locally at: $localImagePath")
                     updateCurrentImagePath(localImagePath)
                     removeBackground(File(localImagePath))
-                    // Update the navigation with the local file path
-                    /*withContext(dispatcher.main) {
-                        _navigationState.tryEmit(
-                            ImageProcessingScreenNavigationState.EditImageScreen(
-                                documentId = documentId,
-                                imageUrl = localImagePath.toString(),
-                                selectedBackgroundColor = uiState.value.selectedColor
-                            )
-                        )
-                    }*/
                 } else {
                     _error.value = "Failed to save image locally"
                 }
@@ -400,13 +402,6 @@ class ImageProcessingScreenViewModel @Inject constructor(
                 _processingStage.value = ProcessingStage.COMPLETED
             }
         }
-        /*_navigationState.tryEmit(
-            ImageProcessingScreenNavigationState.EditImageScreen(
-                documentId = documentId,
-                imageUrl = lastCroppedUrl,
-                selectedBackgroundColor = uiState.value.selectedColor
-
-            ))*/
     }
 
     fun onBackgroundRemoved() {
@@ -420,7 +415,9 @@ class ImageProcessingScreenViewModel @Inject constructor(
 
                 if (localImagePath != null) {
                     Logger.i("ImageProcessingScreenViewModel", "Image saved locally at: $localImagePath")
-
+                    _uiState.value = _uiState.value.copy(
+                        finalImageUrl = localImagePath
+                    )
                     updateCurrentImagePath(localImagePath)
                     // Update the navigation with the local file path
                     withContext(dispatcher.main) {
@@ -428,7 +425,8 @@ class ImageProcessingScreenViewModel @Inject constructor(
                             ImageProcessingScreenNavigationState.EditImageScreen(
                                 documentId = documentId,
                                 imageUrl = localImagePath.toString(),
-                                selectedBackgroundColor = uiState.value.selectedColor
+                                selectedBackgroundColor = uiState.value.selectedColor,
+                                sourceScreen = "ImageProcessingScreen"
                             )
                         )
                     }
@@ -444,13 +442,6 @@ class ImageProcessingScreenViewModel @Inject constructor(
                 _processingStage.value = ProcessingStage.COMPLETED
             }
         }
-        /*_navigationState.tryEmit(
-            ImageProcessingScreenNavigationState.EditImageScreen(
-                documentId = documentId,
-                imageUrl = lastCroppedUrl,
-                selectedBackgroundColor = uiState.value.selectedColor
-
-            ))*/
     }
 
     /**

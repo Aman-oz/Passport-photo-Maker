@@ -45,36 +45,21 @@ import com.ots.aipassportphotomaker.presentation.ui.theme.colors
 fun ChooseOrPickImage(
     modifier: Modifier = Modifier,
     context: Context,
-    onChooseImage: (Uri?) -> Unit,
-    onCameraImage: (Uri?) -> Unit,
+    onChooseImage: () -> Unit,
+    onCameraImage: () -> Unit,
     isChooseEnabled: Boolean = true,
     isPickEnabled: Boolean = true
 ) {
 
-    // Launcher for camera and gallery
-    val cameraLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicture()
-    ) { success ->
-        if (success) {
-            onCameraImage(createImageUri(context))
-        }
-    }
-    val galleryLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri ->
-        onChooseImage(uri)
-    }
-
     // Click handlers
     val onCameraClick: () -> Unit = {
         if (isPickEnabled) {
-            val uri = createImageUri(context)
-            cameraLauncher.launch(uri)
+            onCameraImage()
         }
     }
     val onGalleryClick: () -> Unit = {
         if (isChooseEnabled) {
-            galleryLauncher.launch("image/*")
+            onChooseImage()
         }
     }
 

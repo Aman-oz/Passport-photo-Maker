@@ -87,7 +87,8 @@ class DocumentInfoScreenViewModel @Inject constructor(
                 imagePath = selectedImagesList.firstOrNull()?.uriString?.toString(),
                 filePath = selectedImagesList.firstOrNull()?.filepath?.toString(),
                 selectedDpi = selectedDpi,
-                selectedBackgroundColor = selectedColor.replayCache.firstOrNull()
+                selectedBackgroundColor = selectedColor.replayCache.firstOrNull(),
+                sourceScreen = "DocumentInfoScreen"
 
             ))
     }

@@ -36,13 +36,15 @@ class ImageProcessingBundle @Inject constructor(
     val filePath: String? = savedStateHandle.toRoute<Page.ImageProcessingScreen>().filePath
     val selectedDpi: String = savedStateHandle.toRoute<Page.ImageProcessingScreen>().selectedDpi
     val selectedColor: String? = savedStateHandle.toRoute<Page.ImageProcessingScreen>().selectedBackgroundColor
+    val sourceScreen: String = savedStateHandle.toRoute<Page.ImageProcessingScreen>().sourceScreen
 }
 
 sealed class ImageProcessingScreenNavigationState {
     data class EditImageScreen(
         val documentId: Int,
         val imageUrl: String? = null,
-        val selectedBackgroundColor: Color? = null
+        val selectedBackgroundColor: Color? = null,
+        val sourceScreen: String
     ) : ImageProcessingScreenNavigationState()
 
 }

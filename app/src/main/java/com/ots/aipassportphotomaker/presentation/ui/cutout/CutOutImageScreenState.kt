@@ -21,7 +21,8 @@ data class CutOutImageScreenUiState(
     val documentType: String = "",
     val documentCompleted: String? = null,
     val selectedColor: Color = Color.Unspecified,
-    val imageUrl: String? = null
+    val imageUrl: String? = null,
+    val sourceScreen: String = "",
 
 )
 
@@ -31,13 +32,15 @@ class CutOutImageScreenBundle @Inject constructor(
     val documentId: Int = savedStateHandle.toRoute<Page.CutOutImageScreen>().documentId
     val imageUrl: String? = savedStateHandle.toRoute<Page.CutOutImageScreen>().imageUrl
     val selectedColor: String? = savedStateHandle.toRoute<Page.CutOutImageScreen>().selectedBackgroundColor
+    val sourceScreen: String = savedStateHandle.toRoute<Page.CutOutImageScreen>().sourceScreen
+
 }
 
 sealed class CutOutImageScreenNavigationState {
-    data class CutOutScreen(
+    data class SavedImageScreen(
         val documentId: Int,
-        val imageUrl: String? = null,
-        val selectedBackgroundColor: Color? = null
+        val imagePath: String? = null,
+        val sourceScreen: String
     ) : CutOutImageScreenNavigationState()
 
 }

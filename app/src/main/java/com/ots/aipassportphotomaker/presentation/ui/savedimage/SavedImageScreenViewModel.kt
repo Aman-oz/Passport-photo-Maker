@@ -3,6 +3,7 @@ package com.ots.aipassportphotomaker.presentation.ui.savedimage
 import android.content.Context
 import android.net.Uri
 import android.os.Build
+import androidx.compose.ui.graphics.Color
 import androidx.core.net.toUri
 import androidx.lifecycle.viewModelScope
 import androidx.paging.CombinedLoadStates
@@ -23,6 +24,7 @@ import com.ots.aipassportphotomaker.domain.util.getDocumentWidthAndHeight
 import com.ots.aipassportphotomaker.domain.util.onError
 import com.ots.aipassportphotomaker.domain.util.onSuccess
 import com.ots.aipassportphotomaker.presentation.ui.base.BaseViewModel
+import com.ots.aipassportphotomaker.presentation.ui.cutout.CutOutImageScreenUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -64,11 +66,18 @@ class SavedImageScreenViewModel @Inject constructor(
 
     val documentId: Int = savedImageScreenBundle.documentId
     val imagePath: String? = savedImageScreenBundle.imagePath
+    val sourceScreen: String = savedImageScreenBundle.sourceScreen
 
     init {
-        Logger.i("EditImageScreenViewModel"," initialized with documentId: $documentId, imagePath: $imagePath")
+        Logger.i("SavedImageScreenViewModel"," initialized with documentId: $documentId, imagePath: $imagePath")
+        if (sourceScreen == "CutOutImageScreen") {
+
+            loadState(false)
+        } else {
+            loadState(true)
+        }
+
         onInitialState()
-        loadState(true)
     }
 
     fun onLoadStateUpdate(loadState: CombinedLoadStates) {
@@ -83,8 +92,33 @@ class SavedImageScreenViewModel @Inject constructor(
     }
 
     private fun onInitialState() = launch {
+
+        if (sourceScreen == "CutOutImageScreen") {
+            if (imagePath.isNullOrEmpty()) {
+                Logger.e("CutOutImageScreenViewModel", "No image path provided from HomeScreen")
+                _error.value = "No image was selected"
+                loadState(false)
+                return@launch
+            }
+
+            _uiState.value = SavedImageScreenUiState(
+                showLoading = false,
+                documentName = "",
+                documentSize = "",
+                documentUnit = "",
+                documentPixels = "",
+                documentResolution = "",
+                documentImage = "",
+                documentType = "",
+                documentCompleted = "",
+                imagePath = imagePath
+            )
+            loadState(false)
+            return@launch
+        }
+
         getDocumentById(documentId).onSuccess { document ->
-            Logger.i("EditImageScreenViewModel", "Fetched document details: $document")
+            Logger.i("SavedImageScreenViewModel", "Fetched document details: $document")
             loadState(isLoading = false)
             _uiState.value = SavedImageScreenUiState(
                 showLoading = false,
@@ -109,7 +143,7 @@ class SavedImageScreenViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(ratio = size.width/size.height)
 
             if (imagePath.isNullOrEmpty()) {
-                Logger.e("EditImageScreenViewModel", "No image path provided")
+                Logger.e("SavedImageScreenViewModel", "No image path provided")
                 _error.value = "No image was selected"
                 return@onSuccess
             }
@@ -120,14 +154,14 @@ class SavedImageScreenViewModel @Inject constructor(
                 val height = size.height ?: 0f
                 val unit = document.unit.ifEmpty { "mm" }
 
-                Logger.i("EditImageScreenViewModel", "Starting crop with size: $size width=$width, height=$height, unit=$unit")
+                Logger.i("SavedImageScreenViewModel", "Starting crop with size: $size width=$width, height=$height, unit=$unit")
 
             } catch (e: Exception) {
-                Logger.e("EditImageScreenViewModel", "Error processing image: ${e.message}", e)
+                Logger.e("SavedImageScreenViewModel", "Error processing image: ${e.message}", e)
                 _error.value = "Failed to process the selected image: ${e.message}"
             }
         }.onError { error ->
-            Logger.e("EditImageScreenViewModel", "Failed to fetch document: ${error.message}", error)
+            Logger.e("SavedImageScreenViewModel", "Failed to fetch document: ${error.message}", error)
             _error.value = "Failed to load document details"
         }
     }

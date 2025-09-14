@@ -129,7 +129,8 @@ fun DocumentInfoPage(
                     imagePath = viewModel.selectedImagesList.firstOrNull()?.uriString?.toString(),
                     filePath = viewModel.selectedImagesList.firstOrNull()?.filepath?.toString(),
                     selectedDpi = viewModel.selectedDpi,
-                    selectedBackgroundColor = selectedColor
+                    selectedBackgroundColor = selectedColor,
+                    sourceScreen = "DocumentInfoScreen"
 
                 )
             }
@@ -158,6 +159,9 @@ fun DocumentInfoPage(
             showAssetPicker.value = true
         },
         onTakePhotoClick = { uri ->
+            isImageSelected = uri.toString().isNotEmpty()
+            Logger.i(TAG, "DocumentInfoPage: Camera image URI: $uri")
+
             viewModel.selectedImagesList.clear()
             viewModel.selectedImagesList.addAll(
                 listOf(AssetInfo(
@@ -540,11 +544,14 @@ private fun DocumentInfoScreen(
                     }
 
                 } else {
+                    var preparedUri: Uri? by remember { mutableStateOf(null) }
                     val cameraLauncher = rememberLauncherForActivityResult(
                         contract = ActivityResultContracts.TakePicture()
                     ) { success ->
                         if (success) {
-                            onTakePhotoClick(createImageUri(context))
+                            preparedUri?.let {
+                                onTakePhotoClick(it)
+                            }
                         }
                     }
                     Row(
@@ -581,8 +588,11 @@ private fun DocumentInfoScreen(
 
                         Button(
                             onClick = {
-                                val uri = createImageUri(context)
-                                cameraLauncher.launch(uri)
+                                preparedUri = createImageUri(context)
+                                preparedUri?.let { uri ->
+                                    cameraLauncher.launch(uri)
+                                    Logger.i("DocumentInfoScreen", "Camera URI: $uri")
+                                }
                             },
                             shape = RoundedCornerShape(24.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),

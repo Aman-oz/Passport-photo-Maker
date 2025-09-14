@@ -102,6 +102,7 @@ fun SavedImagePage(
 
     val imagePath = viewModel.imagePath
     val context = LocalContext.current
+    val sourceScreen = viewModel.sourceScreen
 
     viewModel.navigationState.collectAsEffect { navigationState ->
 
@@ -115,6 +116,7 @@ fun SavedImagePage(
 
     SavedImageScreen(
         uiState = uiState,
+        sourceScreen = sourceScreen,
         onBackClick = { mainRouter.goBack() },
         onGetProClick = { },
         onGoToHomeClick = {
@@ -153,6 +155,7 @@ fun SavedImagePage(
 @Composable
 private fun SavedImageScreen(
     uiState: SavedImageScreenUiState,
+    sourceScreen: String = "",
     onDeleteClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
     onGetProClick: () -> Unit = {},
@@ -232,7 +235,7 @@ private fun SavedImageScreen(
             }
 
             FinalScreenTopBar(
-                title = "Edit image",
+                title = "Image Saved",
                 showGetProButton = true,
                 onBackClick = {
                     onBackClick.invoke()
@@ -320,70 +323,75 @@ private fun SavedImageScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     // Checklist Card
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(colors.custom400)
-                            .border(1.dp, colors.custom100, RoundedCornerShape(16.dp)),
-                    ) {
-                        Column(
+                    if (sourceScreen != "CutOutImageScreen") {
+                        Box(
                             modifier = Modifier
-                                .padding(16.dp)
                                 .fillMaxWidth()
+                                .padding(vertical = 8.dp, horizontal = 16.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(colors.custom400)
+                                .border(1.dp, colors.custom100, RoundedCornerShape(16.dp)),
                         ) {
-                            // Title with Icon
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.fillMaxWidth()
+                            Column(
+                                modifier = Modifier
+                                    .padding(16.dp)
+                                    .fillMaxWidth()
                             ) {
-                                Image(
-                                    painter = painterResource(id = R.drawable.passport_united_state), // Replace with passport icon
-                                    contentDescription = "Passport Icon",
-                                    modifier = Modifier.size(40.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Column(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .fillMaxWidth()
+                                // Title with Icon
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    Text(
-                                        text = uiState.documentName,
-                                        style = MaterialTheme.typography.titleMedium,
-                                        color = colors.onCustom400,
-                                        modifier = Modifier
+                                    Image(
+                                        painter = painterResource(id = R.drawable.passport_united_state), // Replace with passport icon
+                                        contentDescription = "Passport Icon",
+                                        modifier = Modifier.size(40.dp)
                                     )
-                                    Text(
-                                        text = uiState.documentType,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = colors.onSurfaceVariant,
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Column(
                                         modifier = Modifier
-                                    )
+                                            .weight(1f)
+                                            .fillMaxWidth()
+                                    ) {
+                                        Text(
+                                            text = uiState.documentName,
+                                            style = MaterialTheme.typography.titleMedium,
+                                            color = colors.onCustom400,
+                                            modifier = Modifier
+                                        )
+                                        Text(
+                                            text = uiState.documentType,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = colors.onSurfaceVariant,
+                                            modifier = Modifier
+                                        )
+                                    }
+
                                 }
 
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                // Checklist Items
+                                ChecklistItem(
+                                    uiState,
+                                    text = "Printable"
+                                )
+
+                                ChecklistItem(
+                                    uiState,
+                                    text = "Compressed"
+                                )
+
                             }
-
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            // Checklist Items
-                            ChecklistItem(
-                                uiState,
-                                text = "Printable"
-                            )
-
-                            ChecklistItem(
-                                uiState,
-                                text = "Compressed"
-                            )
-
                         }
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    LazyRow {
+                    LazyRow(
+                        modifier = Modifier
+                            .padding(vertical = 4.dp, horizontal = 16.dp)
+                    ) {
                         items(socialItemList.size) { index ->
                             val (iconRes, platformName) = socialItemList[index]
                             Column(

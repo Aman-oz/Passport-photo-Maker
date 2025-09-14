@@ -1,9 +1,13 @@
 package com.ots.aipassportphotomaker.common.utils
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Matrix
 import android.graphics.Paint
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.File
 import kotlin.math.min
 
 // Created by amanullah on 07/09/2025.
@@ -11,11 +15,10 @@ import kotlin.math.min
 object BitmapUtils {
 
     fun isMemorySufficient(bitmap: Bitmap): Boolean {
-        val maxMemory =
-            Runtime.getRuntime().maxMemory()
-        val bitmapSize =
-            bitmap.allocationByteCount
-        return bitmapSize < maxMemory
+        val maxMemory = Runtime.getRuntime().maxMemory()
+        val usedMemory = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()
+        val bitmapSize = bitmap.allocationByteCount
+        return (usedMemory + bitmapSize) < maxMemory
     }
 
     fun getResizedBitmap(bitmap: Bitmap, width: Int, height: Int): Bitmap {

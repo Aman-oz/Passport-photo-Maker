@@ -1,13 +1,8 @@
 package com.ots.aipassportphotomaker.presentation.ui.editimage
 
-import android.content.ContentValues
 import android.content.Context
-import android.graphics.Bitmap
 import android.net.Uri
-import android.os.Environment
-import android.provider.MediaStore
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.lifecycle.viewModelScope
 import androidx.paging.CombinedLoadStates
 import androidx.paging.LoadState
@@ -15,9 +10,9 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
 import com.ots.aipassportphotomaker.common.utils.ColorUtils.parseColorFromString
+import com.ots.aipassportphotomaker.common.utils.FileUtils
 import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.domain.model.DocumentEntity
-import com.ots.aipassportphotomaker.domain.model.DocumentListItem
 import com.ots.aipassportphotomaker.domain.model.SuitsEntity
 import com.ots.aipassportphotomaker.domain.repository.ColorFactory
 import com.ots.aipassportphotomaker.domain.usecase.photoid.GetDocumentDetails
@@ -28,8 +23,6 @@ import com.ots.aipassportphotomaker.domain.util.getDocumentWidthAndHeight
 import com.ots.aipassportphotomaker.domain.util.onError
 import com.ots.aipassportphotomaker.domain.util.onSuccess
 import com.ots.aipassportphotomaker.presentation.ui.base.BaseViewModel
-import com.ots.aipassportphotomaker.presentation.ui.documentinfo.BackgroundOption
-import com.ots.aipassportphotomaker.presentation.ui.documentinfo.DocumentInfoScreenNavigationState
 import com.ots.aipassportphotomaker.presentation.ui.usecase.suits.GetSuitsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -41,7 +34,6 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import javax.inject.Inject
-import kotlin.text.ifEmpty
 
 // Created by amanullah on 04/09/2025.
 // Copyright (c) 2025 Ozi Publishing. All rights reserved.
@@ -55,7 +47,7 @@ class EditImageScreenViewModel @Inject constructor(
     val colorFactory: ColorFactory,
     private val getSuitsUseCase: GetSuitsUseCase,
     @ApplicationContext private val context: Context
-): BaseViewModel() {
+) : BaseViewModel() {
 
     val suits: Flow<PagingData<SuitsEntity>> = getSuitsUseCase.suits(
         pageSize = 20
@@ -78,6 +70,7 @@ class EditImageScreenViewModel @Inject constructor(
     val documentId: Int = editImageScreenBundle.documentId
     val imageUrl: String? = editImageScreenBundle.imageUrl
     val selectedColor: String? = editImageScreenBundle.selectedColor
+    val sourceScreen: String = editImageScreenBundle.sourceScreen
 
     private var mParsedColor = Color.Unspecified
 
@@ -85,10 +78,25 @@ class EditImageScreenViewModel @Inject constructor(
     val localSelectedColor = _localSelectedColor.asSharedFlow()
 
     init {
-        Logger.i("EditImageScreenViewModel"," initialized with documentId: $documentId, imagePath: $imageUrl, selectedColor: $selectedColor")
+        Logger.i(
+            "EditImageScreenViewModel",
+            " initialized with documentId: $documentId, imagePath: $imageUrl, selectedColor: $selectedColor, sourceScreen: $sourceScreen"
+        )
+        if (sourceScreen == "HomeScreen") {
+            loadState(false)
+        } else {
+            loadState(true)
+        }
+
         onInitialState()
-        loadState(true)
         observeSuitsLoadingState()
+    }
+
+    fun updateImageUrl(newImageUrl: String) {
+        launch {
+            _uiState.value = _uiState.value.copy(imageUrl = newImageUrl)
+            Logger.i("EditImageScreenViewModel", "Updated image URL: $newImageUrl")
+        }
     }
 
     private fun observeSuitsLoadingState() {
@@ -114,36 +122,93 @@ class EditImageScreenViewModel @Inject constructor(
     }
 
     private fun onInitialState() = launch {
+        if (sourceScreen == "HomeScreen") {
+            if (imageUrl.isNullOrEmpty()) {
+                Logger.e("EditImageScreenViewModel", "No image path provided from HomeScreen")
+                _error.value = "No image was selected"
+                loadState(isLoading = false)
+                return@launch
+            }
+
+            val uri = Uri.parse(imageUrl)
+            Logger.d("EditImageScreenViewModel", "Processing URI: $uri")
+
+            val imageFile = FileUtils.uriToFile(context, uri)
+
+            if (!imageFile.exists() || imageFile.length() == 0L) {
+                Logger.e("EditImageScreenViewModel", "Image file is empty or does not exist")
+                _error.value = "The selected image could not be processed"
+                return@launch
+            }
+
+            Logger.i("EditImageScreenViewModel", "Image file exists: ${imageFile.path}, size: ${imageFile.length()} bytes")
+            // Get image dimensions using BitmapFactory
+            val options = android.graphics.BitmapFactory.Options().apply {
+                inJustDecodeBounds = true
+            }
+            android.graphics.BitmapFactory.decodeFile(imageUrl, options)
+
+            val imageWidth = options.outWidth
+            val imageHeight = options.outHeight
+            val aspectRatio = imageWidth.toFloat() / imageHeight.toFloat()
+
+            Logger.i("CutOutImageScreenViewModel", "Image file exists: $imageUrl, size: ${imageFile.length()} bytes")
+            Logger.i("CutOutImageScreenViewModel", "Image dimensions: ${imageWidth}x${imageHeight}, ratio: $aspectRatio")
+
+            _uiState.value = EditImageScreenUiState(
+                showLoading = false,
+                documentName = "Custom Image",
+                documentSize = "${imageWidth} x ${imageHeight}",
+                documentUnit = "px",
+                documentPixels = "${imageWidth}x${imageHeight} px",
+                documentResolution = "72 dpi", // Default DPI
+                documentImage = "",
+                documentType = "custom",
+                documentCompleted = "",
+                selectedColor = Color.Unspecified,
+                imageUrl = imageFile.toString(),
+                sourceScreen = sourceScreen
+            )
+
+            return@launch
+        }
+
         getDocumentById(documentId).onSuccess { document ->
             Logger.i("EditImageScreenViewModel", "Fetched document details: $document")
             loadState(isLoading = false)
             val parsedColor = parseColorFromString(selectedColor) ?: Color.Unspecified
             mParsedColor = parsedColor
-            when(parsedColor) {
+            when (parsedColor) {
                 Color.Transparent -> {
                     selectColor(parsedColor, ColorFactory.ColorType.TRANSPARENT)
                     Logger.i("EditImageScreenViewModel", "Parsed color is Transparent")
                 }
+
                 Color.Unspecified -> {
                     selectColor(parsedColor, ColorFactory.ColorType.TRANSPARENT)
                     Logger.i("EditImageScreenViewModel", "Parsed color is Unspecified")
                 }
+
                 Color.White -> {
                     selectColor(parsedColor, ColorFactory.ColorType.WHITE)
                     Logger.i("EditImageScreenViewModel", "Parsed color is White")
                 }
+
                 Color.Green -> {
                     selectColor(parsedColor, ColorFactory.ColorType.GREEN)
                     Logger.i("EditImageScreenViewModel", "Parsed color is Green")
                 }
+
                 Color.Blue -> {
                     selectColor(parsedColor, ColorFactory.ColorType.BLUE)
                     Logger.i("EditImageScreenViewModel", "Parsed color is Blue")
                 }
+
                 Color.Red -> {
                     selectColor(parsedColor, ColorFactory.ColorType.RED)
                     Logger.i("EditImageScreenViewModel", "Parsed color is Red")
                 }
+
                 else -> {
                     selectColor(parsedColor, ColorFactory.ColorType.CUSTOM)
                     Logger.i("EditImageScreenViewModel", "Parsed custom color: $parsedColor")
@@ -164,7 +229,7 @@ class EditImageScreenViewModel @Inject constructor(
             )
 
             val size = getDocumentWidthAndHeight(document.size)
-            _uiState.value = _uiState.value.copy(ratio = size.width/size.height)
+            _uiState.value = _uiState.value.copy(ratio = size.width / size.height)
 
 
             if (imageUrl.isNullOrEmpty()) {
@@ -179,14 +244,21 @@ class EditImageScreenViewModel @Inject constructor(
                 val height = size.height ?: 0f
                 val unit = document.unit.ifEmpty { "mm" }
 
-                Logger.i("EditImageScreenViewModel", "Starting crop with size: $size width=$width, height=$height, unit=$unit")
+                Logger.i(
+                    "EditImageScreenViewModel",
+                    "Starting crop with size: $size width=$width, height=$height, unit=$unit"
+                )
 
             } catch (e: Exception) {
                 Logger.e("EditImageScreenViewModel", "Error processing image: ${e.message}", e)
                 _error.value = "Failed to process the selected image: ${e.message}"
             }
         }.onError { error ->
-            Logger.e("EditImageScreenViewModel", "Failed to fetch document: ${error.message}", error)
+            Logger.e(
+                "EditImageScreenViewModel",
+                "Failed to fetch document: ${error.message}",
+                error
+            )
             _error.value = "Failed to load document details"
         }
     }
@@ -208,9 +280,10 @@ class EditImageScreenViewModel @Inject constructor(
             EditImageScreenNavigationState.CutOutScreen(
                 documentId = documentId,
                 imageUrl = imageUrl,
-                selectedBackgroundColor = mParsedColor
-
-            ))
+                selectedBackgroundColor = mParsedColor,
+                sourceScreen = "EditImageScreen"
+            )
+        )
     }
 
     fun onImageSaved(imagePath: String) {
@@ -222,7 +295,8 @@ class EditImageScreenViewModel @Inject constructor(
                 documentId = documentId,
                 imagePath = imagePath
 
-            ))
+            )
+        )
     }
 
     private fun loadState(isLoading: Boolean) {
@@ -232,6 +306,7 @@ class EditImageScreenViewModel @Inject constructor(
     }
 
 
-    private suspend fun getDocumentById(documentId: Int): Result<DocumentEntity> = getDocumentDetails(documentId)
+    private suspend fun getDocumentById(documentId: Int): Result<DocumentEntity> =
+        getDocumentDetails(documentId)
 
 }

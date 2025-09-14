@@ -41,7 +41,8 @@ sealed class DocumentInfoScreenNavigationState {
         val imagePath: String? = null,// content uri path
         val filePath: String? = null,// local file path /storage
         val selectedDpi: String = "300",
-        val selectedBackgroundColor: Color? = null
+        val selectedBackgroundColor: Color? = null,
+        val sourceScreen: String
     ) : DocumentInfoScreenNavigationState()
 
 }

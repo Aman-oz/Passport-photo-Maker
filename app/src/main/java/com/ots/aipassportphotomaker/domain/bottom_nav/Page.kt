@@ -38,27 +38,31 @@ sealed class Page {
         val imagePath: String?,
         val filePath: String?,
         val selectedDpi: String,
-        val selectedBackgroundColor: String?
+        val selectedBackgroundColor: String?,
+        val sourceScreen: String
     ) : Page()
 
     @Serializable
     data class EditImageScreen(
         val documentId: Int,
         val imageUrl: String?,
-        val selectedBackgroundColor: String?
+        val selectedBackgroundColor: String?,
+        val sourceScreen: String
     ) : Page()
 
     @Serializable
     data class CutOutImageScreen(
         val documentId: Int,
         val imageUrl: String?,
-        val selectedBackgroundColor: String?
+        val selectedBackgroundColor: String?,
+        val sourceScreen: String
     ) : Page()
 
     @Serializable
     data class SavedImageScreen(
         val documentId: Int,
-        val imagePath: String?
+        val imagePath: String?,
+        val sourceScreen: String
     ) : Page()
 
     @Serializable

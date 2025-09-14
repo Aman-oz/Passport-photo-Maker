@@ -223,14 +223,14 @@ object ImageUtils {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 val contentValues = ContentValues().apply {
                     put(MediaStore.Images.Media.DISPLAY_NAME, filename)
-                    put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+                    put(MediaStore.Images.Media.MIME_TYPE, "image/png")
                     put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
                 }
 
                 val uri = context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
                 uri?.let {
                     context.contentResolver.openOutputStream(it)?.use { stream ->
-                        bitmap?.compress(Bitmap.CompressFormat.JPEG, 95, stream)
+                        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
                     }
                     Logger.i("ImageUtils", "Image saved to gallery: $it")
                     it
@@ -243,14 +243,14 @@ object ImageUtils {
 
                 val file = File(directory, filename)
                 FileOutputStream(file).use { stream ->
-                    bitmap?.compress(Bitmap.CompressFormat.JPEG, 95, stream)
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
                 }
 
                 // Scan the file to make it immediately visible in gallery
                 MediaScannerConnection.scanFile(
                     context,
                     arrayOf(file.toString()),
-                    arrayOf("image/jpeg"),
+                    arrayOf("image/png"),
                     null
                 )
                 Logger.i("ImageUtils", "Image saved to gallery: ${file.absolutePath}, uri: ${Uri.fromFile(file)}")

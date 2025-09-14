@@ -1,8 +1,11 @@
 package com.ots.aipassportphotomaker.common.utils
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.net.Uri
 import android.provider.MediaStore
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -12,6 +15,7 @@ import java.io.IOException
 object FileUtils {
 
     private const val TAG = "FileUtils"
+    const val TEMP_FILE_NAME = "temp_image.png"
 
     fun uriToFile(context: Context, uri: Uri): File {
         if (uri == Uri.EMPTY) {
@@ -92,5 +96,22 @@ object FileUtils {
             }
         }
         return null
+    }
+
+    suspend fun saveBitmapToInternalStorage(
+        context: Context,
+        bitmap: Bitmap,
+        fileName: String = TEMP_FILE_NAME
+    ): String? = withContext(Dispatchers.IO) {
+        try {
+            val file = File(context.filesDir, fileName)
+            file.outputStream().use { out ->
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+            }
+            file.absolutePath
+        } catch (e: Exception) {
+            Logger.e("ImageUtils", "Failed to save bitmap to internal storage: ${e.message}", e)
+            null
+        }
     }
 }
