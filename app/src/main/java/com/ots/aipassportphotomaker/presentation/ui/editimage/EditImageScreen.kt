@@ -1,7 +1,6 @@
 package com.ots.aipassportphotomaker.presentation.ui.editimage
 
 import android.Manifest
-import android.R.attr.label
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
@@ -13,7 +12,9 @@ import android.os.Environment
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -50,6 +51,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -80,13 +82,19 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.AsyncImage
 import coil.compose.AsyncImagePainter
 import coil.request.ImageRequest
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.ots.aipassportphotomaker.R
+import com.ots.aipassportphotomaker.common.ext.animatedBorder
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
 import com.ots.aipassportphotomaker.common.utils.ImageUtils.saveBitmapToGallery
 import com.ots.aipassportphotomaker.common.utils.Logger
+import com.ots.aipassportphotomaker.domain.model.ProcessingStage
 import com.ots.aipassportphotomaker.domain.model.SuitsEntity
 import com.ots.aipassportphotomaker.domain.repository.ColorFactory
 import com.ots.aipassportphotomaker.domain.util.determinePixels
@@ -104,6 +112,7 @@ import dev.shreyaspatil.capturable.controller.rememberCaptureController
 import io.mhssn.colorpicker.ColorPickerDialog
 import io.mhssn.colorpicker.ColorPickerType
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -157,6 +166,10 @@ fun EditImagePage(
         }
     }
 
+
+    val processingStage by viewModel.processingStage.collectAsState()
+    val shouldRemoveBackground by viewModel.shouldRemoveBackground.collectAsState()
+
     // Get the activity-scoped SharedViewModel
     val activity = context as ComponentActivity
     val commonSharedViewModel: SharedViewModel = hiltViewModel(activity)
@@ -178,13 +191,22 @@ fun EditImagePage(
     EditImageScreen(
         suits = suitsPaging,
         uiState = uiState,
+        shouldRemoveBg = shouldRemoveBackground,
+        processingStage = processingStage,
         selectedColor = localSelectedColor,
         colorFactory = colorFactory,
         onImageSaved = { imagePath ->
             viewModel.onImageSaved(imagePath)
         },
         onColorChange = { color, colorType ->
-            viewModel.selectColor(color, colorType)
+            if (uiState.sourceScreen == "HomeScreen" && !uiState.isBgRemoved && shouldRemoveBackground) {
+                uiState.imageUrl?.let {
+                    viewModel.removeBackground(File(it))
+                }
+                viewModel.selectColor(color, colorType)
+            } else {
+                viewModel.selectColor(color, colorType)
+            }
         },
         onBackClick = { mainRouter.goBack() },
         onEraseClick = {
@@ -203,6 +225,8 @@ fun EditImagePage(
 private fun EditImageScreen(
     suits: LazyPagingItems<SuitsEntity>,
     uiState: EditImageScreenUiState,
+    shouldRemoveBg: Boolean = false,
+    processingStage: ProcessingStage = ProcessingStage.NONE,
     selectedColor: Color? = null,
     colorFactory: ColorFactory,
     onImageSaved: (String) -> Unit = {},
@@ -246,10 +270,45 @@ private fun EditImageScreen(
         var isCreatingBitmap by remember { mutableStateOf(false) }
 
         val animatedColor by animateColorAsState(
-            if (backgroundColor != Color.Unspecified) backgroundColor else colors.primary,
+            if (backgroundColor != Color.Unspecified) backgroundColor else Color.Transparent,
             label = "color"
         )
 
+        val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.ai_erase))
+//        val shouldRemoveBg by remember { mutableStateOf(uiState.sourceScreen == "HomeScreen" && shouldRemoveBg) }
+        var showRemoveBackgroundDialog by remember { mutableStateOf(false) }
+        // Get appropriate message based on processing stage
+        val currentMessage = when (processingStage) {
+            ProcessingStage.UPLOADING -> "🔄 Uploading Photo..."
+            ProcessingStage.PROCESSING -> {
+                // Alternate between these messages during processing
+                val processingMessages = listOf(
+                    "🔮 AI Magic in progress… just a moment!",
+                    "🎨 Removing the best fit for your requirements!",
+                    "☺ Face detection in progress… almost there!",
+                )
+                val messageIndex by produceState(initialValue = 0) {
+                    while (processingStage == ProcessingStage.PROCESSING) {
+                        delay(3000)
+                        value = (value + 1) % processingMessages.size
+                    }
+                }
+                processingMessages[messageIndex]
+            }
+
+            ProcessingStage.CROPPING_IMAGE -> "💫 Cropping image..."
+            ProcessingStage.COMPLETED -> {
+                "✅ Process completed successfully"
+
+            }
+
+            ProcessingStage.NONE -> ""
+            ProcessingStage.NO_NETWORK_AVAILABLE -> "❌ No network connection"
+            ProcessingStage.ERROR -> "❌ Something went wrong"
+            ProcessingStage.DOWNLOADING -> "⬇️ Applying Changes..."
+            ProcessingStage.SAVING_IMAGE -> "💾 Saving image..."
+            ProcessingStage.BACKGROUND_REMOVAL -> "🖼️ Removing background..."
+        }
 
         showNoSuitsFound = suits.itemCount == 0
 
@@ -303,6 +362,10 @@ private fun EditImageScreen(
                     },
                     onPickedColor = {
                         showDialog = false
+
+                        if (shouldRemoveBg) {
+                            showRemoveBackgroundDialog = true
+                        }
 
                         onColorChange.invoke(
                             it,
@@ -445,6 +508,25 @@ private fun EditImageScreen(
                                 )
                             }
 
+                            if (isSuitLoading) {
+                                Box(
+                                    modifier = Modifier
+                                        .background(color = colors.background, shape = RoundedCornerShape(10.dp))
+                                        .size(60.dp)
+                                        .align(Alignment.Center),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier
+                                            .align(Alignment.Center)
+                                            .size(28.dp),
+                                        color = colors.primary,
+                                        strokeWidth = 2.dp
+                                    )
+                                }
+
+                            }
+
                             // Add control buttons
                             Column(
                                 modifier = Modifier
@@ -550,6 +632,10 @@ private fun EditImageScreen(
                                     showTransparentBg = true,
                                     isSelected = isTransparentSelected,
                                     onClick = {
+                                        if (shouldRemoveBg) {
+                                            showRemoveBackgroundDialog = true
+                                        }
+
                                         onColorChange.invoke(
                                             Color.Transparent,
                                             ColorFactory.ColorType.TRANSPARENT
@@ -568,6 +654,9 @@ private fun EditImageScreen(
                                     ratio = 1.2f,
                                     isSelected = isWhiteSelected,
                                     onClick = {
+                                        if (shouldRemoveBg) {
+                                            showRemoveBackgroundDialog = true
+                                        }
                                         onColorChange.invoke(
                                             Color.White,
                                             ColorFactory.ColorType.WHITE
@@ -586,6 +675,9 @@ private fun EditImageScreen(
                                     ratio = 1.2f,
                                     isSelected = isGreenSelected,
                                     onClick = {
+                                        if (shouldRemoveBg) {
+                                            showRemoveBackgroundDialog = true
+                                        }
                                         onColorChange.invoke(
                                             Color.Green,
                                             ColorFactory.ColorType.GREEN
@@ -604,6 +696,9 @@ private fun EditImageScreen(
                                     ratio = 1.2f,
                                     isSelected = isBlueSelected,
                                     onClick = {
+                                        if (shouldRemoveBg) {
+                                            showRemoveBackgroundDialog = true
+                                        }
                                         onColorChange.invoke(
                                             AppColors.LightPrimary,
                                             ColorFactory.ColorType.BLUE
@@ -622,6 +717,9 @@ private fun EditImageScreen(
                                     ratio = 1.2f,
                                     isSelected = isRedSelected,
                                     onClick = {
+                                        if (shouldRemoveBg) {
+                                            showRemoveBackgroundDialog = true
+                                        }
                                         onColorChange.invoke(Color.Red, ColorFactory.ColorType.RED)
                                     }
 
@@ -742,6 +840,51 @@ private fun EditImageScreen(
                             }
                         }
 
+                        AnimatedVisibility(showRemoveBackgroundDialog) {
+                            Dialog(onDismissRequest = { }) {
+
+                                Box(
+                                    modifier = Modifier
+                                        .background(
+                                            color = colors.background,
+                                            shape = RoundedCornerShape(16.dp)
+                                        )
+                                        .animatedBorder(
+                                            borderColors = listOf(
+                                                Color.Red,
+                                                Color.Green,
+                                                Color.Blue
+                                            ),
+                                            backgroundColor = colors.background,
+                                            shape = RoundedCornerShape(16.dp),
+                                            borderWidth = 3.dp,
+                                            animationDurationInMillis = 2500
+                                        )
+                                        .animateContentSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+
+                                    LottieAnimation(
+                                        composition = composition,
+                                        modifier = Modifier
+                                            .width(160.dp)
+                                            .aspectRatio(1f)
+                                            .align(Alignment.Center),
+                                        iterations = LottieConstants.IterateForever,
+                                    )
+                                    LaunchedEffect(processingStage) {
+                                        if (processingStage == ProcessingStage.COMPLETED ||
+                                            processingStage == ProcessingStage.ERROR ||
+                                            processingStage == ProcessingStage.NO_NETWORK_AVAILABLE
+                                        ) {
+                                            showRemoveBackgroundDialog = false
+                                        }
+                                    }
+                                }
+
+                            }
+                        }
+
                         Spacer(Modifier.size(8.dp))
 
                         Button(
@@ -774,132 +917,6 @@ private fun EditImageScreen(
                                     ticketBitmap = resultBitmap.asImageBitmap()
                                     isCreatingBitmap = false
                                 }
-
-                                /* val permissionsGranted =
-                                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                                         true
-                                     } else {
-                                         writeStorageAccessState.allPermissionsGranted
-                                     }
-
-
-                                 if (!permissionsGranted) {
-
-                                     coroutineScope.launch {
-                                         try {
-                                             // Get the source image from the URL
-                                             val sourceBitmap =
-                                                 loadAndTransformBitmap(context, imageUrl) ?: run {
-                                                     Toast.makeText(
-                                                         context,
-                                                         "Could not load image",
-                                                         Toast.LENGTH_SHORT
-                                                     ).show()
-                                                     return@launch
-                                                 }
-
-                                             // Create a bitmap with exact dimensions of the source
-                                             val resultBitmap = Bitmap.createBitmap(
-                                                 sourceBitmap.width,
-                                                 sourceBitmap.height,
-                                                 Bitmap.Config.ARGB_8888
-                                             )
-                                             val canvas = android.graphics.Canvas(resultBitmap)
-
-                                             // Fill with background color
-                                             canvas.drawColor(backgroundColor.toArgb())
-
-                                             // Calculate the visible portion of the source image
-                                             // Scale factors determine how much of the image is visible
-                                             val scaleFactor = scale
-
-                                             // Create a matrix that applies all current transformations
-                                             val matrix = android.graphics.Matrix()
-
-                                             // Apply flip if needed
-                                             if (flip) {
-                                                 matrix.postScale(
-                                                     -1f,
-                                                     1f,
-                                                     sourceBitmap.width / 2f,
-                                                     sourceBitmap.height / 2f
-                                                 )
-                                             }
-
-                                             // The offsetX and offsetY values represent the translation in the view
-                                             // To apply them to the source bitmap, we need to adjust them relative to scale
-                                             // The center point of the view is where the image is anchored
-                                             val sourceWidthHalf = sourceBitmap.width / 2f
-                                             val sourceHeightHalf = sourceBitmap.height / 2f
-
-                                             // Adjust offsets to be relative to the source bitmap
-                                             // offsetX and offsetY values are in screen pixels, we need to convert to bitmap coordinates
-                                             val viewToBitmapScaleX =
-                                                 sourceBitmap.width.toFloat() / boxWidth.value
-                                             val viewToBitmapScaleY =
-                                                 sourceBitmap.height.toFloat() / boxHeight.value
-
-                                             // Calculate offset in bitmap coordinates
-                                             val bitmapOffsetX =
-                                                 -offsetX * viewToBitmapScaleX / scale
-                                             val bitmapOffsetY =
-                                                 -offsetY * viewToBitmapScaleY / scale
-
-                                             // Draw the bitmap in the center of the canvas
-                                             canvas.drawBitmap(sourceBitmap, matrix, null)
-
-                                             // Save to gallery
-                                             withContext(Dispatchers.IO) {
-                                                 val savedUri =
-                                                     saveBitmapToGallery(context, resultBitmap)
-                                                 withContext(Dispatchers.Main) {
-                                                     if (savedUri != null) {
-                                                         // Now you have the saved image URI
-                                                         val imagePath = savedUri.toString()
-                                                         onImageSaved(imagePath)
-                                                         Logger.d(
-                                                             "EditImageScreen",
-                                                             "Image saved to: $imagePath"
-                                                         )
-                                                         Toast.makeText(
-                                                             context,
-                                                             "Image saved to gallery",
-                                                             Toast.LENGTH_SHORT
-                                                         ).show()
-                                                     } else {
-                                                         Toast.makeText(
-                                                             context,
-                                                             "Failed to save image",
-                                                             Toast.LENGTH_SHORT
-                                                         ).show()
-                                                     }
-                                                 }
-                                             }
-
-                                         } catch (e: Exception) {
-                                             withContext(Dispatchers.Main) {
-                                                 Toast.makeText(
-                                                     context,
-                                                     "Error: ${e.message}",
-                                                     Toast.LENGTH_SHORT
-                                                 ).show()
-                                                 Log.e("EditImageScreen", "Error saving image", e)
-                                             }
-                                         }
-                                     }
-                                 } else if (writeStorageAccessState.shouldShowRationale) {
-                                     coroutineScope.launch {
-                                         val result = snackbarHostState.showSnackbar(
-                                             message = "The storage permission is needed to save the image",
-                                             actionLabel = "Grant Access"
-                                         )
-                                         if (result == SnackbarResult.ActionPerformed) {
-                                             writeStorageAccessState.launchMultiplePermissionRequest()
-                                         }
-                                     }
-                                 } else {
-                                     writeStorageAccessState.launchMultiplePermissionRequest()
-                                 }*/
                             },
                             modifier = Modifier
                                 .fillMaxWidth()

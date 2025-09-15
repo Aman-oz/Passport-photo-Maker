@@ -1,5 +1,6 @@
 package com.ots.aipassportphotomaker.domain.bottom_nav
 
+import com.ots.aipassportphotomaker.domain.model.CustomDocumentData
 import kotlinx.serialization.Serializable
 
 // Created by amanullah on 25/07/2025.
@@ -31,6 +32,9 @@ sealed class Page {
 
     @Serializable
     data class DocumentInfoScreen(val documentId: Int) : Page()
+
+    @Serializable
+    data class DocumentInfoScreenFromCustom(@Serializable val customData: CustomDocumentData) : Page()
 
     @Serializable
     data class ImageProcessingScreen(

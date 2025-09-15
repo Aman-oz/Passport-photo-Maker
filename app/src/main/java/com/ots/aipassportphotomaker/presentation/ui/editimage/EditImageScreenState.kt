@@ -27,8 +27,9 @@ data class EditImageScreenUiState(
     val ratio: Float = 1f,
     val editPosition: Int = 0,
     val sourceScreen: String = "",
+    val isBgRemoved: Boolean = false,
 
-)
+    )
 
 class EditImageScreenBundle @Inject constructor(
     savedStateHandle: SavedStateHandle

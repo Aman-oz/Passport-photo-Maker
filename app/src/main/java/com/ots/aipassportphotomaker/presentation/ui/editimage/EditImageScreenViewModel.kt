@@ -8,13 +8,17 @@ import androidx.paging.CombinedLoadStates
 import androidx.paging.LoadState
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import com.aman.downloader.OziDownloader
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
 import com.ots.aipassportphotomaker.common.utils.ColorUtils.parseColorFromString
 import com.ots.aipassportphotomaker.common.utils.FileUtils
 import com.ots.aipassportphotomaker.common.utils.Logger
+import com.ots.aipassportphotomaker.data.model.RemoverApiResponse
 import com.ots.aipassportphotomaker.domain.model.DocumentEntity
+import com.ots.aipassportphotomaker.domain.model.ProcessingStage
 import com.ots.aipassportphotomaker.domain.model.SuitsEntity
 import com.ots.aipassportphotomaker.domain.repository.ColorFactory
+import com.ots.aipassportphotomaker.domain.repository.RemoveBackgroundRepository
 import com.ots.aipassportphotomaker.domain.usecase.photoid.GetDocumentDetails
 import com.ots.aipassportphotomaker.domain.util.DispatchersProvider
 import com.ots.aipassportphotomaker.domain.util.NetworkMonitor
@@ -26,13 +30,17 @@ import com.ots.aipassportphotomaker.presentation.ui.base.BaseViewModel
 import com.ots.aipassportphotomaker.presentation.ui.usecase.suits.GetSuitsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import java.io.File
 import javax.inject.Inject
 
 // Created by amanullah on 04/09/2025.
@@ -44,6 +52,8 @@ class EditImageScreenViewModel @Inject constructor(
     editImageScreenBundle: EditImageScreenBundle,
     private val dispatcher: DispatchersProvider,
     private val networkMonitor: NetworkMonitor,
+    private val removeBackgroundRepository: RemoveBackgroundRepository,
+    private val oziDownloader: OziDownloader,
     val colorFactory: ColorFactory,
     private val getSuitsUseCase: GetSuitsUseCase,
     @ApplicationContext private val context: Context
@@ -67,6 +77,13 @@ class EditImageScreenViewModel @Inject constructor(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
+
+    private val _shouldRemoveBackground = MutableStateFlow(false)
+    val shouldRemoveBackground = _shouldRemoveBackground.asStateFlow()
+
+    private val _processingStage = MutableStateFlow(ProcessingStage.NONE)
+    val processingStage = _processingStage.asStateFlow()
+
     val documentId: Int = editImageScreenBundle.documentId
     var imageUrl: String? = editImageScreenBundle.imageUrl
     val selectedColor: String? = editImageScreenBundle.selectedColor
@@ -78,6 +95,9 @@ class EditImageScreenViewModel @Inject constructor(
 
     private val _localSelectedColor: MutableSharedFlow<Color> = singleSharedFlow()
     val localSelectedColor = _localSelectedColor.asSharedFlow()
+
+    private var lastRemovedBgUrl: String? = null
+
 
     init {
         Logger.i(
@@ -126,6 +146,7 @@ class EditImageScreenViewModel @Inject constructor(
     private fun onInitialState() = launch {
 
         if (sourceScreen == "HomeScreen") {
+            _shouldRemoveBackground.value = true
             if (imageUrl.isNullOrEmpty()) {
                 Logger.e("EditImageScreenViewModel", "No image path provided from HomeScreen")
                 _error.value = "No image was selected"
@@ -178,6 +199,7 @@ class EditImageScreenViewModel @Inject constructor(
             return@launch
         }
 
+        _shouldRemoveBackground.value = false
         getDocumentById(documentId).onSuccess { document ->
             Logger.i("EditImageScreenViewModel", "Fetched document details: $document")
             loadState(isLoading = false)
@@ -269,10 +291,121 @@ class EditImageScreenViewModel @Inject constructor(
         }
     }
 
+    fun removeBackground(file: File) {
+
+        viewModelScope.launch(dispatcher.io) {
+            _loading.value = true
+            _error.value = null
+            _processingStage.value = ProcessingStage.UPLOADING
+
+            val networkState = networkMonitor.networkState.first()
+
+            if (networkState.isOnline.not()) {
+                _error.value = "No internet connection. Please check your network settings."
+                _loading.value = false
+                _processingStage.value = ProcessingStage.NO_NETWORK_AVAILABLE
+                return@launch
+            }
+
+            var attempts = 0
+            val maxAttempts = 3
+            var success = false
+            var apiResponse: RemoverApiResponse? = null
+
+            while (attempts < maxAttempts && !success) {
+                try {
+                    delay(1500L)
+                    _processingStage.value = ProcessingStage.PROCESSING
+
+                    apiResponse = removeBackgroundRepository.removeBackground(file).getOrThrow()
+
+                    delay(2000)
+                    _processingStage.value = ProcessingStage.BACKGROUND_REMOVAL
+
+                    if (apiResponse.imageUrl == null) {
+                        Logger.e("EditImageScreenViewModel","remove background: Server returned null filename")
+                        _error.value = "Server returned null filename"
+                        break
+                    }
+                    if (apiResponse.imageUrl == lastRemovedBgUrl && attempts < maxAttempts - 1) {
+                        Logger.w("EditImageScreenViewModel","remove background: Received same URL as last attempt, retrying... (attempt ${attempts + 1})")
+                        attempts++
+                        delay(500)
+                    } else {
+                        delay(1500)
+                        _processingStage.value = ProcessingStage.SAVING_IMAGE
+
+                        val localImagePath = saveImageToLocalStorage(apiResponse.imageUrl)
+                        if (localImagePath != null) {
+                            lastRemovedBgUrl = localImagePath
+                            _uiState.value = _uiState.value.copy(
+                                isBgRemoved = true,
+                                imageUrl = localImagePath,
+                                showLoading = false
+                            )
+                            _shouldRemoveBackground.value = false
+                            Logger.i("EditImageScreenViewModel","Background removed successfully: ${apiResponse.imageUrl}")
+                            success = true
+
+                            delay(500)
+                            _processingStage.value = ProcessingStage.COMPLETED
+                            delay(100)
+                            _processingStage.value = ProcessingStage.NONE
+                        } else {
+                            Logger.e("EditImageScreenViewModel","remove background: Failed to save image locally")
+                            _error.value = "Failed to save image locally"
+                            _processingStage.value = ProcessingStage.ERROR
+                        }
+                    }
+                } catch (error: retrofit2.HttpException) {
+                    val errorCode = error.code()
+                    val errorBody = error.response()?.errorBody()?.string() ?: "No details"
+                    Logger.e("EditImageScreenViewModel", "cropImage: Error during cropping: HTTP $errorCode - $errorBody", error)
+                    _error.value = "HTTP $errorCode: $errorBody"
+                    _processingStage.value = ProcessingStage.ERROR
+
+                    break
+                } catch (error: Throwable) {
+                    Logger.e("EditImageScreenViewModel", "cropImage: Error during cropping: ${error.message}", error)
+                    Logger.i("EditImageScreenViewModel","user image: ${file.absolutePath}")
+                    _error.value = error.message
+                    _processingStage.value = ProcessingStage.ERROR
+
+                    break
+                }
+            }
+
+            if (!success) {
+                Logger.e("EditImageScreenViewModel","cropImage: Failed to get new cropped image after $maxAttempts attempts")
+                _processingStage.value = ProcessingStage.ERROR
+                _error.value = "Failed to get new cropped image after $maxAttempts attempts"
+            }
+            _loading.value = false
+        }
+    }
+
     fun selectColor(color: Color, colorType: ColorFactory.ColorType) {
         _uiState.value = _uiState.value.copy(selectedColor = color)
         colorFactory.selectColor(colorType)
         _localSelectedColor.tryEmit(color)
+
+        if (sourceScreen == "HomeScreen" &&
+            !_uiState.value.isBgRemoved &&
+            _shouldRemoveBackground.value) {
+
+            // Get the file from the current image URL
+            val imageFile = imageUrl?.let { File(it) }
+            if (imageFile != null && imageFile.exists()) {
+                removeBackground(imageFile)
+                // Set flag to false immediately after initiating removal
+                // to prevent multiple removals
+                _shouldRemoveBackground.value = false
+            }
+        }
+    }
+
+    fun requestBackgroundRemoval() {
+        _shouldRemoveBackground.value = true
     }
 
     fun setCustomColor(color: Color) {
@@ -315,5 +448,77 @@ class EditImageScreenViewModel @Inject constructor(
 
     private suspend fun getDocumentById(documentId: Int): Result<DocumentEntity> =
         getDocumentDetails(documentId)
+
+    /**
+     * Downloads an image from a URL and saves it to the app's private storage
+     * Returns the local file path if successful
+     */
+    fun saveImageToLocalStorage(imageUrl: String?): String? {
+        if (imageUrl.isNullOrEmpty()) {
+            Logger.e("ImageProcessingScreenViewModel", "saveImageToLocalStorage: URL is null or empty")
+            return null
+        }
+
+        try {
+            // Generate a unique filename
+            val fileName = FileUtils.TEMP_FILE_NAME
+
+            // Create directory if it doesn't exist
+            val cacheDir = File(context.filesDir, "images")
+            if (!cacheDir.exists()) {
+                cacheDir.mkdirs()
+            }
+
+            val filePath = File(cacheDir, fileName).absolutePath
+
+            // Build the download request
+            val request = oziDownloader.newRequestBuilder(
+                imageUrl, cacheDir.absolutePath, fileName
+            ).tag("ImageProcessing").build()
+
+            // Synchronously wait for download completion
+            var resultPath: String? = null
+            var downloadError: String? = null
+
+            val latch = java.util.concurrent.CountDownLatch(1)
+
+            oziDownloader.enqueue(
+                request,
+                onStart = {
+                    Logger.d("ImageProcessingScreenViewModel", "Download started")
+                    _processingStage.value = ProcessingStage.DOWNLOADING
+                },
+                onProgress = { progress ->
+                    Logger.d("ImageProcessingScreenViewModel", "Download progress: $progress%")
+                },
+                onCompleted = {
+                    Logger.i("ImageProcessingScreenViewModel", "Download completed: $filePath")
+                    resultPath = filePath
+                    latch.countDown()
+                },
+                onError = { error ->
+                    Logger.e("ImageProcessingScreenViewModel", "Download error: $error")
+                    downloadError = error
+                    latch.countDown()
+                }
+            )
+
+            // Wait for completion with timeout
+            if (!latch.await(30, java.util.concurrent.TimeUnit.SECONDS)) {
+                Logger.e("ImageProcessingScreenViewModel", "Download timed out")
+                return null
+            }
+
+            if (downloadError != null) {
+                Logger.e("ImageProcessingScreenViewModel", "Download failed: $downloadError")
+                return null
+            }
+
+            return resultPath
+        } catch (e: Exception) {
+            Logger.e("ImageProcessingScreenViewModel", "Error saving image: ${e.message}", e)
+            return null
+        }
+    }
 
 }

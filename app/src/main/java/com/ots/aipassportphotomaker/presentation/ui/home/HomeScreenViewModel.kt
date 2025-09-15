@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.CombinedLoadStates
 import androidx.paging.LoadState
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
+import com.ots.aipassportphotomaker.domain.model.CustomDocumentData
 import com.ots.aipassportphotomaker.domain.util.NetworkMonitor
 import com.ots.aipassportphotomaker.image_picker.model.AssetInfo
 import com.ots.aipassportphotomaker.presentation.ui.base.BaseViewModel
@@ -101,12 +102,14 @@ class HomeScreenViewModel  @Inject constructor(
                 )
             }
 
-
-
             "SocialProfile" -> {
                 _navigationState.tryEmit(HomeScreenNavigationState.PhotoIDDetails("Profile"))
             }
         }
+    }
+
+    fun onCustomSizeClick(customData: CustomDocumentData) {
+//        _navigationState.tryEmit(HomeScreenNavigationState.DocumentInfoScreen(customData))
     }
 
     private fun observeNetworkStatus() {

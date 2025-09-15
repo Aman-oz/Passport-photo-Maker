@@ -390,7 +390,7 @@ private fun SavedImageScreen(
 
                     LazyRow(
                         modifier = Modifier
-                            .padding(vertical = 4.dp, horizontal = 16.dp)
+                            .padding(vertical = 4.dp, horizontal = 4.dp)
                     ) {
                         items(socialItemList.size) { index ->
                             val (iconRes, platformName) = socialItemList[index]

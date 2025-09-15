@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.aman.downloader.OziDownloader
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
 import com.ots.aipassportphotomaker.common.utils.ColorUtils.parseColorFromString
+import com.ots.aipassportphotomaker.common.utils.FileUtils
 import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.data.model.RemoverApiResponse
 import com.ots.aipassportphotomaker.domain.model.DocumentEntity
@@ -213,6 +214,8 @@ class CutOutImageScreenViewModel @Inject constructor(
 
                             delay(500)
                             _processingStage.value = ProcessingStage.COMPLETED
+                            delay(100)
+                            _processingStage.value = ProcessingStage.NONE
                         } else {
                             Logger.e("CutOutImageScreenViewModel","remove background: Failed to save image locally")
                             _error.value = "Failed to save image locally"
@@ -285,7 +288,7 @@ class CutOutImageScreenViewModel @Inject constructor(
 
         try {
             // Generate a unique filename
-            val fileName = "cropped_${System.currentTimeMillis()}.jpg"
+            val fileName = FileUtils.TEMP_FILE_NAME
 
             // Create directory if it doesn't exist
             val cacheDir = File(context.filesDir, "images")

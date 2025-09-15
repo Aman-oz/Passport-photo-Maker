@@ -4,7 +4,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
 import com.ots.aipassportphotomaker.domain.bottom_nav.Page
+import com.ots.aipassportphotomaker.domain.model.CustomDocumentData
 import javax.inject.Inject
+import kotlin.text.get
 
 data class DocumentInfoScreenUiState(
     val showLoading: Boolean = true,
@@ -31,6 +33,7 @@ class DocumentDetailsBundle @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) {
     val documentId: Int = savedStateHandle.toRoute<Page.DocumentInfoScreen>().documentId
+    val customDocumentData: CustomDocumentData? = savedStateHandle.get<CustomDocumentData>("customData")
 }
 
 sealed class DocumentInfoScreenNavigationState {

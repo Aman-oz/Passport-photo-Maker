@@ -1,6 +1,7 @@
 package com.ots.aipassportphotomaker.presentation.ui.home
 
 import androidx.compose.ui.graphics.Color
+import com.ots.aipassportphotomaker.domain.model.CustomDocumentData
 import com.ots.aipassportphotomaker.presentation.ui.createid.PhotoIDScreenNavigationState
 import com.ots.aipassportphotomaker.presentation.ui.editimage.EditImageScreenNavigationState
 import com.ots.aipassportphotomaker.presentation.ui.processimage.ImageProcessingScreenNavigationState
@@ -30,4 +31,6 @@ sealed class HomeScreenNavigationState {
 
 
     data class PhotoIDDetails(val type: String) : HomeScreenNavigationState()
+// Todo: implement when needed
+//    data class DocumentInfoScreen(val customData: CustomDocumentData) : HomeScreenNavigationState()
 }

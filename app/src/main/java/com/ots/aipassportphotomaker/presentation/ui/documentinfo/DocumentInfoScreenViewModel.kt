@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
 import com.ots.aipassportphotomaker.common.utils.Logger
+import com.ots.aipassportphotomaker.domain.model.CustomDocumentData
 import com.ots.aipassportphotomaker.domain.model.DocumentEntity
 import com.ots.aipassportphotomaker.domain.repository.ColorFactory
 import com.ots.aipassportphotomaker.domain.usecase.photoid.GetDocumentDetails
@@ -51,7 +52,7 @@ class DocumentInfoScreenViewModel @Inject constructor(
     val visiblePermissionDialogQueue = mutableStateListOf<String>()
 
     @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
-    fun dismissDialog() {
+    fun  dismissDialog() {
         visiblePermissionDialogQueue.removeFirst()
     }
 
@@ -68,6 +69,11 @@ class DocumentInfoScreenViewModel @Inject constructor(
 
 
     init {
+        if (documentDetailsBundle.customDocumentData != null) {
+            handleCustomDocumentData(documentDetailsBundle.customDocumentData)
+        } else if (documentDetailsBundle.documentId > 0) {
+            onInitialState()
+        }
         onInitialState()
         loadState(false)
         colorFactory.resetToDefault()
@@ -90,6 +96,22 @@ class DocumentInfoScreenViewModel @Inject constructor(
         }
     }
 
+    private fun handleCustomDocumentData(customData: CustomDocumentData) {
+        _uiState.update { currentState ->
+            currentState.copy(
+                showLoading = false,
+                documentName = customData.documentName,
+                documentSize = customData.documentSize,
+                documentUnit = customData.documentUnit,
+                documentPixels = customData.documentPixels,
+                documentResolution = customData.documentResolution,
+                documentImage = customData.documentImage,
+                documentType = customData.documentType,
+                documentCompleted = customData.documentCompleted
+            )
+        }
+    }
+
     private fun loadState(isLoading: Boolean) {
         launch {
             _uiState.value = _uiState.value.copy(showLoading = isLoading, errorMessage = null)
@@ -101,6 +123,7 @@ class DocumentInfoScreenViewModel @Inject constructor(
         Logger.i("DocumentInfoScreenViewModel", "onUpdateDpi: selectedDpi=$selectedDpi")
         _uiState.update { it.copy(documentResolution = newDpi) }
     }
+
     fun onOpenCameraClicked() {
 //        _navigationState.tryEmit(PhotoIDScreenNavigationState.TakePhotoScreen(documentId))
     }

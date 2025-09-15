@@ -3,6 +3,7 @@ package com.ots.aipassportphotomaker.presentation.ui.main
 import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavHostController
 import com.ots.aipassportphotomaker.domain.bottom_nav.Page
+import com.ots.aipassportphotomaker.domain.model.CustomDocumentData
 
 // Created by amanullah on 25/07/2025.
 // Copyright (c) 2025 Ozi Publishing. All rights reserved.
@@ -25,6 +26,12 @@ class MainRouter(
     fun navigateToDocumentInfoScreen(documentId: Int) {
         mainNavController.navigate(Page.DocumentInfoScreen(documentId = documentId))
     }
+
+
+    //To be implemented later for custom size
+    /*fun navigateFromCustomHomeToDocumentInfoScreen(customData: CustomDocumentData) {
+        mainNavController.navigate(Page.DocumentInfoScreenFromCustom(customData = customData))
+    }*/
 
     fun navigateToPhotoIDDetailScreen(type: String) {
         mainNavController.navigate(Page.PhotoIDDetailScreen(type = type))

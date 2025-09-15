@@ -4,10 +4,10 @@ import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.BitmapDrawable
-import android.os.Build
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -29,8 +29,9 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
-import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -53,6 +54,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -60,9 +63,13 @@ import androidx.compose.ui.window.Dialog
 import androidx.core.graphics.createBitmap
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.ImageLoader
-import android.graphics.Color as AndroidColor
 import coil.request.ImageRequest
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.ots.aipassportphotomaker.R
+import com.ots.aipassportphotomaker.common.ext.animatedBorder
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
 import com.ots.aipassportphotomaker.common.utils.DrawViewAction
@@ -77,12 +84,13 @@ import com.ots.aipassportphotomaker.presentation.ui.components.CustomTab
 import com.ots.aipassportphotomaker.presentation.ui.components.LoaderFullScreen
 import com.ots.aipassportphotomaker.presentation.ui.main.MainRouter
 import com.ots.aipassportphotomaker.presentation.ui.theme.colors
+import com.ots.aipassportphotomaker.presentation.ui.theme.custom100
+import com.ots.aipassportphotomaker.presentation.ui.theme.custom300
 import com.ots.aipassportphotomaker.presentation.viewmodel.SharedViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.File
+import android.graphics.Color as AndroidColor
 
 // Created by amanullah on 04/09/2025.
 // Copyright (c) 2025 Ozi Publishing. All rights reserved.
@@ -105,13 +113,13 @@ fun CutOutImagePage(
     viewModel.navigationState.collectAsEffect { navigationState ->
 
         Log.d(TAG, "CutOutImagePage: Navigation State: $navigationState, ImageUrl: $imageUrl")
-         when (navigationState) {
-             is CutOutImageScreenNavigationState.SavedImageScreen -> mainRouter.navigateFromCutoutToSavedImageScreen(
-                 documentId = navigationState.documentId,
-                 imagePath = uiState.imageUrl,
-                 sourceScreen = "CutOutImageScreen"
-             )
-         }
+        when (navigationState) {
+            is CutOutImageScreenNavigationState.SavedImageScreen -> mainRouter.navigateFromCutoutToSavedImageScreen(
+                documentId = navigationState.documentId,
+                imagePath = uiState.imageUrl,
+                sourceScreen = "CutOutImageScreen"
+            )
+        }
     }
 
     val processingStage by viewModel.processingStage.collectAsState()
@@ -130,7 +138,8 @@ fun CutOutImagePage(
                 when (viewModel.sourceScreen) {
                     "EditImageScreen" -> {
                         Logger.i(TAG, "onSaveImage: Navigating back to EditImageScreen")
-                        val internalPath = saveBitmapToInternalStorage(context, bitmap.asAndroidBitmap())
+                        val internalPath =
+                            saveBitmapToInternalStorage(context, bitmap.asAndroidBitmap())
                         if (internalPath != null) {
                             Logger.i(TAG, "Image saved successfully: $internalPath")
                             commonSharedViewModel.setEditedImageResult(internalPath)
@@ -156,7 +165,10 @@ fun CutOutImagePage(
                     }
 
                     else -> {
-                        Logger.i(TAG, "onSaveImage: Unknown sourceScreen, defaulting to EditImageScreen: ${uiState.sourceScreen}")
+                        Logger.i(
+                            TAG,
+                            "onSaveImage: Unknown sourceScreen, defaulting to EditImageScreen: ${uiState.sourceScreen}"
+                        )
                         val savedUri = saveBitmapToGallery(context, bitmap.asAndroidBitmap())
                         if (savedUri != null) {
                             Logger.i(TAG, "Image saved successfully: $savedUri")
@@ -196,6 +208,7 @@ private fun CutOutImageScreen(
     onBackClick: () -> Unit = {},
     onGetProClick: () -> Unit = {},
 ) {
+    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.ai_erase))
 
     Surface {
 
@@ -233,11 +246,13 @@ private fun CutOutImageScreen(
                 }
                 processingMessages[messageIndex]
             }
+
             ProcessingStage.CROPPING_IMAGE -> "💫 Cropping image..."
             ProcessingStage.COMPLETED -> {
                 "✅ Process completed successfully"
 
             }
+
             ProcessingStage.NONE -> ""
             ProcessingStage.NO_NETWORK_AVAILABLE -> "❌ No network connection"
             ProcessingStage.ERROR -> "❌ Something went wrong"
@@ -358,7 +373,12 @@ private fun CutOutImageScreen(
                                                             Bitmap.Config.ARGB_8888
                                                         )
                                                         val canvas = Canvas(bmp)
-                                                        drawable.setBounds(0, 0, canvas.width, canvas.height)
+                                                        drawable.setBounds(
+                                                            0,
+                                                            0,
+                                                            canvas.width,
+                                                            canvas.height
+                                                        )
                                                         drawable.draw(canvas)
                                                         bmp
                                                     }
@@ -368,12 +388,19 @@ private fun CutOutImageScreen(
                                                 bitmap = newBitmap
                                                 graphicOverlay?.setBitmap(newBitmap)
 
-                                                Logger.i("CutOutImageScreen", "Image updated successfully: ${imageUrl}")
+                                                Logger.i(
+                                                    "CutOutImageScreen",
+                                                    "Image updated successfully: ${imageUrl}"
+                                                )
                                             }
                                             .build()
                                         imageLoader.enqueue(request)
                                     } catch (e: Exception) {
-                                        Logger.e("CutOutImageScreen", "Failed to load image: ${e.message}", e)
+                                        Logger.e(
+                                            "CutOutImageScreen",
+                                            "Failed to load image: ${e.message}",
+                                            e
+                                        )
                                     }
                                 }
                             }
@@ -442,7 +469,7 @@ private fun CutOutImageScreen(
                         ) {
                             Icon(
                                 modifier = Modifier
-                                .padding(6.dp)
+                                    .padding(6.dp)
                                     .clickable(onClick = {
                                         graphicOverlay?.undo()
                                     }),
@@ -453,10 +480,10 @@ private fun CutOutImageScreen(
                             Spacer(modifier = Modifier.width(8.dp))
                             Icon(
                                 modifier = Modifier
-                                .padding(6.dp)
-                                .clickable(onClick = {
-                                    graphicOverlay?.redo()
-                                }),
+                                    .padding(6.dp)
+                                    .clickable(onClick = {
+                                        graphicOverlay?.redo()
+                                    }),
                                 painter = painterResource(id = R.drawable.redo_icon),
                                 contentDescription = "Redo",
                                 tint = colors.onBackground,
@@ -464,30 +491,69 @@ private fun CutOutImageScreen(
                         }
 
                         Column {
-                            Slider(
-                                value = brushSize,
-                                onValueChange = {
-                                    brushSize = it
-                                    graphicOverlay?.setBrushSize(it)
-                                },
-                                valueRange = 10f..100f
-                            )
-                            Text(text = brushSize.toString())
+                            Row {
+
+                                Text(
+                                    text = "Size",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Medium,
+                                    color = colors.onSurfaceVariant,
+                                    modifier = Modifier
+                                        .align(Alignment.CenterVertically)
+                                )
+
+                                Spacer(modifier = Modifier.width(16.dp))
+
+                                Slider(
+                                    value = brushSize,
+                                    colors = SliderDefaults.colors(
+                                        thumbColor = colors.primary, // White color for thumb
+                                        activeTrackColor = colors.primary, // Primary fill color for active track
+                                        inactiveTrackColor = colors.custom300 // Gray color for inactive track (adjust if custom100 is not gray)
+                                    ),
+
+
+                                    onValueChange = {
+                                        brushSize = it
+                                        graphicOverlay?.setBrushSize(it)
+                                    },
+                                    valueRange = 10f..100f,
+                                )
+                            }
+
                         }
 
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Column {
-                            Slider(
-                                value = brushOffset,
-                                onValueChange = {
-                                    brushOffset = it
-                                    graphicOverlay?.setBrushOffset(it)
-                                                },
-                                valueRange = 0f..150f
+                            Row {
 
-                            )
-                            Text(text = brushOffset.toString())
+                                Text(
+                                    text = "Offset",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Medium,
+                                    color = colors.onSurfaceVariant,
+                                    modifier = Modifier
+                                        .align(Alignment.CenterVertically)
+                                )
+
+                                Spacer(modifier = Modifier.width(16.dp))
+
+                                Slider(
+                                    value = brushOffset,
+                                    colors = SliderDefaults.colors(
+                                        thumbColor = colors.primary, // White color for thumb
+                                        activeTrackColor = colors.primary, // Primary fill color for active track
+                                        inactiveTrackColor = colors.custom300 // Gray color for inactive track (adjust if custom100 is not gray)
+                                    ),
+                                    onValueChange = {
+                                        brushOffset = it
+                                        graphicOverlay?.setBrushOffset(it)
+                                    },
+                                    valueRange = 0f..150f
+
+                                )
+                            }
                         }
 
                         Spacer(modifier = Modifier.height(8.dp))
@@ -563,29 +629,32 @@ private fun CutOutImageScreen(
 
                                     setSelected(1) // Reset to eraser mode
                                 }
+
                                 1 -> {
                                     if (currentMode != DrawViewAction.ERASE_BACKGROUND) {
                                         currentMode = DrawViewAction.ERASE_BACKGROUND
                                     }
                                 }
+
                                 2 -> {
                                     if (currentMode != DrawViewAction.RECOVER_AREA) {
                                         currentMode = DrawViewAction.RECOVER_AREA
                                     }
                                 }
+
                                 3 -> {
                                     graphicOverlay?.hideBrush()
                                     currentMode = DrawViewAction.NONE
 
-                                        graphicOverlay?.getCurrentBitmap()?.let { bitmap ->
-                                            val transparentBitmap = Bitmap.createBitmap(
-                                                bitmap.width,
-                                                bitmap.height,
-                                                Bitmap.Config.ARGB_8888
-                                            ).apply { eraseColor(AndroidColor.TRANSPARENT) }
-                                            Canvas(transparentBitmap).drawBitmap(bitmap, 0f, 0f, null)
-                                            finalBitmap = transparentBitmap.asImageBitmap()
-                                        }
+                                    graphicOverlay?.getCurrentBitmap()?.let { bitmap ->
+                                        val transparentBitmap = Bitmap.createBitmap(
+                                            bitmap.width,
+                                            bitmap.height,
+                                            Bitmap.Config.ARGB_8888
+                                        ).apply { eraseColor(AndroidColor.TRANSPARENT) }
+                                        Canvas(transparentBitmap).drawBitmap(bitmap, 0f, 0f, null)
+                                        finalBitmap = transparentBitmap.asImageBitmap()
+                                    }
                                     setSelected(1) // Reset to eraser mode
                                 }
                             }
@@ -607,13 +676,17 @@ private fun CutOutImageScreen(
                     Dialog(onDismissRequest = { }) {
                         Column(
                             modifier = Modifier
-                                .background(colors.onBackground)
+                                .background(
+                                    color = colors.background,
+                                    shape = RoundedCornerShape(16.dp)
+                                )
                                 .padding(16.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
                                 "Preview of Ticket image \uD83D\uDC47",
-                                color = colors.background,
+                                style = MaterialTheme.typography.titleMedium,
+                                color = colors.onBackground,
                                 modifier = Modifier
                                     .align(Alignment.CenterHorizontally),
                             )
@@ -623,20 +696,31 @@ private fun CutOutImageScreen(
                                 contentDescription = "Preview of ticket"
                             )
                             Spacer(Modifier.size(4.dp))
-                            Row {
-                                Button(onClick = { finalBitmap = null }) {
-                                    Text("Close")
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Button(
+                                    onClick = { finalBitmap = null },
+                                    modifier = Modifier
+                                        .weight(1f) // Takes 50% of the width
+                                        .padding(end = 3.dp) // Optional: small padding to separate buttons
+                                ) {
+                                    Text("Close", modifier = Modifier.padding(horizontal = 10.dp))
                                 }
-
 
                                 Spacer(Modifier.size(6.dp))
 
-                                Button(onClick = {
-                                    onSaveImage(bitmap)
-                                    finalBitmap = null
-
-                                }) {
-                                    Text("Save")
+                                Button(
+                                    onClick = {
+                                        onSaveImage(bitmap)
+                                        finalBitmap = null
+                                    },
+                                    modifier = Modifier
+                                        .weight(1f) // Takes 50% of the width
+                                        .padding(start = 3.dp) // Optional: small padding to separate buttons
+                                ) {
+                                    Text("Save", modifier = Modifier.padding(horizontal = 10.dp))
                                 }
                             }
                         }
@@ -646,13 +730,108 @@ private fun CutOutImageScreen(
                 removeBackgroundBitmap?.let { bitmap ->
                     Dialog(onDismissRequest = { }) {
 
+                        var removeBg by remember { mutableStateOf(false) }
+                        val boxModifier = if (removeBg) {
+                            Modifier
+                                .background(
+                                    color = colors.background,
+                                    shape = RoundedCornerShape(16.dp)
+                                )
+                                .animatedBorder(
+                                    borderColors = listOf(Color.Red, Color.Green, Color.Blue),
+                                    backgroundColor = colors.background,
+                                    shape = RoundedCornerShape(16.dp),
+                                    borderWidth = 3.dp,
+                                    animationDurationInMillis = 2500
+                                )
+                                .animateContentSize()
+                        } else {
+                            Modifier
+                                .background(
+                                    color = colors.background,
+                                    shape = RoundedCornerShape(16.dp)
+                                )
+                                .animateContentSize()
+                        }
                         Box(
-                            modifier = Modifier
-                                .background(color = colors.background, shape = RoundedCornerShape(16.dp)),
+                            modifier = boxModifier,
                             contentAlignment = Alignment.Center
                         ) {
-                            var removeBg by remember { mutableStateOf(false) }
+
+
                             if (removeBg) {
+                                LottieAnimation(
+                                    composition = composition,
+                                    modifier = Modifier
+                                        .width(160.dp)
+                                        .aspectRatio(1f)
+                                        .align(Alignment.Center),
+                                    iterations = LottieConstants.IterateForever,
+                                )
+                                LaunchedEffect(processingStage) {
+                                    if (processingStage == ProcessingStage.COMPLETED ||
+                                        processingStage == ProcessingStage.ERROR ||
+                                        processingStage == ProcessingStage.NO_NETWORK_AVAILABLE) {
+
+                                        removeBackgroundBitmap = null
+                                    }
+                                }
+
+                            } else {
+                                Column(
+                                    modifier = Modifier
+                                        .padding(16.dp)
+                                        .background(
+                                            color = colors.background,
+                                            shape = RoundedCornerShape(16.dp)
+                                        )
+                                        .align(Alignment.Center),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        "Do you want to remove background through Ai? \uD83D\uDC47",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        textAlign = TextAlign.Center,
+                                        color = colors.onBackground,
+                                        modifier = Modifier
+                                            .align(Alignment.CenterHorizontally),
+                                    )
+                                    Spacer(Modifier.size(16.dp))
+                                    Image(
+                                        bitmap = bitmap,
+                                        contentDescription = "Preview of Removed Background image"
+                                    )
+                                    Spacer(Modifier.size(4.dp))
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Button(onClick = { removeBackgroundBitmap = null },
+                                            modifier = Modifier
+                                                .weight(1f) // Takes 50% of the width
+                                                .padding(end = 3.dp)
+                                        ) {
+                                            Text("No", modifier = Modifier.padding(horizontal = 10.dp))
+                                        }
+
+                                        Spacer(Modifier.size(6.dp))
+
+                                        Button(onClick = {
+                                            removeBg = true
+                                            onRemoveBackgroundAi(bitmap)
+
+                                        },
+                                            modifier = Modifier
+                                                .weight(1f) // Takes 50% of the width
+                                                .padding(end = 3.dp)
+                                        ) {
+                                            Text("Yes", modifier = Modifier.padding(horizontal = 10.dp))
+                                        }
+                                    }
+                                }
+                            }
+
+                            /*if (removeBg) {
                                 Column(
                                     modifier = Modifier
                                         .size(300.dp)
@@ -681,42 +860,43 @@ private fun CutOutImageScreen(
                                         }
                                     }
                                 }
-                            } else {
-                            Column(
-                                modifier = Modifier
-                                    .padding(16.dp)
-                                    .align(Alignment.Center),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Text(
-                                    "Do you want to remove background through Ai? \uD83D\uDC47",
-                                    color = colors.onBackground,
+                            }
+                            else {
+                                Column(
                                     modifier = Modifier
-                                        .align(Alignment.CenterHorizontally),
-                                )
-                                Spacer(Modifier.size(16.dp))
-                                Image(
-                                    bitmap = bitmap,
-                                    contentDescription = "Preview of Removed Background image"
-                                )
-                                Spacer(Modifier.size(4.dp))
-                                Row {
-                                    Button(onClick = { removeBackgroundBitmap = null }) {
-                                        Text("No")
-                                    }
+                                        .padding(16.dp)
+                                        .align(Alignment.Center),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        "Do you want to remove background through Ai? \uD83D\uDC47",
+                                        color = colors.onBackground,
+                                        modifier = Modifier
+                                            .align(Alignment.CenterHorizontally),
+                                    )
+                                    Spacer(Modifier.size(16.dp))
+                                    Image(
+                                        bitmap = bitmap,
+                                        contentDescription = "Preview of Removed Background image"
+                                    )
+                                    Spacer(Modifier.size(4.dp))
+                                    Row {
+                                        Button(onClick = { removeBackgroundBitmap = null }) {
+                                            Text("No")
+                                        }
 
-                                    Spacer(Modifier.size(6.dp))
+                                        Spacer(Modifier.size(6.dp))
 
-                                    Button(onClick = {
-                                        removeBg = true
-                                        onRemoveBackgroundAi(bitmap)
+                                        Button(onClick = {
+                                            removeBg = true
+                                            onRemoveBackgroundAi(bitmap)
 
-                                    }) {
-                                        Text("Yes")
+                                        }) {
+                                            Text("Yes")
+                                        }
                                     }
                                 }
-                            }
-                        }
+                            }*/
                         }
 
                     }

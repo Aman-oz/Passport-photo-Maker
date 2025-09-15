@@ -1,5 +1,7 @@
 package com.ots.aipassportphotomaker.presentation.ui.main
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -33,6 +35,7 @@ import com.ots.aipassportphotomaker.presentation.ui.savedimage.SavedImageScreenV
 // Created by amanullah on 25/07/2025.
 // Copyright (c) 2025 Ozi Publishing. All rights reserved.
 
+@RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
 @Composable
 fun MainGraph(
     mainNavController: NavHostController,
@@ -103,6 +106,15 @@ fun MainGraph(
                 sharedViewModel = hiltViewModel<NavigationBarSharedViewModel>(),
             )
         }
+
+        //Todo: Fix the issue with custom document data not being passed correctly
+        /*composableHorizontalSlide<Page.DocumentInfoScreenFromCustom> {
+            DocumentInfoPage(
+                mainRouter = MainRouter(mainNavController),
+                viewModel = hiltViewModel<DocumentInfoScreenViewModel>(),
+                sharedViewModel = hiltViewModel<NavigationBarSharedViewModel>(),
+            )
+        }*/
 
         composableHorizontalSlide<Page.ImageProcessingScreen> {
             ImageProcessingPage(
