@@ -33,7 +33,16 @@ class DocumentDetailsBundle @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) {
     val documentId: Int = savedStateHandle.toRoute<Page.DocumentInfoScreen>().documentId
-    val customDocumentData: CustomDocumentData? = savedStateHandle.get<CustomDocumentData>("customData")
+    val imagePath: String? = savedStateHandle.toRoute<Page.DocumentInfoScreen>().imagePath
+
+    val documentName: String? = savedStateHandle.toRoute<Page.DocumentInfoScreen>().documentName
+    val documentSize: String? = savedStateHandle.toRoute<Page.DocumentInfoScreen>().documentSize
+    val documentUnit: String? = savedStateHandle.toRoute<Page.DocumentInfoScreen>().documentUnit
+    val documentPixels: String? = savedStateHandle.toRoute<Page.DocumentInfoScreen>().documentPixels
+    val documentResolution: String? = savedStateHandle.toRoute<Page.DocumentInfoScreen>().documentResolution
+    val documentImage: String? = savedStateHandle.toRoute<Page.DocumentInfoScreen>().documentImage
+    val documentType: String? = savedStateHandle.toRoute<Page.DocumentInfoScreen>().documentType
+    val documentCompleted: String? = savedStateHandle.toRoute<Page.DocumentInfoScreen>().documentCompleted
 }
 
 sealed class DocumentInfoScreenNavigationState {
@@ -43,6 +52,10 @@ sealed class DocumentInfoScreenNavigationState {
         val documentId: Int,
         val imagePath: String? = null,// content uri path
         val filePath: String? = null,// local file path /storage
+        val documentName: String,
+        val documentSize: String,
+        val documentUnit: String,
+        val documentPixels: String,
         val selectedDpi: String = "300",
         val selectedBackgroundColor: Color? = null,
         val sourceScreen: String

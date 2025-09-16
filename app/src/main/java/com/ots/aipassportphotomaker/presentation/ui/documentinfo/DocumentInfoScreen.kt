@@ -140,6 +140,10 @@ fun DocumentInfoPage(
                     documentId = navigationState.documentId,
                     imagePath = viewModel.selectedImagesList.firstOrNull()?.uriString?.toString(),
                     filePath = viewModel.selectedImagesList.firstOrNull()?.filepath?.toString(),
+                    documentName = uiState.documentName,
+                    documentSize = uiState.documentSize,
+                    documentUnit = uiState.documentUnit,
+                    documentPixels = uiState.documentPixels,
                     selectedDpi = viewModel.selectedDpi,
                     selectedBackgroundColor = selectedColor,
                     sourceScreen = "DocumentInfoScreen"

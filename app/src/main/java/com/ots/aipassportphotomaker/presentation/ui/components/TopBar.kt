@@ -55,6 +55,7 @@ fun TopBar(
     fontFamily: FontFamily = FontFamily.Serif             ,
     fontSize: TextUnit = 25.sp,
     fontWeight: FontWeight = FontWeight.Bold,
+    onSettingsClick: () -> Unit,
     onThemeUpdated: () -> Unit,
     onGetProClick: () -> Unit
 ) {
@@ -94,7 +95,7 @@ fun TopBar(
 
                 IconButton(
                     onClick = {
-//                        onThemeUpdated()
+                        onSettingsClick()
                     }
                 ) {
                     Icon(
@@ -136,9 +137,17 @@ fun TopBar(
 private fun TopBarPreview() {
     PreviewContainer {
         Column {
-            TopBar("AppName", true, onThemeUpdated = {}, onGetProClick = {})
+            TopBar("AppName", true,
+                onThemeUpdated = {},
+                onSettingsClick = {},
+                onGetProClick = {}
+            )
             Spacer(modifier = Modifier.padding(10.dp))
-            TopBar(stringResource(id = R.string.photo_id), false, onThemeUpdated = {}, onGetProClick = {})
+            TopBar(stringResource(id = R.string.photo_id), false,
+                onThemeUpdated = {},
+                onSettingsClick = {},
+                onGetProClick = {}
+            )
         }
     }
 }

@@ -40,6 +40,7 @@ import com.ots.aipassportphotomaker.presentation.ui.savedimage.SavedImageScreenV
 fun MainGraph(
     mainNavController: NavHostController,
     darkMode: Boolean,
+    onSettingClick: () -> Unit,
     onThemeUpdated: () -> Unit
 ) {
     NavHost(
@@ -53,6 +54,9 @@ fun MainGraph(
                 sharedViewModel = backStack.sharedViewModel(navController = mainNavController),
                 mainRouter = MainRouter(mainNavController),
                 darkMode = darkMode,
+                onSettingClick = {
+                    onSettingClick()
+                },
                 onThemeUpdated = onThemeUpdated,
                 nestedNavController = nestedNavController
             ) {
@@ -106,15 +110,6 @@ fun MainGraph(
                 sharedViewModel = hiltViewModel<NavigationBarSharedViewModel>(),
             )
         }
-
-        //Todo: Fix the issue with custom document data not being passed correctly
-        /*composableHorizontalSlide<Page.DocumentInfoScreenFromCustom> {
-            DocumentInfoPage(
-                mainRouter = MainRouter(mainNavController),
-                viewModel = hiltViewModel<DocumentInfoScreenViewModel>(),
-                sharedViewModel = hiltViewModel<NavigationBarSharedViewModel>(),
-            )
-        }*/
 
         composableHorizontalSlide<Page.ImageProcessingScreen> {
             ImageProcessingPage(

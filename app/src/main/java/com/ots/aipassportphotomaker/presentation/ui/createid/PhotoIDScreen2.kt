@@ -2,6 +2,7 @@ package com.ots.aipassportphotomaker.presentation.ui.createid
 
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -57,6 +58,8 @@ fun PhotoIDPage2(
 ) {
     val TAG = "PhotoIDPage"
 
+    val context = LocalContext.current
+
     val documentsPaging = viewModel.documents.collectAsLazyPagingItems()
     val documentsSearchedPaging = viewModel.searchedDocuments.collectAsLazyPagingItems()
     val uiState by viewModel.uiState.collectAsState()
@@ -73,10 +76,14 @@ fun PhotoIDPage2(
         Log.d(TAG, "HomePage: Navigation State: $navigationState")
         when (navigationState) {
             is PhotoIDScreen2NavigationState.PhotoIDDetails -> mainRouter.navigateToPhotoIDDetailScreen(
-                navigationState.type
+                type = navigationState.type,
+                imagePath = navigationState.imagePath
             )
             is PhotoIDScreen2NavigationState.DocumentInfoScreen -> {
-                mainRouter.navigateToDocumentInfoScreen(navigationState.documentId)
+                mainRouter.navigateToDocumentInfoScreen(
+                    navigationState.documentId,
+                    navigationState.imagePath
+                )
             }
 
             is PhotoIDScreen2NavigationState.SelectPhotoScreen -> {
@@ -116,6 +123,12 @@ fun PhotoIDPage2(
         onSeeAllClick = viewModel::onSeeAllClicked,
         onBackClick = { mainRouter.goBack() },
     )
+
+    BackHandler {
+        viewModel.resetAllData()
+        Toast.makeText(context, "Clear cache and go back from PhotoID: ${uiState.imagePath}", Toast.LENGTH_SHORT).show()
+        mainRouter.goBack()
+    }
 }
 
 @Composable

@@ -86,6 +86,10 @@ class EditImageScreenViewModel @Inject constructor(
 
     val documentId: Int = editImageScreenBundle.documentId
     var imageUrl: String? = editImageScreenBundle.imageUrl
+    val documentName: String = editImageScreenBundle.documentName
+    val documentSize: String = editImageScreenBundle.documentSize
+    val documentUnit: String = editImageScreenBundle.documentUnit
+    val documentPixels: String = editImageScreenBundle.documentPixels
     val selectedColor: String? = editImageScreenBundle.selectedColor
     val sourceScreen: String = editImageScreenBundle.sourceScreen
     val editPosition: Int = editImageScreenBundle.editPosition
@@ -144,6 +148,92 @@ class EditImageScreenViewModel @Inject constructor(
     }
 
     private fun onInitialState() = launch {
+
+        // custom size
+        if (sourceScreen == "ImageProcessingScreen" && documentId == 0) {
+            _shouldRemoveBackground.value = false
+            loadState(isLoading = false)
+            val parsedColor = parseColorFromString(selectedColor) ?: Color.Unspecified
+            mParsedColor = parsedColor
+            when (parsedColor) {
+                Color.Transparent -> {
+                    selectColor(parsedColor, ColorFactory.ColorType.TRANSPARENT)
+                    Logger.i("EditImageScreenViewModel", "Parsed color is Transparent")
+                }
+
+                Color.Unspecified -> {
+                    selectColor(parsedColor, ColorFactory.ColorType.TRANSPARENT)
+                    Logger.i("EditImageScreenViewModel", "Parsed color is Unspecified")
+                }
+
+                Color.White -> {
+                    selectColor(parsedColor, ColorFactory.ColorType.WHITE)
+                    Logger.i("EditImageScreenViewModel", "Parsed color is White")
+                }
+
+                Color.Green -> {
+                    selectColor(parsedColor, ColorFactory.ColorType.GREEN)
+                    Logger.i("EditImageScreenViewModel", "Parsed color is Green")
+                }
+
+                Color.Blue -> {
+                    selectColor(parsedColor, ColorFactory.ColorType.BLUE)
+                    Logger.i("EditImageScreenViewModel", "Parsed color is Blue")
+                }
+
+                Color.Red -> {
+                    selectColor(parsedColor, ColorFactory.ColorType.RED)
+                    Logger.i("EditImageScreenViewModel", "Parsed color is Red")
+                }
+
+                else -> {
+                    selectColor(parsedColor, ColorFactory.ColorType.CUSTOM)
+                    Logger.i("EditImageScreenViewModel", "Parsed custom color: $parsedColor")
+                }
+            }
+            _uiState.value = EditImageScreenUiState(
+                showLoading = false,
+                documentName = documentName,
+                documentSize = documentSize,
+                documentUnit = documentUnit,
+                documentPixels = documentPixels,
+                documentResolution = selectedDpi,
+                documentImage = "",
+                documentType = "custom",
+                documentCompleted = "",
+                selectedColor = parsedColor,
+                imageUrl = imageUrl,
+                editPosition = editPosition
+            )
+
+            val size = getDocumentWidthAndHeight(documentSize)
+            _uiState.value = _uiState.value.copy(ratio = size.width / size.height)
+
+
+            if (imageUrl.isNullOrEmpty()) {
+                Logger.e("EditImageScreenViewModel", "No image path provided")
+                _error.value = "No image was selected"
+                return@launch
+            }
+
+            try {
+
+                val width = size.width ?: 0f
+                val height = size.height ?: 0f
+                val unit = documentUnit.ifEmpty { "mm" }
+
+                Logger.i(
+                    "EditImageScreenViewModel",
+                    "Starting crop with size: $size width=$width, height=$height, unit=$unit"
+                )
+
+            } catch (e: Exception) {
+                Logger.e("EditImageScreenViewModel", "Error processing image: ${e.message}", e)
+                _error.value = "Failed to process the selected image: ${e.message}"
+            }
+
+            return@launch
+        }
 
         if (sourceScreen == "HomeScreen") {
             _shouldRemoveBackground.value = true

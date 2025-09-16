@@ -65,6 +65,7 @@ import com.ots.aipassportphotomaker.presentation.ui.bottom_nav.NavigationBarShar
 import com.ots.aipassportphotomaker.presentation.ui.components.ChooseOrPickImage
 import com.ots.aipassportphotomaker.presentation.ui.components.LoaderFullScreen
 import com.ots.aipassportphotomaker.presentation.ui.components.createImageUri
+import com.ots.aipassportphotomaker.presentation.ui.createid.PhotoIDScreen2ViewModel
 import com.ots.aipassportphotomaker.presentation.ui.main.MainRouter
 import com.ots.aipassportphotomaker.presentation.ui.theme.colors
 import com.ots.aipassportphotomaker.presentation.ui.theme.custom300
@@ -88,12 +89,24 @@ fun HomePage(
 
     var itemClicked: String by remember { mutableStateOf("") }
 
+    val photoIDViewModel: PhotoIDScreen2ViewModel = hiltViewModel()
+
     viewModel.navigationState.collectAsEffect { navigationState ->
         Logger.d(TAG, "HomePage: Navigation State: $navigationState")
         when (navigationState) {
             is HomeScreenNavigationState.PhotoID -> {
-                navigationState
-                mainRouter.navigateToPhotoIDScreen2()
+                photoIDViewModel.resetAllData()
+                uiState.imagePath?.let {
+                    Logger.d(TAG, "HomePage: Navigating to PhotoID with image path: $it")
+                    if (it.isNotEmpty()) {
+                        mainRouter.navigateToPhotoIDScreen2(uiState.imagePath)
+                    } else {
+                        mainRouter.navigateToPhotoIDScreen2("") // Navigate with empty path
+                    }
+                } ?: run {
+                    Logger.d(TAG, "HomePage: imagePath is null, navigating without it")
+                    mainRouter.navigateToPhotoIDScreen2("") // Navigate with empty path
+                }
             }
 
             is HomeScreenNavigationState.CutOutScreen -> mainRouter.navigateFromHomeToCutOutScreen(
@@ -111,12 +124,20 @@ fun HomePage(
             )
 
             is HomeScreenNavigationState.PhotoIDDetails -> mainRouter.navigateToPhotoIDDetailScreen(
-                navigationState.type
+                navigationState.type, ""
             )
 // To be implemented later for custom size
-            /*is HomeScreenNavigationState.DocumentInfoScreen -> mainRouter.navigateFromCustomHomeToDocumentInfoScreen(
-                navigationState.customData
-            )*/
+            is HomeScreenNavigationState.DocumentInfoScreen -> mainRouter.navigateFromHomeToDocumentInfoScreen(
+                documentId = 0,
+                documentName = navigationState.documentName!!,
+                documentSize = navigationState.documentSize!!,
+                documentUnit = navigationState.documentUnit!!,
+                documentPixels = navigationState.documentPixels!!,
+                documentResolution = navigationState.documentResolution!!,
+                documentImage = navigationState.documentImage,
+                documentType = navigationState.documentType!!,
+                documentCompleted = navigationState.documentCompleted
+            )
         }
     }
     val galleryLauncher = rememberLauncherForActivityResult(
@@ -149,6 +170,9 @@ fun HomePage(
         uiState = uiState,
         lazyGridState = lazyGridState,
         onItemClick = { name ->
+
+            viewModel.updateImagePath("")
+
             when (name) {
                 "PhotoID" -> {
                     viewModel.onItemClick(name)
@@ -176,8 +200,23 @@ fun HomePage(
                 }
             }
         },
-        onGalleryClick = {
-            showAssetPicker.value = true
+        onGalleryClick = { path ->
+            Logger.d("HomeScreen", "Gallery image path: $path")
+            viewModel.updateImagePath(path)
+            uiScope.launch {
+                delay(500L)
+            }
+            viewModel.onGalleryClick(path)
+//            showAssetPicker.value = true
+        },
+        onCameraImage = { path ->
+            Logger.d("HomeScreen", "Camera image path: $path")
+            viewModel.updateImagePath(path)
+            uiScope.launch {
+                delay(500L)
+            }
+            viewModel.onCameraImage(path)
+
         },
         onCustomSizeClick = { customData ->
             viewModel.onCustomSizeClick(customData)
@@ -238,6 +277,9 @@ private fun HomeScreen(
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
+        uri?.let {
+            onGalleryClick(it.toString())
+        }
 
         Logger.d("HomeScreen", "Gallery image selected: $uri")
 
@@ -584,12 +626,17 @@ private fun HomeScreen(
                                     documentName = "Custom Document",
                                     documentSize = "$width x $height",
                                     documentUnit = selectedUnit,
-                                    documentPixels = "${width}x${height}",
+                                    documentPixels = "${width}x${height} px",
                                     documentResolution = "300",
                                     documentImage = null,
                                     documentType = "custom",
                                     documentCompleted = null
                                 )
+
+                                scope.launch {
+                                    customBottomSheetState.hide()
+                                }
+                                showCustomBottomSheet = false
 
                                 onCustomSizeClick(customData)
                             },

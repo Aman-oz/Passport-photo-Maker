@@ -36,6 +36,10 @@ class EditImageScreenBundle @Inject constructor(
 ) {
     val documentId: Int = savedStateHandle.toRoute<Page.EditImageScreen>().documentId
     val imageUrl: String? = savedStateHandle.toRoute<Page.EditImageScreen>().imageUrl
+    val documentName: String = savedStateHandle.toRoute<Page.EditImageScreen>().documentName
+    val documentSize: String = savedStateHandle.toRoute<Page.EditImageScreen>().documentSize
+    val documentUnit: String = savedStateHandle.toRoute<Page.EditImageScreen>().documentUnit
+    val documentPixels: String = savedStateHandle.toRoute<Page.EditImageScreen>().documentPixels
     val selectedColor: String? = savedStateHandle.toRoute<Page.EditImageScreen>().selectedBackgroundColor
     val sourceScreen: String = savedStateHandle.toRoute<Page.EditImageScreen>().sourceScreen
     val editPosition: Int = savedStateHandle.toRoute<Page.EditImageScreen>().editPosition

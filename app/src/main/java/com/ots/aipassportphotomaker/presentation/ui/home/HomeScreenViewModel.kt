@@ -46,7 +46,6 @@ class HomeScreenViewModel  @Inject constructor(
     fun updateImagePath(imagePath: String) {
 
         _uiState.value = _uiState.value.copy(imagePath = imagePath)
-//        _uiState.update { it.copy(imagePath = imagePath) }
     }
 
     private fun loadData() {
@@ -109,7 +108,32 @@ class HomeScreenViewModel  @Inject constructor(
     }
 
     fun onCustomSizeClick(customData: CustomDocumentData) {
-//        _navigationState.tryEmit(HomeScreenNavigationState.DocumentInfoScreen(customData))
+        _navigationState.tryEmit(HomeScreenNavigationState.DocumentInfoScreen(
+            documentId = 0,
+            documentName = customData.documentName,
+            documentSize = customData.documentSize,
+            documentUnit = customData.documentUnit,
+            documentPixels = customData.documentPixels,
+            documentResolution = customData.documentResolution,
+            documentImage = customData.documentImage,
+            documentType = customData.documentType,
+            documentCompleted = customData.documentCompleted
+
+        ))
+    }
+
+    fun onGalleryClick(path: String) {
+        _navigationState.tryEmit(HomeScreenNavigationState.PhotoID(
+            item = "PhotoID",
+            imagePath = path
+        ))
+    }
+
+    fun onCameraImage(path: String) {
+        _navigationState.tryEmit(HomeScreenNavigationState.PhotoID(
+            item = "PhotoID",
+            imagePath = path
+        ))
     }
 
     private fun observeNetworkStatus() {

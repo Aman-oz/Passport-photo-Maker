@@ -72,6 +72,10 @@ fun ImageProcessingPage(
             is ImageProcessingScreenNavigationState.EditImageScreen -> mainRouter.navigateToEditImageScreen(
                 documentId = navigationState.documentId,
                 imageUrl = uiState.finalImageUrl,
+                documentName = navigationState.documentName,
+                documentSize = navigationState.documentSize,
+                documentUnit = navigationState.documentUnit,
+                documentPixels = navigationState.documentPixels,
                 selectedBackgroundColor = uiState.selectedColor,
                 editPosition = 0,
                 selectedDpi = viewModel.selectedDpi,

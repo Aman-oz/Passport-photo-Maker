@@ -14,7 +14,10 @@ data class HomeScreenUiState(
 )
 
 sealed class HomeScreenNavigationState {
-    data class PhotoID(val item: String) : HomeScreenNavigationState()
+    data class PhotoID(
+        val item: String,
+        val imagePath: String? = null,
+    ) : HomeScreenNavigationState()
 
     data class CutOutScreen(
         val imagePath: String? = null,
@@ -31,6 +34,17 @@ sealed class HomeScreenNavigationState {
 
 
     data class PhotoIDDetails(val type: String) : HomeScreenNavigationState()
-// Todo: implement when needed
-//    data class DocumentInfoScreen(val customData: CustomDocumentData) : HomeScreenNavigationState()
+
+    data class DocumentInfoScreen(
+        val documentId: Int,
+        val documentName: String? = null,
+        val documentSize: String? = null,
+        val documentUnit: String? = null,
+        val documentPixels: String? = null,
+        val documentResolution: String? = null,
+        val documentImage: String? = null,
+        val documentType: String? = null,
+        val documentCompleted: String? = null,
+
+    ) : HomeScreenNavigationState()
 }

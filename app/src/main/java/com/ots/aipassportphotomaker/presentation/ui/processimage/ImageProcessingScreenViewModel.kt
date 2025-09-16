@@ -83,6 +83,10 @@ class ImageProcessingScreenViewModel @Inject constructor(
     val documentId: Int = imageProcessingBundle.documentId
     val imagePath: String? = imageProcessingBundle.imagePath
     val filePath: String? = imageProcessingBundle.filePath
+    val documentName: String? = imageProcessingBundle.documentName
+    val documentSize: String? = imageProcessingBundle.documentSize
+    val documentUnit: String? = imageProcessingBundle.documentUnit
+    val documentPixels: String? = imageProcessingBundle.documentPixels
     val selectedDpi: String = imageProcessingBundle.selectedDpi
     val selectedColor: String? = imageProcessingBundle.selectedColor
     val sourceScreen: String = imageProcessingBundle.sourceScreen
@@ -112,15 +116,66 @@ class ImageProcessingScreenViewModel @Inject constructor(
 
     private fun onInitialState() = launch {
         //will do if needed
-        if (sourceScreen == "HomeScreen") {
+        if (documentId == 0) {
             if (imagePath.isNullOrEmpty()) {
                 Logger.e("ImageProcessingScreenViewModel", "No image path provided from HomeScreen")
                 _error.value = "No image was selected"
                 loadState(isLoading = false)
                 return@launch
             }
+            val parsedColor = parseColorFromString(selectedColor) ?: Color.Unspecified
 
-            _uiState.value = _uiState.value.copy(currentImagePath = imagePath)
+            _uiState.value = ImageProcessingScreenUiState(
+                showLoading = false,
+                documentName = documentName!!,
+                documentSize = documentSize!!,
+                documentUnit = documentUnit!!,
+                documentPixels = documentPixels!!,
+                documentResolution = selectedDpi,
+                documentImage = "",
+                documentType = "custom",
+                documentCompleted = "",
+                selectedColor = parsedColor
+            )
+
+            val size = getDocumentWidthAndHeight(documentSize)
+            isPortrait = size.height >= size.width
+
+            if (imagePath.isNullOrEmpty()) {
+                Logger.e("ImageProcessingScreenViewModel", "No image path provided")
+                _error.value = "No image was selected"
+                return@launch
+            }
+
+            try {
+                val uri = Uri.parse(imagePath)
+                Logger.d("ImageProcessingScreenViewModel", "Processing URI: $uri")
+
+                val imageFile = FileUtils.uriToFile(context, uri)
+
+                if (!imageFile.exists() || imageFile.length() == 0L) {
+                    Logger.e("ImageProcessingScreenViewModel", "Image file is empty or does not exist")
+                    _error.value = "The selected image could not be processed"
+                    return@launch
+                }
+
+                Logger.i("ImageProcessingScreenViewModel", "Image file prepared: ${imageFile.absolutePath}, size: ${imageFile.length()} bytes")
+
+                val width = size.width ?: 0f
+                val height = size.height ?: 0f
+                val unit = documentUnit.ifEmpty { "mm" }
+                val dpi = selectedDpi.toIntOrNull() ?: 300
+
+                Logger.i("ImageProcessingScreenViewModel", "Starting crop with size: $size width=$width, height=$height, unit=$unit, dpi=$dpi")
+
+//                uploadFile(imageFile)
+                cropImage(imageFile, width, height, unit, dpi)
+            } catch (e: Exception) {
+                Logger.e("ImageProcessingScreenViewModel", "Error processing image: ${e.message}", e)
+                _error.value = "Failed to process the selected image: ${e.message}"
+            }
+
+
             return@launch
         }
 
@@ -426,6 +481,10 @@ class ImageProcessingScreenViewModel @Inject constructor(
                             ImageProcessingScreenNavigationState.EditImageScreen(
                                 documentId = documentId,
                                 imageUrl = localImagePath.toString(),
+                                documentName = documentName ?: "",
+                                documentSize = documentSize ?: "",
+                                documentUnit = documentUnit ?: "",
+                                documentPixels = documentPixels ?: "",
                                 selectedBackgroundColor = uiState.value.selectedColor,
                                 selectedDpi = selectedDpi,
                                 sourceScreen = "ImageProcessingScreen"
@@ -458,7 +517,7 @@ class ImageProcessingScreenViewModel @Inject constructor(
 
         try {
             // Generate a unique filename
-            val fileName = "cropped_${System.currentTimeMillis()}.jpg"
+            val fileName = FileUtils.TEMP_FILE_NAME
 
             // Create directory if it doesn't exist
             val cacheDir = File(context.filesDir, "images")

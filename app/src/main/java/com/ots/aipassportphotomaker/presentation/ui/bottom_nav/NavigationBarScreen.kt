@@ -36,6 +36,7 @@ fun NavigationBarScreen(
     sharedViewModel: NavigationBarSharedViewModel,
     mainRouter: MainRouter,
     darkMode: Boolean,
+    onSettingClick: () -> Unit,
     onThemeUpdated: () -> Unit,
     nestedNavController: NavHostController,
     content: @Composable () -> Unit
@@ -48,6 +49,9 @@ fun NavigationBarScreen(
                 darkMode,
                 fontFamily = funnelFamily,
                 onThemeUpdated = onThemeUpdated,
+                onSettingsClick = {
+                    onSettingClick()
+                },
                 onGetProClick = {
                     mainRouter.navigateToPremiumScreen()
                 }
@@ -96,6 +100,7 @@ private fun NavigationBarScreenPreview() = PreviewContainer {
         sharedViewModel = hiltViewModel<NavigationBarSharedViewModel>(),
         mainRouter = mainRouter,
         darkMode = darkTheme,
+        onSettingClick = {},
         onThemeUpdated = { },
         nestedNavController = navController,
         content = {

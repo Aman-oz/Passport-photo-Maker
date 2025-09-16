@@ -34,6 +34,10 @@ class ImageProcessingBundle @Inject constructor(
     val documentId: Int = savedStateHandle.toRoute<Page.ImageProcessingScreen>().documentId
     val imagePath: String? = savedStateHandle.toRoute<Page.ImageProcessingScreen>().imagePath
     val filePath: String? = savedStateHandle.toRoute<Page.ImageProcessingScreen>().filePath
+    val documentName: String = savedStateHandle.toRoute<Page.ImageProcessingScreen>().documentName
+    val documentSize: String = savedStateHandle.toRoute<Page.ImageProcessingScreen>().documentSize
+    val documentUnit: String = savedStateHandle.toRoute<Page.ImageProcessingScreen>().documentUnit
+    val documentPixels: String = savedStateHandle.toRoute<Page.ImageProcessingScreen>().documentPixels
     val selectedDpi: String = savedStateHandle.toRoute<Page.ImageProcessingScreen>().selectedDpi
     val selectedColor: String? = savedStateHandle.toRoute<Page.ImageProcessingScreen>().selectedBackgroundColor
     val sourceScreen: String = savedStateHandle.toRoute<Page.ImageProcessingScreen>().sourceScreen
@@ -43,6 +47,10 @@ sealed class ImageProcessingScreenNavigationState {
     data class EditImageScreen(
         val documentId: Int,
         val imageUrl: String? = null,
+        val documentName: String,
+        val documentSize: String,
+        val documentUnit: String,
+        val documentPixels: String,
         val selectedBackgroundColor: Color? = null,
         val selectedDpi: String,
         val sourceScreen: String

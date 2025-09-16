@@ -16,7 +16,7 @@ sealed class Page {
     data object PhotoID : Page()
 
     @Serializable
-    data object PhotoID2 : Page()
+    data class PhotoID2(val imagePath: String? = null) : Page()
 
     @Serializable
     data object History : Page()
@@ -28,19 +28,34 @@ sealed class Page {
     data class ItemDetailScreen(val name: String) : Page()
 
     @Serializable
-    data class PhotoIDDetailScreen(val type: String) : Page()
+    data class PhotoIDDetailScreen(
+        val type: String,
+        val imagePath: String? = null
+    ) : Page()
 
     @Serializable
-    data class DocumentInfoScreen(val documentId: Int) : Page()
-
-    @Serializable
-    data class DocumentInfoScreenFromCustom(@Serializable val customData: CustomDocumentData) : Page()
+    data class DocumentInfoScreen(
+        val documentId: Int,
+        val imagePath: String? = null,
+        val documentName: String? = null,
+        val documentSize: String? = null,
+        val documentUnit: String? = null,
+        val documentPixels: String? = null,
+        val documentResolution: String? = null,
+        val documentImage: String? = null,
+        val documentType: String? = null,
+        val documentCompleted: String? = null,
+    ) : Page()
 
     @Serializable
     data class ImageProcessingScreen(
         val documentId: Int,
         val imagePath: String?,
         val filePath: String?,
+        val documentName: String,
+        val documentSize: String,
+        val documentUnit: String,
+        val documentPixels: String,
         val selectedDpi: String,
         val selectedBackgroundColor: String?,
         val sourceScreen: String
@@ -50,6 +65,10 @@ sealed class Page {
     data class EditImageScreen(
         val documentId: Int,
         val imageUrl: String?,
+        val documentName: String,
+        val documentSize: String,
+        val documentUnit: String,
+        val documentPixels: String,
         val selectedBackgroundColor: String?,
         val editPosition: Int = 0,
         val selectedDpi: String,

@@ -70,9 +70,9 @@ fun PhotoIDPage(
 
         Log.d(TAG, "PhotoIDPage: Navigation State: $navigationState")
         when (navigationState) {
-            is PhotoIDDetails -> mainRouter.navigateToPhotoIDDetailScreen(navigationState.type)
+            is PhotoIDDetails -> mainRouter.navigateToPhotoIDDetailScreen(navigationState.type, "")
             is PhotoIDScreenNavigationState.DocumentInfoScreen -> {
-                mainRouter.navigateToDocumentInfoScreen(navigationState.documentId)
+                mainRouter.navigateToDocumentInfoScreen(navigationState.documentId, "")
             }
             is PhotoIDScreenNavigationState.SelectPhotoScreen -> {
                 Log.d(TAG, "PhotoIDPage: Navigate to Select Photo Screen")

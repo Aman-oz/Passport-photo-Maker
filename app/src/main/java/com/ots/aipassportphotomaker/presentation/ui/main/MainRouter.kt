@@ -19,28 +19,63 @@ class MainRouter(
         mainNavController.navigate(Page.ItemDetailScreen(name))
     }
 
-    fun navigateToPhotoIDScreen2() {
-        mainNavController.navigate(Page.PhotoID2)
+    fun navigateToPhotoIDScreen2(imagePath: String?) {
+        mainNavController.navigate(Page.PhotoID2(imagePath = imagePath))
     }
 
-    fun navigateToDocumentInfoScreen(documentId: Int) {
-        mainNavController.navigate(Page.DocumentInfoScreen(documentId = documentId))
+    fun navigateToDocumentInfoScreen(
+        documentId: Int,
+        imagePath: String?
+    ) {
+        mainNavController.navigate(Page.DocumentInfoScreen(
+            documentId = documentId,
+            imagePath = imagePath
+        ))
     }
 
+    fun navigateFromHomeToDocumentInfoScreen(
+        documentId: Int,
+        documentName: String,
+        documentSize: String,
+        documentUnit: String,
+        documentPixels: String,
+        documentResolution: String,
+        documentImage: String?,
+        documentType: String,
+        documentCompleted: String?
+        ) {
+        mainNavController.navigate(Page.DocumentInfoScreen(
+            documentId = documentId,
+            documentName = documentName,
+            documentSize = documentSize,
+            documentUnit = documentUnit,
+            documentPixels = documentPixels,
+            documentResolution = documentResolution,
+            documentImage = documentImage,
+            documentType = documentType,
+            documentCompleted = documentCompleted
 
-    //To be implemented later for custom size
-    /*fun navigateFromCustomHomeToDocumentInfoScreen(customData: CustomDocumentData) {
-        mainNavController.navigate(Page.DocumentInfoScreenFromCustom(customData = customData))
-    }*/
+        ))
+    }
 
-    fun navigateToPhotoIDDetailScreen(type: String) {
-        mainNavController.navigate(Page.PhotoIDDetailScreen(type = type))
+    fun navigateToPhotoIDDetailScreen(
+        type: String,
+        imagePath: String?
+    ) {
+        mainNavController.navigate(Page.PhotoIDDetailScreen(
+            type = type,
+            imagePath = imagePath
+        ))
     }
 
     fun navigateToImageProcessingScreen(
         documentId: Int,
         imagePath: String?,
         filePath: String?,
+        documentName: String,
+        documentSize: String,
+        documentUnit: String,
+        documentPixels: String,
         selectedDpi: String,
         selectedBackgroundColor: Color?,
         sourceScreen: String
@@ -50,6 +85,10 @@ class MainRouter(
                 documentId = documentId,
                 imagePath = imagePath,
                 filePath = filePath,
+                documentName = documentName,
+                documentSize = documentSize,
+                documentUnit = documentUnit,
+                documentPixels = documentPixels,
                 selectedDpi = selectedDpi,
                 selectedBackgroundColor = selectedBackgroundColor?.toString(),
                 sourceScreen = sourceScreen
@@ -60,6 +99,10 @@ class MainRouter(
     fun navigateToEditImageScreen(
         documentId: Int,
         imageUrl: String?,
+        documentName: String,
+        documentSize: String,
+        documentUnit: String,
+        documentPixels: String,
         selectedBackgroundColor: Color?,
         editPosition: Int = 0,
         selectedDpi: String,
@@ -69,6 +112,10 @@ class MainRouter(
             Page.EditImageScreen(
                 documentId = documentId,
                 imageUrl = imageUrl,
+                documentName = documentName,
+                documentSize = documentSize,
+                documentUnit = documentUnit,
+                documentPixels = documentPixels,
                 selectedBackgroundColor = selectedBackgroundColor?.toString(),
                 editPosition = editPosition,
                 selectedDpi = selectedDpi,
@@ -94,6 +141,10 @@ class MainRouter(
             Page.EditImageScreen(
                 documentId = documentId,
                 imageUrl = imageUrl,
+                documentName = "",
+                documentSize = "",
+                documentUnit = "",
+                documentPixels = "",
                 selectedBackgroundColor = selectedBackgroundColor?.toString(),
                 editPosition = editPosition,
                 selectedDpi = selectedDpi,

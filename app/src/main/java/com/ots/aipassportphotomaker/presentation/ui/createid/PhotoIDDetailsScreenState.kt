@@ -12,11 +12,16 @@ data class PhotoIDDetailScreenUiState(
     val showDefaultState: Boolean = true,
     val showNoDocumentsFound: Boolean = false,
     val type: String = "",
+    val imagePath: String? = null,
 )
 
 sealed class PhotoIDDetailScreenNavigationState {
     data class SelectPhotoScreen(val documentId: Int) : PhotoIDDetailScreenNavigationState()
-    data class DocumentInfoScreen(val documentId: Int) : PhotoIDDetailScreenNavigationState()
+
+    data class DocumentInfoScreen(
+        val documentId: Int,
+        val imagePath: String?
+    ) : PhotoIDDetailScreenNavigationState()
 }
 
 class PhotoIDDetailBundle @Inject constructor(
@@ -26,7 +31,6 @@ class PhotoIDDetailBundle @Inject constructor(
     // Extract the page object
     val route: Page.PhotoIDDetailScreen = savedStateHandle.toRoute()
 
-    // Extract the type directly from the route object
     val type: String = route.type
-//    val type: String = savedStateHandle.toRoute<Page.PhotoIDDetailScreen>().type
+    val imagePath: String? = route.imagePath
 }

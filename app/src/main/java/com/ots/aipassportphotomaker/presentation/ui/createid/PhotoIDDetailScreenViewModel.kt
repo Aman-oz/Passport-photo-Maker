@@ -8,6 +8,7 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.map
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
+import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.domain.model.DocumentEntity
 import com.ots.aipassportphotomaker.domain.model.DocumentListItem
 import com.ots.aipassportphotomaker.domain.usecase.photoid.SearchDocuments
@@ -48,10 +49,12 @@ class PhotoIDDetailScreenViewModel @Inject constructor(
 ) : BaseViewModel() {
 
     private val type = photoIDDetailBundle.type
+    private val imagePath = photoIDDetailBundle.imagePath
+    var cachedImagePath: String? = imagePath
 
     val documents: Flow<PagingData<DocumentListItem>> = getDocumentsByType.documents(
         type = type,//should get by the selected type
-        pageSize = 90
+        pageSize = 40
     ).cachedIn(viewModelScope)
 
     private val _uiState: MutableStateFlow<PhotoIDDetailScreenUiState> = MutableStateFlow(PhotoIDDetailScreenUiState())
@@ -111,6 +114,15 @@ class PhotoIDDetailScreenViewModel @Inject constructor(
     }
 
     private fun onInitialState() = launch {
+        cachedImagePath?.let {
+            Logger.i("PhotoIDDetailScreenViewModel","PhotoIDDetailScreenViewModel: Image Path: $it")
+            if (it.isNotEmpty()) {
+                _uiState.update { currentState ->
+                    currentState.copy(imagePath = it)
+
+                }
+            }
+        }
 
         _uiState.value = _uiState.value.copy(
             type = type, //should get by the selected type
@@ -122,16 +134,15 @@ class PhotoIDDetailScreenViewModel @Inject constructor(
                 currentState.copy(showLoading = false)
             }
         }
-
-        /*getDocumentsByType(type).onSuccess {
-            _uiState.value = PhotoIDDetailScreenUiState(
-                type = it.type
-            )
-        }*/
     }
 
-    fun onDocumentClicked(documentId: Int) =
-        _navigationState.tryEmit(PhotoIDDetailScreenNavigationState.DocumentInfoScreen(documentId))
+    fun onDocumentClicked(documentId: Int) {
+
+        _navigationState.tryEmit(PhotoIDDetailScreenNavigationState.DocumentInfoScreen(
+            documentId = documentId,
+            imagePath = cachedImagePath,
+        ))
+    }
 
     fun onBackClicked() {
         //_navigationState.tryEmit(PhotoIDDetailScreenNavigationState.NavigateBack)

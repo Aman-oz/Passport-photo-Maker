@@ -46,6 +46,16 @@ class DocumentInfoScreenViewModel @Inject constructor(
     var selectedDpi: String = "300"
 
     private val documentId: Int = documentDetailsBundle.documentId
+    private val imagePath: String? = documentDetailsBundle.imagePath
+
+    private val documentName: String? = documentDetailsBundle.documentName
+    private val documentSize: String? = documentDetailsBundle.documentSize
+    private val documentUnit: String? = documentDetailsBundle.documentUnit
+    private val documentPixels: String? = documentDetailsBundle.documentPixels
+    private val documentResolution: String? = documentDetailsBundle.documentResolution
+    private val documentImage: String? = documentDetailsBundle.documentImage
+    private val documentType: String? = documentDetailsBundle.documentType
+    private val documentCompleted: String? = documentDetailsBundle.documentCompleted
 
 
     //*********************Permission***************//
@@ -69,17 +79,27 @@ class DocumentInfoScreenViewModel @Inject constructor(
 
 
     init {
-        if (documentDetailsBundle.customDocumentData != null) {
-            handleCustomDocumentData(documentDetailsBundle.customDocumentData)
+
+        Logger.i("DocumentInfoScreenViewModel", "init: documentId=$documentId, imagePath=$imagePath")
+        imagePath?.let {
+            Logger.i("DocumentInfoScreenViewModel", "onInitialState: imagePath=$it")
+            if (it.isNotEmpty()) {
+                selectedImagesList.add(AssetInfo(id = 0,uriString = it, filepath = it, filename = "", directory = "", size = 0L, mediaType = 0, mimeType = "", duration = 0L, date = 0L))
+            }
+        }
+
+        if (documentDetailsBundle.documentId == 0 && documentDetailsBundle.documentName != null) {
+            handleCustomDocumentData(documentDetailsBundle)
         } else if (documentDetailsBundle.documentId > 0) {
             onInitialState()
         }
-        onInitialState()
+//        onInitialState()
         loadState(false)
         colorFactory.resetToDefault()
     }
 
     private fun onInitialState() = launch {
+
         getDocumentById(documentId).onSuccess {
             loadState(isLoading = false)
             _uiState.value = DocumentInfoScreenUiState(
@@ -96,17 +116,17 @@ class DocumentInfoScreenViewModel @Inject constructor(
         }
     }
 
-    private fun handleCustomDocumentData(customData: CustomDocumentData) {
+    private fun handleCustomDocumentData(customData: DocumentDetailsBundle) {
         _uiState.update { currentState ->
             currentState.copy(
                 showLoading = false,
-                documentName = customData.documentName,
-                documentSize = customData.documentSize,
-                documentUnit = customData.documentUnit,
-                documentPixels = customData.documentPixels,
-                documentResolution = customData.documentResolution,
+                documentName = customData.documentName!!,
+                documentSize = customData.documentSize!!,
+                documentUnit = customData.documentUnit!!,
+                documentPixels = customData.documentPixels!!,
+                documentResolution = customData.documentResolution!!,
                 documentImage = customData.documentImage,
-                documentType = customData.documentType,
+                documentType = customData.documentType!!,
                 documentCompleted = customData.documentCompleted
             )
         }
@@ -135,6 +155,10 @@ class DocumentInfoScreenViewModel @Inject constructor(
                 documentId = documentId,
                 imagePath = selectedImagesList.firstOrNull()?.uriString?.toString(),
                 filePath = selectedImagesList.firstOrNull()?.filepath?.toString(),
+                documentName = _uiState.value.documentName,
+                documentSize = _uiState.value.documentSize,
+                documentUnit = _uiState.value.documentUnit,
+                documentPixels = _uiState.value.documentPixels,
                 selectedDpi = selectedDpi,
                 selectedBackgroundColor = selectedColor.replayCache.firstOrNull(),
                 sourceScreen = "DocumentInfoScreen"
