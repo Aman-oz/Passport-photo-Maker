@@ -88,6 +88,8 @@ dependencies {
     implementation(libs.media.downloader)
     implementation(libs.accompanist.permission)
     implementation(libs.compose.capturable)
+    implementation(libs.accompanist.pager)
+    implementation(libs.accompanist.pager.indicator)
 
     implementation(libs.androidx.constraintlayout.compose)
 //    implementation(libs.compose.colorpicker)

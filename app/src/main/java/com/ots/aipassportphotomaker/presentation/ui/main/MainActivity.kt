@@ -14,56 +14,26 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
-import com.farimarwat.permissionmate.PMate
-import com.farimarwat.permissionmate.rememberPermissionMateState
-import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.common.utils.SharedPrefUtils
 import com.ots.aipassportphotomaker.di.AppSettingsSharedPreference
-import com.ots.aipassportphotomaker.domain.model.CustomDocumentData
+import com.ots.aipassportphotomaker.domain.bottom_nav.Page
 import com.ots.aipassportphotomaker.domain.permission.PermissionsHelper
 import com.ots.aipassportphotomaker.domain.util.NetworkMonitor
 import com.ots.aipassportphotomaker.presentation.ui.components.CameraPermissionTextProvider
@@ -72,13 +42,8 @@ import com.ots.aipassportphotomaker.presentation.ui.components.NoInternetConnect
 import com.ots.aipassportphotomaker.presentation.ui.components.PermissionDialog
 import com.ots.aipassportphotomaker.presentation.ui.components.SettingsScreen
 import com.ots.aipassportphotomaker.presentation.ui.components.StoragePermissionTextProvider
-import com.ots.aipassportphotomaker.presentation.ui.theme.AIPassportPhotoMakerTheme
 import com.ots.aipassportphotomaker.presentation.ui.theme.AppTheme
 import com.ots.aipassportphotomaker.presentation.ui.theme.colors
-import com.ots.aipassportphotomaker.presentation.ui.theme.custom300
-import com.ots.aipassportphotomaker.presentation.ui.theme.customError
-import com.ots.aipassportphotomaker.presentation.ui.theme.onCustom300
-import com.ots.aipassportphotomaker.presentation.ui.theme.onCustom400
 import com.ots.aipassportphotomaker.presentation.viewmodel.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
@@ -94,6 +59,7 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var networkMonitor: NetworkMonitor
+
     @Inject
     lateinit var permissionsHelper: PermissionsHelper
 
@@ -103,6 +69,7 @@ class MainActivity : ComponentActivity() {
         Manifest.permission.READ_EXTERNAL_STORAGE,
         Manifest.permission.WRITE_EXTERNAL_STORAGE
     )
+
     //Camera and Read Media Images for android 14 and above
     private val permissionsForAndroid14AndAbove = listOf(
         Manifest.permission.CAMERA,
@@ -116,25 +83,21 @@ class MainActivity : ComponentActivity() {
             permissionsForAndroid13AndBelow
         }
 
-    private fun isDarkModeEnabled() = appSettings.getBoolean(SharedPrefUtils.DARK_MODE, false)
+    private fun isDarkModeEnabled() =
+        appSettings.getBoolean(SharedPrefUtils.DARK_MODE, isSystemInDarkMode())
 
-    private fun enableDarkMode(enable: Boolean) = appSettings.edit().putBoolean(SharedPrefUtils.DARK_MODE, enable).commit()
+    private fun enableDarkMode(enable: Boolean) =
+        appSettings.edit().putBoolean(SharedPrefUtils.DARK_MODE, enable).commit()
+
+    private fun isFirstLaunch(): Boolean = appSettings.getBoolean(SharedPrefUtils.FIRST_LAUNCH, true)
+
+    private fun setFirstLaunch(launched: Boolean) = appSettings.edit().putBoolean(SharedPrefUtils.FIRST_LAUNCH, launched).commit()
 
     @OptIn(ExperimentalMaterial3Api::class)
     @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
-        /*permissionsHelper.initRegisterForRequestMultiplePermissionsInActivity(
-            this,
-            onPermissionsGranted = { permissions ->
-                Logger.i("MainActivity", "Permissions granted: $permissions")
-            },
-            onPermissionsDenied = { permissions ->
-                Logger.w("MainActivity", "Permissions denied: $permissions")
-            }
-        )*/
 
         setContent {
 
@@ -144,10 +107,13 @@ class MainActivity : ComponentActivity() {
             val scope = rememberCoroutineScope()
 
             val customBottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-            val changeThemeBottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+            val changeThemeBottomSheetState =
+                rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
             var showSettingsDialog by rememberSaveable { mutableStateOf(false) }
             var showChangeThemeDialog by rememberSaveable { mutableStateOf(false) }
+
+            var selectedTheme by rememberSaveable { mutableIntStateOf(getInitialThemeIndex()) }
 
             AppTheme(darkMode) {
 
@@ -195,6 +161,7 @@ class MainActivity : ComponentActivity() {
                     MainGraph(
                         mainNavController = navController,
                         darkMode = darkMode,
+                        isFirstLaunch = isFirstLaunch(),
                         onSettingClick = {
                             Logger.d("MainActivity", "Settings icon clicked")
                             showSettingsDialog = true
@@ -203,6 +170,20 @@ class MainActivity : ComponentActivity() {
                             val updated = !darkMode
                             enableDarkMode(updated)
                             darkMode = updated
+                            selectedTheme = if (updated) 2 else 1
+                        },
+                        onGetStartedCompleted = { destination ->
+
+                            if (isFirstLaunch()) {
+                                setFirstLaunch(false)
+                                navController.navigate(destination) {
+                                    popUpTo(Page.GetSta rtedScreen) { inclusive = true }
+                                }
+                            } else {
+                                navController.navigate(destination) {
+                                    popUpTo(Page.GetStartedScreen) { inclusive = true }
+                                }
+                            }
                         }
                     )
 
@@ -217,10 +198,12 @@ class MainActivity : ComponentActivity() {
                                 Manifest.permission.CAMERA -> {
                                     CameraPermissionTextProvider()
                                 }
+
                                 Manifest.permission.READ_MEDIA_IMAGES,
                                 Manifest.permission.READ_EXTERNAL_STORAGE -> {
                                     StoragePermissionTextProvider()
                                 }
+
                                 else -> return@forEach
                             },
                             isPermanentlyDeclined = !shouldShowRequestPermissionRationale(
@@ -251,6 +234,7 @@ class MainActivity : ComponentActivity() {
                         sheetState = customBottomSheetState
                     ) {
                         SettingsScreen(
+                            themeSelectedIndex = selectedTheme,
                             onCloseClick = {
                                 scope.launch {
                                     customBottomSheetState.hide()
@@ -329,12 +313,33 @@ class MainActivity : ComponentActivity() {
                             showChangeThemeDialog = false
                         },
                         containerColor = colors.background,
-                        sheetState = customBottomSheetState
+                        sheetState = changeThemeBottomSheetState
                     ) {
-                        ChangeThemDialog {
-                            val updated = !darkMode
-                            enableDarkMode(updated)
-                            darkMode = updated
+                        ChangeThemDialog(
+                            selectedOption = selectedTheme
+                        ) { themeIndex ->
+
+                            when (themeIndex) {
+                                0 -> {
+                                    val systemDarkMode = isSystemInDarkMode()
+                                    enableDarkMode(systemDarkMode)
+                                    darkMode = systemDarkMode
+                                    selectedTheme = 0
+
+                                }
+
+                                1 -> {
+                                    enableDarkMode(false)
+                                    darkMode = false
+                                    selectedTheme = 1
+                                }
+
+                                2 -> {
+                                    enableDarkMode(true)
+                                    darkMode = true
+                                    selectedTheme = 2
+                                }
+                            }
 
                             scope.launch {
                                 changeThemeBottomSheetState.hide()
@@ -348,6 +353,20 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    private fun isSystemInDarkMode(): Boolean {
+        val currentNightMode =
+            resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK
+        return currentNightMode == android.content.res.Configuration.UI_MODE_NIGHT_YES
+    }
+
+    private fun getInitialThemeIndex(): Int {
+        return if (appSettings.contains(SharedPrefUtils.DARK_MODE)) {
+            if (isDarkModeEnabled()) 2 else 1
+        } else {
+            0 // Default to system theme if no preference set
+        }
+    }
 }
 
 fun Activity.openAppSettings() {
@@ -356,3 +375,4 @@ fun Activity.openAppSettings() {
         Uri.fromParts("package", packageName, null)
     ).also(::startActivity)
 }
+

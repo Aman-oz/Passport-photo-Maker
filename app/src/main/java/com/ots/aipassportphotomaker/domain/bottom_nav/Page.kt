@@ -13,6 +13,12 @@ sealed class Page {
     data object Home : Page()
 
     @Serializable
+    data object GetStartedScreen : Page()
+
+    @Serializable
+    data object OnboardingScreen : Page()
+
+    @Serializable
     data object PhotoID : Page()
 
     @Serializable

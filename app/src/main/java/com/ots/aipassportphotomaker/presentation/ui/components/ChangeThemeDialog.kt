@@ -65,7 +65,7 @@ fun ChangeThemDialog(
 
         RadioButtonSingleSelection(
             radioButtonList = listOf("System default", "Light Mode", "Dark Mode"),
-            selectedIndex =  0
+            selectedIndex =  selectedOption
         ) { selectedIndex ->
             selectedOption = selectedIndex
         }

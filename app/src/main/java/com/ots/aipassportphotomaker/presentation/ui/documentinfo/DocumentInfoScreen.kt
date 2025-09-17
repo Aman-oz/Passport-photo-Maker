@@ -66,6 +66,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
@@ -517,10 +519,14 @@ private fun DocumentInfoScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Image(
-                                    painter = painterResource(id = R.drawable.passport_united_state), // Replace with passport icon
+                                AsyncImage(
+                                    model = ImageRequest.Builder(context)
+                                        .data(uiState.documentImage)
+                                        .crossfade(true)
+                                        .build(),
                                     contentDescription = "Passport Icon",
-                                    modifier = Modifier.size(40.dp)
+                                    modifier = Modifier.size(40.dp),
+                                    placeholder = painterResource(id = R.drawable.passport_united_state)
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Column(

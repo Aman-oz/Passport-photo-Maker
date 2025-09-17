@@ -11,6 +11,7 @@ import com.ots.aipassportphotomaker.common.ext.composableHorizontalSlide
 import com.ots.aipassportphotomaker.common.ext.sharedViewModel
 import com.ots.aipassportphotomaker.domain.bottom_nav.Graph
 import com.ots.aipassportphotomaker.domain.bottom_nav.Page
+import com.ots.aipassportphotomaker.domain.bottom_nav.route
 import com.ots.aipassportphotomaker.presentation.ui.editimage.EditImagePage
 import com.ots.aipassportphotomaker.presentation.ui.editimage.EditImageScreenViewModel
 import com.ots.aipassportphotomaker.presentation.ui.bottom_nav.NavigationBarScreen
@@ -27,10 +28,14 @@ import com.ots.aipassportphotomaker.presentation.ui.documentinfo.DocumentInfoPag
 import com.ots.aipassportphotomaker.presentation.ui.documentinfo.DocumentInfoScreenViewModel
 import com.ots.aipassportphotomaker.presentation.ui.home.HomePage
 import com.ots.aipassportphotomaker.presentation.ui.home.HomeScreenViewModel
+import com.ots.aipassportphotomaker.presentation.ui.onboarding.OnboardingPage
+import com.ots.aipassportphotomaker.presentation.ui.onboarding.OnboardingScreenViewModel
 import com.ots.aipassportphotomaker.presentation.ui.processimage.ImageProcessingPage
 import com.ots.aipassportphotomaker.presentation.ui.processimage.ImageProcessingScreenViewModel
 import com.ots.aipassportphotomaker.presentation.ui.savedimage.SavedImagePage
 import com.ots.aipassportphotomaker.presentation.ui.savedimage.SavedImageScreenViewModel
+import com.ots.aipassportphotomaker.presentation.ui.splash.GetStartedPage
+import com.ots.aipassportphotomaker.presentation.ui.splash.GetStartedScreenViewModel
 
 // Created by amanullah on 25/07/2025.
 // Copyright (c) 2025 Ozi Publishing. All rights reserved.
@@ -40,14 +45,47 @@ import com.ots.aipassportphotomaker.presentation.ui.savedimage.SavedImageScreenV
 fun MainGraph(
     mainNavController: NavHostController,
     darkMode: Boolean,
+    isFirstLaunch: Boolean,
     onSettingClick: () -> Unit,
-    onThemeUpdated: () -> Unit
+    onThemeUpdated: () -> Unit,
+    onGetStartedCompleted: (Page) -> Unit,
 ) {
     NavHost(
         navController = mainNavController,
-        startDestination = Page.NavigationBar,
+        startDestination = Page.GetStartedScreen, //Page.NavigationBar,
         route = Graph.Main::class
     ) {
+        composableHorizontalSlide<Page.GetStartedScreen> { backStack ->
+            val nestedNavController = rememberNavController()
+            val getStartedViewModel: GetStartedScreenViewModel = hiltViewModel()
+            val sharedViewModel = backStack.sharedViewModel<NavigationBarSharedViewModel>(navController = mainNavController)
+            GetStartedPage(
+                mainRouter = MainRouter(mainNavController),
+                viewModel = getStartedViewModel,
+                sharedViewModel = sharedViewModel,
+                onGetStartedClick = {
+                    val destination = if (isFirstLaunch) Page.OnboardingScreen else Page.NavigationBar
+                    onGetStartedCompleted(destination)
+                }
+            )
+        }
+
+        composableHorizontalSlide<Page.OnboardingScreen> { backStack ->
+            val nestedNavController = rememberNavController()
+            val onboardingViewModel: OnboardingScreenViewModel = hiltViewModel()
+            val sharedViewModel = backStack.sharedViewModel<NavigationBarSharedViewModel>(navController = mainNavController)
+            OnboardingPage(
+                mainRouter = MainRouter(mainNavController),
+                viewModel = onboardingViewModel,
+                sharedViewModel = sharedViewModel,
+                onFinishClick = {
+                    mainNavController.navigate(Page.NavigationBar) {
+                        popUpTo(Page.OnboardingScreen::class) { inclusive = true }
+                    }
+                }
+            )
+        }
+
         composableHorizontalSlide<Page.NavigationBar> { backStack ->
             val nestedNavController = rememberNavController()
             NavigationBarScreen(

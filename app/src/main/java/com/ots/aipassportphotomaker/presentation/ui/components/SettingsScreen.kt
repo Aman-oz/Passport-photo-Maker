@@ -42,6 +42,7 @@ import com.ots.aipassportphotomaker.presentation.ui.theme.colors
 @Composable
 fun SettingsScreen(
     modifier: Modifier = Modifier,
+    themeSelectedIndex: Int = 0,
     appVersion: String = "1.0.0",
     onCloseClick: () -> Unit,
     onPremiumClick: () -> Unit = {},
@@ -138,7 +139,7 @@ fun SettingsScreen(
                         data = premiumItems[page],
                         modifier = Modifier
                             .fillMaxWidth()
-                            .aspectRatio(4f) // Apply the 11.88:1 aspect ratio or wrap to image
+                            .aspectRatio(4f)
                     )
                 }
                 // Dots Indicator
@@ -164,6 +165,12 @@ fun SettingsScreen(
         Column {
             SettingsItem(
                 title = "Change Theme",
+                selectedTheme = when (themeSelectedIndex) {
+                    0 -> "System Default"
+                    1 -> "Light Mode"
+                    2 -> "Dark Mode"
+                    else -> "Light Mode"
+                },
                 icon = R.drawable.theme_icon,
                 onClick = { onChangeThemeClick() }
             )

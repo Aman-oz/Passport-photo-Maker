@@ -28,4 +28,10 @@
     <string name="text_select_button">Next(%1$d/%2$d)</string>
     <string name="button_select_photo">Select Photo (%d)</string>
     <string name="app_not_installed">App not installed!</string>
+    <string name="title1">One Tap, AI ✨ Fit.</string>
+    <string name="text1">Perfectly fit your image through AI model on your desired canvas size.</string>
+    <string name="title2">One Tap, Perfect Edit.</string>
+    <string name="text2">Cutout your images precisely, change background color and apply suits.</string>
+    <string name="title3">One Tap, Perfect ID.</string>
+    <string name="text3">Turn your gallery or camera photos according to the documents you want.</string>
 </resources>

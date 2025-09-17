@@ -43,6 +43,8 @@ lottieVersion = "6.4.0"
 oziMediaDownloader = "v1.0.4"
 permissions = "0.37.3"
 captureVersion = "2.1.0"
+pagerVersion = "0.20.0"
+pagerIndicatorVersion = "0.18.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -102,6 +104,10 @@ lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "
 media-downloader = { module = "com.github.Aman-oz:OziMediaDownloader", version.ref = "oziMediaDownloader" }
 accompanist-permission = { module = "com.google.accompanist:accompanist-permissions", version.ref = "permissions" }
 compose-capturable = { module = "dev.shreyaspatil:capturable", version.ref = "captureVersion" }
+
+accompanist-pager = { module = "com.google.accompanist:accompanist-pager", version.ref = "pagerVersion" }
+accompanist-pager-indicator = { module = "com.google.accompanist:accompanist-pager-indicators", version.ref = "pagerIndicatorVersion" }
+
 
 compose-colorpicker = { module = "com.github.skydoves:colorpicker-compose", version.ref = "colorpicker" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
