@@ -177,7 +177,7 @@ class MainActivity : ComponentActivity() {
                             if (isFirstLaunch()) {
                                 setFirstLaunch(false)
                                 navController.navigate(destination) {
-                                    popUpTo(Page.GetSta rtedScreen) { inclusive = true }
+                                    popUpTo(Page.GetStartedScreen) { inclusive = true }
                                 }
                             } else {
                                 navController.navigate(destination) {
