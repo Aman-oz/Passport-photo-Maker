@@ -7,10 +7,12 @@ import com.ots.aipassportphotomaker.data.db.documents.DocumentRemoteKeyDao
 import com.ots.aipassportphotomaker.data.model.DocumentData
 import com.ots.aipassportphotomaker.data.model.DocumentDbData
 import com.ots.aipassportphotomaker.data.model.DocumentRemoteKeyDbData
+import com.ots.aipassportphotomaker.data.model.mapper.CreatedImageData
 import com.ots.aipassportphotomaker.data.model.toDbData
 import com.ots.aipassportphotomaker.data.model.toDomain
 import com.ots.aipassportphotomaker.data.util.source.DocumentDataSource
 import com.ots.aipassportphotomaker.domain.model.DocumentEntity
+import com.ots.aipassportphotomaker.domain.model.dbmodels.CreatedImageEntity
 import com.ots.aipassportphotomaker.domain.util.Result
 
 // Created by amanullah on 19/08/2025.
@@ -54,5 +56,20 @@ class DocumentLocalDataSource(
 
     override suspend fun clearRemoteKeys() {
         remoteKeyDao.clearRemoteKeys()
+    }
+
+    // New: Save created image
+    override suspend fun saveCreatedImage(createdImage: CreatedImageData) {
+        documentDao.saveCreatedImage(createdImage.toDbData())
+    }
+
+    // New: Get created images by type
+    override suspend fun getCreatedImagesByType(type: String): Result<List<CreatedImageEntity>> {
+        val images = documentDao.getCreatedImagesByType(type)
+        return if (images.isNotEmpty()) {
+            Result.Success(images.map { it.toDomain() })
+        } else {
+            Result.Error(DataNotAvailableException())
+        }
     }
 }

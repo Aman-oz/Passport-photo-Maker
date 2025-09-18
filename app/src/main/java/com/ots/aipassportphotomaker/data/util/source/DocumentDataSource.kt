@@ -4,7 +4,9 @@ import androidx.paging.PagingSource
 import com.ots.aipassportphotomaker.data.model.DocumentData
 import com.ots.aipassportphotomaker.data.model.DocumentDbData
 import com.ots.aipassportphotomaker.data.model.DocumentRemoteKeyDbData
+import com.ots.aipassportphotomaker.data.model.mapper.CreatedImageData
 import com.ots.aipassportphotomaker.domain.model.DocumentEntity
+import com.ots.aipassportphotomaker.domain.model.dbmodels.CreatedImageEntity
 import com.ots.aipassportphotomaker.domain.util.Result
 
 // Created by amanullah on 13/08/2025.
@@ -24,6 +26,8 @@ interface DocumentDataSource {
         suspend fun getDocument(movieId: Int): Result<DocumentEntity>
         /*suspend fun getDocumentsFromJson() : Result<List<DocumentData>>
         suspend fun getDocumentFromJson(movieId: Int): Result<DocumentData>*/
+        suspend fun saveCreatedImage(createdImage: CreatedImageData)
+        suspend fun getCreatedImagesByType(type: String): Result<List<CreatedImageEntity>>
         suspend fun saveDocuments(movies: List<DocumentData>)
         suspend fun getLastRemoteKey(): DocumentRemoteKeyDbData?
         suspend fun saveRemoteKey(key: DocumentRemoteKeyDbData)

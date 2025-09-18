@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.ots.aipassportphotomaker.data.model.DocumentDbData
+import com.ots.aipassportphotomaker.domain.model.dbmodels.CreatedImageDbData
 
 // Created by amanullah on 19/08/2025.
 // Copyright (c) 2025 Ozi Publishing. All rights reserved.
@@ -40,4 +41,21 @@ interface DocumentDao {
      */
     @Query("DELETE FROM documents WHERE id NOT IN (SELECT documentId FROM favorite_documents)")
     suspend fun clearDocumentsExceptFavorites()
+
+//    ********************
+// Save a single created image (similar to saveDocuments but for single)
+@Insert(onConflict = OnConflictStrategy.REPLACE)
+suspend fun saveCreatedImage(createdImage: CreatedImageDbData)
+
+    // Get created images by type (for history screen, filtered by type like "passport")
+    @Query("SELECT * FROM created_images WHERE type = :type ORDER BY id DESC") // DESC for newest first
+    suspend fun getCreatedImagesByType(type: String): List<CreatedImageDbData>
+
+    // Optional: Get all for general history
+    @Query("SELECT * FROM created_images ORDER BY id DESC")
+    suspend fun getAllCreatedImages(): List<CreatedImageDbData>
+
+    // Optional: Get by ID if needed
+    @Query("SELECT * FROM created_images WHERE id = :id")
+    suspend fun getCreatedImageById(id: Int): CreatedImageDbData?
 }

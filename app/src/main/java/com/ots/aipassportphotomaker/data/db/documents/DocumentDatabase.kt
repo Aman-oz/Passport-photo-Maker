@@ -6,12 +6,13 @@ import com.ots.aipassportphotomaker.data.db.favoritedocuments.FavoriteDocumentDa
 import com.ots.aipassportphotomaker.data.model.DocumentDbData
 import com.ots.aipassportphotomaker.data.model.DocumentRemoteKeyDbData
 import com.ots.aipassportphotomaker.domain.model.FavoriteDocumentDbData
+import com.ots.aipassportphotomaker.domain.model.dbmodels.CreatedImageDbData
 
 // Created by amanullah on 19/08/2025.
 // Copyright (c) 2025 Ozi Publishing. All rights reserved.
 @Database(
-    entities = [DocumentDbData::class, FavoriteDocumentDbData::class, DocumentRemoteKeyDbData::class],
-    version = 1,
+    entities = [DocumentDbData::class, FavoriteDocumentDbData::class, DocumentRemoteKeyDbData::class, CreatedImageDbData::class],
+    version = 2,
     exportSchema = false
 )
 abstract class DocumentDatabase: RoomDatabase() {

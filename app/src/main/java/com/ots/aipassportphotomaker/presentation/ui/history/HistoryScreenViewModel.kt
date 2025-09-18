@@ -4,7 +4,11 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.CombinedLoadStates
 import androidx.paging.LoadState
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
+import com.ots.aipassportphotomaker.common.utils.Logger
+import com.ots.aipassportphotomaker.domain.repository.DocumentRepository
 import com.ots.aipassportphotomaker.domain.util.NetworkMonitor
+import com.ots.aipassportphotomaker.domain.util.onError
+import com.ots.aipassportphotomaker.domain.util.onSuccess
 import com.ots.aipassportphotomaker.presentation.ui.base.BaseViewModel
 import com.ots.aipassportphotomaker.presentation.ui.home.HomeScreenNavigationState
 import com.ots.aipassportphotomaker.presentation.ui.home.HomeScreenUiState
@@ -16,11 +20,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class HistoryScreenViewModel @Inject constructor(
     val networkMonitor: NetworkMonitor,
+    private val documentRepository: DocumentRepository
 ) : BaseViewModel() {
 
     private val _uiState: MutableStateFlow<HistoryScreenUiState> = MutableStateFlow(
@@ -37,6 +43,7 @@ class HistoryScreenViewModel @Inject constructor(
     init {
         observeNetworkStatus()
         loadData()
+        getHistoryByType("Passport")
     }
     private fun loadData() {
         launch {
@@ -64,6 +71,21 @@ class HistoryScreenViewModel @Inject constructor(
     }
     fun onRefresh() = launch {
         _refreshListState.emit(Unit)
+    }
+
+    fun getHistoryByType(type: String) {
+        viewModelScope.launch {
+            documentRepository.getCreatedImagesByType(type)
+                .onSuccess { images ->
+                    // Update UI with list of CreatedImageEntity
+                    // e.g., _historyState.value = images
+                    Logger.i("HistoryScreenViewModel", "Loaded ${images.size} images for type: $type")
+                }
+                .onError { error ->
+                    // Handle error
+                    Logger.e("HistoryScreenViewModel", "Error loading history: ${error.message}")
+                }
+        }
     }
 
 }

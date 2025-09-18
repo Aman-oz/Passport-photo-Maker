@@ -17,9 +17,11 @@ import com.ots.aipassportphotomaker.data.model.RemoverApiResponse
 import com.ots.aipassportphotomaker.domain.model.DocumentEntity
 import com.ots.aipassportphotomaker.domain.model.ProcessingStage
 import com.ots.aipassportphotomaker.domain.model.SuitsEntity
+import com.ots.aipassportphotomaker.domain.model.dbmodels.CreatedImageEntity
 import com.ots.aipassportphotomaker.domain.repository.ColorFactory
 import com.ots.aipassportphotomaker.domain.repository.RemoveBackgroundRepository
 import com.ots.aipassportphotomaker.domain.usecase.photoid.GetDocumentDetails
+import com.ots.aipassportphotomaker.domain.usecase.photoid.SaveCreatedImageUseCase
 import com.ots.aipassportphotomaker.domain.util.DispatchersProvider
 import com.ots.aipassportphotomaker.domain.util.NetworkMonitor
 import com.ots.aipassportphotomaker.domain.util.Result
@@ -49,6 +51,7 @@ import javax.inject.Inject
 @HiltViewModel
 class EditImageScreenViewModel @Inject constructor(
     private val getDocumentDetails: GetDocumentDetails,
+    private val saveCreatedImageUseCase: SaveCreatedImageUseCase,
     editImageScreenBundle: EditImageScreenBundle,
     private val dispatcher: DispatchersProvider,
     private val networkMonitor: NetworkMonitor,
@@ -519,6 +522,28 @@ class EditImageScreenViewModel @Inject constructor(
 
         Logger.i("EditImageScreenViewModel", "Image saved at path: $imagePath")
         _uiState.value = uiState.value.copy(imagePath = imagePath)
+
+        viewModelScope.launch(dispatcher.io) {
+            val createdImage = CreatedImageEntity(
+                id = 0, // Auto-generate
+                name = uiState.value.documentName,
+                type = uiState.value.documentType,
+                documentImage = uiState.value.documentImage ?: "",
+                createdImage = imagePath, // Final gallery path
+                documentSize = uiState.value.documentSize,
+                unit = uiState.value.documentUnit,
+                pixel = uiState.value.documentPixels,
+                resolution = uiState.value.documentResolution
+            )
+            try {
+                saveCreatedImageUseCase(createdImage)
+                Logger.i("EditImageScreenViewModel", "Created image saved: ${createdImage.name} (type: ${createdImage.type})")
+            } catch (e: Exception) {
+                Logger.e("EditImageScreenViewModel", "Failed to save created image: ${e.message}", e)
+                _error.value = "Failed to save image details: ${e.message}"
+            }
+        }
+
         _navigationState.tryEmit(
             EditImageScreenNavigationState.SavedImageScreen(
                 documentId = documentId,

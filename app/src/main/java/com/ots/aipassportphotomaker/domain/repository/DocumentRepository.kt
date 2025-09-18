@@ -3,6 +3,7 @@ package com.ots.aipassportphotomaker.domain.repository
 import androidx.paging.PagingData
 import com.ots.aipassportphotomaker.domain.model.DocumentEntity
 import com.ots.aipassportphotomaker.domain.model.DocumentListItem
+import com.ots.aipassportphotomaker.domain.model.dbmodels.CreatedImageEntity
 import kotlinx.coroutines.flow.Flow
 import com.ots.aipassportphotomaker.domain.util.Result
 
@@ -19,4 +20,7 @@ interface DocumentRepository {
     suspend fun addDocumentToFavorite(documentId: Int)
     suspend fun removeDocumentFromFavorite(documentId: Int)
     suspend fun sync(): Boolean
+
+    suspend fun saveCreatedImage(createdImage: CreatedImageEntity)
+    suspend fun getCreatedImagesByType(type: String): Result<List<CreatedImageEntity>>
 }

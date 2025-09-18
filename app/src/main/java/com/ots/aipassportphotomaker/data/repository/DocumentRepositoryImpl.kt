@@ -11,6 +11,8 @@ import com.ots.aipassportphotomaker.data.repository.favorite.FavoriteDocumentsDa
 import com.ots.aipassportphotomaker.data.util.DocumentRemoteMediator
 import com.ots.aipassportphotomaker.data.util.source.DocumentDataSource
 import com.ots.aipassportphotomaker.domain.model.DocumentEntity
+import com.ots.aipassportphotomaker.domain.model.dbmodels.CreatedImageEntity
+import com.ots.aipassportphotomaker.domain.model.dbmodels.toData
 import com.ots.aipassportphotomaker.domain.repository.DocumentRepository
 import com.ots.aipassportphotomaker.domain.util.Result
 import com.ots.aipassportphotomaker.domain.util.Result.Success
@@ -123,5 +125,14 @@ class DocumentRepositoryImpl(
                 true
             }
         }
+    }
+
+    override suspend fun saveCreatedImage(createdImage: CreatedImageEntity) {
+        local.saveCreatedImage(createdImage.toData()) // Assume a toData() extension
+    }
+
+    // New: Get created images by type
+    override suspend fun getCreatedImagesByType(type: String): Result<List<CreatedImageEntity>> {
+        return local.getCreatedImagesByType(type)
     }
 }

@@ -26,6 +26,7 @@ import com.ots.aipassportphotomaker.domain.usecase.photoid.CheckFavoriteStatus
 import com.ots.aipassportphotomaker.domain.usecase.photoid.GetDocumentDetails
 import com.ots.aipassportphotomaker.domain.usecase.photoid.GetFavoriteDocuments
 import com.ots.aipassportphotomaker.domain.usecase.photoid.RemoveDocumentFromFavorite
+import com.ots.aipassportphotomaker.domain.usecase.photoid.SaveCreatedImageUseCase
 import com.ots.aipassportphotomaker.domain.usecase.photoid.SearchDocuments
 import com.ots.aipassportphotomaker.domain.util.NetworkMonitor
 import dagger.Module
@@ -143,5 +144,10 @@ class DataModule {
     @Provides
     fun provideRemoveDocumentFromFavoriteUseCase(movieRepository: DocumentRepository): RemoveDocumentFromFavorite {
         return RemoveDocumentFromFavorite(movieRepository)
+    }
+
+    @Provides
+    fun provideSaveCreatedImageUseCase(documentRepository: DocumentRepository): SaveCreatedImageUseCase {
+        return SaveCreatedImageUseCase(documentRepository)
     }
 }
