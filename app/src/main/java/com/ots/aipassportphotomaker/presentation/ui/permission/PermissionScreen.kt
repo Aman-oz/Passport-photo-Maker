@@ -1,23 +1,28 @@
-package com.ots.aipassportphotomaker.presentation.ui.splash
+package com.ots.aipassportphotomaker.presentation.ui.permission
 
+import android.Manifest
 import android.content.res.Configuration
 import android.os.Build
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -26,20 +31,18 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.BlendMode
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -48,15 +51,19 @@ import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
 import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.presentation.ui.bottom_nav.NavigationBarSharedViewModel
+import com.ots.aipassportphotomaker.presentation.ui.components.CameraPermissionTextProvider
 import com.ots.aipassportphotomaker.presentation.ui.components.LoaderFullScreen
+import com.ots.aipassportphotomaker.presentation.ui.components.PermissionDialog
+import com.ots.aipassportphotomaker.presentation.ui.components.StoragePermissionTextProvider
 import com.ots.aipassportphotomaker.presentation.ui.main.MainRouter
+import com.ots.aipassportphotomaker.presentation.ui.main.openAppSettings
 import com.ots.aipassportphotomaker.presentation.ui.theme.colors
 
 @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
 @Composable
-fun GetStartedPage(
+fun PermissionPage(
     mainRouter: MainRouter,
-    viewModel: GetStartedScreenViewModel = hiltViewModel(),
+    viewModel: PermissionScreenViewModel = hiltViewModel(),
     sharedViewModel: NavigationBarSharedViewModel,
     onGetStartedClick: () -> Unit
 ) {
@@ -72,11 +79,8 @@ fun GetStartedPage(
 
         Log.d(TAG, "GetStartedPage: Navigation State: $navigationState")
         when (navigationState) {
-            is GetStartedScreenNavigationState.OnboardingScreen -> {
-//                mainRouter.navigateToPhotoIDDetailScreen(navigationState.type)
-            }
 
-            is GetStartedScreenNavigationState.HomeScreen -> {
+            is PermissionScreenNavigationState.HomeScreen -> {
                 Log.d(TAG, "GetStartedPage: Navigate to Select Photo Screen")
                 /*mainRouter.navigateToSelectPhotoScreen(
                     documentId = navigationState.documentId,
@@ -86,29 +90,104 @@ fun GetStartedPage(
         }
     }
 
+    val dialogQueue = viewModel.visiblePermissionDialogQueue
+    //Camera and Read External Storage for android 13 and below
+    val permissionsForAndroid13AndBelow = listOf(
+        Manifest.permission.CAMERA,
+        Manifest.permission.READ_EXTERNAL_STORAGE,
+        Manifest.permission.WRITE_EXTERNAL_STORAGE
+    )
+    //Camera and Read Media Images for android 14 and above
+    val permissionsForAndroid14AndAbove = listOf(
+        Manifest.permission.CAMERA,
+        Manifest.permission.READ_MEDIA_IMAGES
+    )
 
-    GetStartedScreen(
+    val permissionsToRequest: List<String> =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissionsForAndroid14AndAbove
+        } else {
+            permissionsForAndroid13AndBelow
+        }
+    val multiplePermissionResultLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions(),
+        onResult = { perms ->
+            permissionsToRequest.forEach { permission ->
+                val isGranted = perms[permission] == true
+                if (isGranted) {
+                    Logger.d(TAG, "$permission granted")
+                    onGetStartedClick()
+                } else {
+                    Logger.d(TAG, "$permission denied")
+                    viewModel.onPermissionResult(
+                        permission = permission,
+                        isGranted = perms[permission] == true
+                    )
+                }
+
+            }
+        }
+    )
+
+
+    PermissionScreen(
         uiState = uiState,
 
-        onBackClick = {
-            mainRouter.goBack()
+        onCloseClick = {
+            onGetStartedClick()
         },
-        onGetStartedClick = onGetStartedClick
+
+        onAllowPermissionClick = {
+            multiplePermissionResultLauncher.launch(permissionsToRequest.toTypedArray())
+        }
     )
+
+    dialogQueue
+        .reversed()
+        .forEach { permission ->
+            PermissionDialog(
+                permissionTextProvider = when (permission) {
+                    Manifest.permission.CAMERA -> {
+                        CameraPermissionTextProvider()
+                    }
+
+                    Manifest.permission.READ_MEDIA_IMAGES,
+                    Manifest.permission.READ_EXTERNAL_STORAGE -> {
+                        StoragePermissionTextProvider()
+                    }
+
+                    else -> return@forEach
+                },
+                isPermanentlyDeclined = !activityContext.shouldShowRequestPermissionRationale(
+                    permission
+                ),
+                onDismiss = {
+                    viewModel.dismissDialog()
+                },
+                onOkClick = {
+                    viewModel.dismissDialog()
+                    multiplePermissionResultLauncher.launch(
+                        arrayOf(permission)
+                    )
+                },
+                onGoToAppSettingsClick = { activityContext.openAppSettings() }
+            )
+        }
 
 }
 
 
 @Composable
-private fun GetStartedScreen(
-    uiState: GetStartedScreenUiState,
-    onBackClick: () -> Unit,
-    onGetStartedClick: () -> Unit
+private fun PermissionScreen(
+    uiState: PermissionScreenUiState,
+    onCloseClick: () -> Unit,
+    onAllowPermissionClick: () -> Unit,
 ) {
 
-    val TAG = "GetStartedScreen"
+    val TAG = "PermissionScreen"
 
     val context = LocalContext.current
+    val uiScope = rememberCoroutineScope()
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -140,73 +219,47 @@ private fun GetStartedScreen(
                 label = "FloatAnimation"
             )
 
-//            Box(
-//                modifier = Modifier
-//                    .background(colors.background)
-//                    .fillMaxSize(),
-//            ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(colors.background),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.close_circled_icon),
+                    contentDescription = "Back",
+                    modifier = Modifier
+                        .align(Alignment.End)
+                        .padding(top = 40.dp, end = 28.dp)
+                        .clickable(
+                            onClick = {
+                                onCloseClick()
+                            }
+                        )
+                )
 
-                Box(
+                Image(
+                    painter = painterResource(id = R.drawable.permission_image),
+                    contentDescription = stringResource(id = R.string.app_name),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(colors.background),
-                    contentAlignment = Alignment.TopCenter
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.after_image_girl1),
-                        contentDescription = stringResource(id = R.string.app_name),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .graphicsLayer { alpha = 0.99F }
-                            .drawWithContent {
-                                val height = size.height
+                        .aspectRatio(1f)
+                        .graphicsLayer { alpha = 0.99F },
+                    contentScale = ContentScale.Fit
+                )
 
-                                val colors = listOf(Color.Transparent, colors.background)
-                                drawContent()
-                                drawRect(
-                                    brush = Brush.verticalGradient(
-                                        colors = colors,
-                                        startY = height, // Start at the bottom
-                                        endY = height - (height / 2f) // End halfway up
-                                    ),
-                                    blendMode = BlendMode.DstIn
-                                )
-                            },
 
-                        contentScale = ContentScale.Fit
-                    )
-
-                    Spacer(
-                        Modifier
-                            .fillMaxWidth()
-                            .height(100.dp)
-                            .background(
-                                brush = Brush.verticalGradient(
-                                    colors = listOf(
-                                        Color.Transparent,
-                                        colors.background
-                                    )
-                                )
-                            )
-                            .align(Alignment.BottomCenter)
-                    )
-
-                }
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
                 ) {
-                    Spacer(modifier = Modifier.weight(1f))
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
                     Text(
-                        text = stringResource(id = R.string.app_name),
-                        style = MaterialTheme.typography.headlineSmall,
+                        text = stringResource(id = R.string.storage_permission),
+                        style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         color = colors.onBackground,
                         modifier = Modifier
@@ -218,22 +271,36 @@ private fun GetStartedScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = "Creation of Professional identification Photos.",
+                        text = "To continue, we need access to your photos to process them and save them.",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
                         color = colors.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
                         modifier = Modifier
                             .align(Alignment.CenterHorizontally)
                             .scale(textAnimatedScale)
-                            .padding(horizontal = 16.dp),
+                            .padding(horizontal = 20.dp),
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    Text(
+                        text = "We respect you privacy - your photos are never stored on our servers.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = colors.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .scale(textAnimatedScale)
+                            .padding(horizontal = 20.dp),
                     )
 
-
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     Button(
                         onClick = {
-                            onGetStartedClick()
+                            onAllowPermissionClick()
+
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -241,13 +308,13 @@ private fun GetStartedScreen(
                             .scale(buttonAnimatedScale),
                     ) {
                         Text(
-                                modifier = Modifier
+                            text = "Allow Permission",
+                            modifier = Modifier
                                 .padding(vertical = 4.dp),
-                            text = "Get Started",
                             style = MaterialTheme.typography.titleMedium,
-                            color = colors.onPrimary)
+                            color = colors.onPrimary
+                        )
                     }
-
 
                     Spacer(modifier = Modifier.height(8.dp))
 
@@ -267,7 +334,6 @@ private fun GetStartedScreen(
                                 .fillMaxWidth()
                                 .wrapContentSize(align = Alignment.Center)
                         )
-
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
@@ -276,8 +342,6 @@ private fun GetStartedScreen(
 
             }
 
-
-//            }
         }
     }
 }
@@ -287,13 +351,13 @@ private fun GetStartedScreen(
 @Composable
 fun DocumentInfoScreenPreview() {
     PreviewContainer {
-        GetStartedScreen(
-            uiState = GetStartedScreenUiState(
+        PermissionScreen(
+            uiState = PermissionScreenUiState(
                 showLoading = false,
                 errorMessage = null
             ),
-            onBackClick = {},
-            onGetStartedClick = {}
+            onCloseClick = {},
+            onAllowPermissionClick = {},
         )
     }
 }

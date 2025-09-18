@@ -30,6 +30,10 @@ import com.ots.aipassportphotomaker.presentation.ui.home.HomePage
 import com.ots.aipassportphotomaker.presentation.ui.home.HomeScreenViewModel
 import com.ots.aipassportphotomaker.presentation.ui.onboarding.OnboardingPage
 import com.ots.aipassportphotomaker.presentation.ui.onboarding.OnboardingScreenViewModel
+import com.ots.aipassportphotomaker.presentation.ui.permission.PermissionPage
+import com.ots.aipassportphotomaker.presentation.ui.permission.PermissionScreenViewModel
+import com.ots.aipassportphotomaker.presentation.ui.premium.PremiumPage
+import com.ots.aipassportphotomaker.presentation.ui.premium.PremiumScreenViewModel
 import com.ots.aipassportphotomaker.presentation.ui.processimage.ImageProcessingPage
 import com.ots.aipassportphotomaker.presentation.ui.processimage.ImageProcessingScreenViewModel
 import com.ots.aipassportphotomaker.presentation.ui.savedimage.SavedImagePage
@@ -79,10 +83,36 @@ fun MainGraph(
                 viewModel = onboardingViewModel,
                 sharedViewModel = sharedViewModel,
                 onFinishClick = {
-                    mainNavController.navigate(Page.NavigationBar) {
+                    mainNavController.navigate(Page.PermissionScreen) {
                         popUpTo(Page.OnboardingScreen::class) { inclusive = true }
                     }
                 }
+            )
+        }
+
+        composableHorizontalSlide<Page.PermissionScreen> { backStack ->
+            val nestedNavController = rememberNavController()
+            val permissionViewModel: PermissionScreenViewModel = hiltViewModel()
+            val sharedViewModel = backStack.sharedViewModel<NavigationBarSharedViewModel>(navController = mainNavController)
+            PermissionPage(
+                mainRouter = MainRouter(mainNavController),
+                viewModel = permissionViewModel,
+                sharedViewModel = sharedViewModel,
+                onGetStartedClick = {
+                    mainNavController.navigate(Page.NavigationBar) {
+                        popUpTo(Page.PermissionScreen::class) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composableHorizontalSlide<Page.Premium> {
+            val premiumScreenViewModel: PremiumScreenViewModel = hiltViewModel()
+            val sharedViewModel = hiltViewModel<NavigationBarSharedViewModel>()
+            PremiumPage(
+                mainRouter = MainRouter(mainNavController),
+                viewModel = premiumScreenViewModel,
+                sharedViewModel = sharedViewModel
             )
         }
 

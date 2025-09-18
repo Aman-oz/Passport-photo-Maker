@@ -34,4 +34,6 @@
     <string name="text2">Cutout your images precisely, change background color and apply suits.</string>
     <string name="title3">One Tap, Perfect ID.</string>
     <string name="text3">Turn your gallery or camera photos according to the documents you want.</string>
+    <string name="storage_permission">Storage Permission</string>
+    <string name="get_premium">Get Premium</string>
 </resources>

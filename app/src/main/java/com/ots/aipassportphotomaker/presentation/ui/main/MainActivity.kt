@@ -32,6 +32,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.common.utils.SharedPrefUtils
+import com.ots.aipassportphotomaker.common.utils.UrlFactory
 import com.ots.aipassportphotomaker.di.AppSettingsSharedPreference
 import com.ots.aipassportphotomaker.domain.bottom_nav.Page
 import com.ots.aipassportphotomaker.domain.permission.PermissionsHelper
@@ -143,11 +144,11 @@ class MainActivity : ComponentActivity() {
                 )
 
                 // Trigger permission request after composition
-                LaunchedEffect(Unit) {
+               /* LaunchedEffect(Unit) {
                     lifecycleScope.launch {
                         multiplePermissionResultLauncher.launch(permissionsToRequest.toTypedArray())
                     }
-                }
+                }*/
 
                 Column {
                     val networkStatus by networkMonitor.networkState.collectAsState(null)
@@ -223,6 +224,14 @@ class MainActivity : ComponentActivity() {
 
                 if (showSettingsDialog) {
 
+                    val appVersion = try {
+                        packageManager.getPackageInfo(packageName, 0).versionName
+                    } catch (e: Exception) {
+                        "1.0.0"
+                    } ?: run {
+                        "1.0.0"
+                    }
+
                     ModalBottomSheet(
                         onDismissRequest = {
                             scope.launch {
@@ -256,6 +265,13 @@ class MainActivity : ComponentActivity() {
                             },
                             onPremiumClick = {
                                 Logger.i("MainActivity", "Go Premium Clicked")
+                                scope.launch {
+                                    customBottomSheetState.hide()
+                                }
+                                showSettingsDialog = false
+
+                                navController.navigate(Page.Premium) {
+                                }
 
                             },
                             onShareApp = {
@@ -295,11 +311,10 @@ class MainActivity : ComponentActivity() {
                                 }
                             },
                             onPrivacyPolicy = {
-                                val privacyPolicyUrl = "https://ozipublishing.com/privacy-policy/"
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(privacyPolicyUrl))
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(UrlFactory.PRIVACY_POLICY_URL))
                                 startActivity(intent)
                             },
-                            appVersion = "1.0.0"
+                            appVersion = appVersion
                         )
                     }
                 }

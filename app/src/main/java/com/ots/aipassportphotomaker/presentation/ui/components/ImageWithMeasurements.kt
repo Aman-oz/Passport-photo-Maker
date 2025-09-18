@@ -156,7 +156,7 @@ fun ImageWithMeasurements(
             modifier = Modifier
                 .layoutId("image")
                 .padding(16.dp)
-                .background(color = colors.primary)
+                .background(color = colors.background)
                 .width(200.dp)
                 .aspectRatio(imageRatio)
                 .animateContentSize()

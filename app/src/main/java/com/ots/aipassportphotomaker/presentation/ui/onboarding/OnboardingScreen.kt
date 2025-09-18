@@ -172,7 +172,7 @@ private fun OnboardingScreen(
                         state = statePager,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .weight(0.8f),
+                            .weight(0.7f),
                         count = items.size
                     ) { page ->
 
@@ -261,10 +261,15 @@ private fun OnboardingScreen(
                     painter = painterResource(id = R.drawable.close_circled_icon),
                     contentDescription = "Back",
                     modifier = Modifier
-                        .padding(top = 40.dp, end = 28.dp)
                         .align(Alignment.TopEnd)
-                        .clickable(onClick = onFinishClick)
+                        .padding(top = 40.dp, end = 28.dp)
+                        .clickable(
+                            onClick = {
+                                onFinishClick()
+                            }
+                        )
                 )
+
             }
         }
     }
@@ -285,7 +290,7 @@ fun BottomSection(
               .fillMaxSize()
             .padding(12.dp)
     ) {
-        val buttonText = if (size == index + 1) "start" else "next"
+        val buttonText = if (size == index + 1) "Finish" else "Next"
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -329,7 +334,12 @@ fun BottomSection(
                     .fillMaxWidth()
                     .padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
             ) {
-                Text("Get Started")
+                Text(
+                    modifier = Modifier
+                        .padding(vertical = 4.dp),
+                    text = buttonText,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = colors.onPrimary)
             }
 
             Surface(
@@ -354,17 +364,7 @@ fun BottomSection(
             Spacer(modifier = Modifier.height(10.dp))
 
         }
-
-
-        /* FloatingActionButton(
-             onClick = onNextClicked,
-             modifier = Modifier.align(Alignment.CenterEnd),
-             *//*backgroundColor = MaterialTheme.colors.primary,
-            contentColor = MaterialTheme.colors.onPrimary*//*
-        ) {
-            Text(text = buttontext)
-            //  Icon(Icons.Outlined.KeyboardArrowRight, contentDescription = "next")
-        }*/
+        
     }
 }
 

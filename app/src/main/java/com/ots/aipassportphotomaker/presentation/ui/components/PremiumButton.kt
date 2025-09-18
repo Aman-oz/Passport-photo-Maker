@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
+import com.ots.aipassportphotomaker.common.utils.ViewsUtils.premiumHorizontalGradientBrush
 import com.ots.aipassportphotomaker.presentation.ui.theme.colors
 import com.ots.aipassportphotomaker.presentation.ui.theme.onCustom100
 
@@ -38,23 +39,6 @@ fun PremiumButton(
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
-    val gradientBrush = Brush.linearGradient(
-        colorStops = arrayOf(
-            0.0f to Color(0xFF4D50FB), // Start: #4D50FB (0% - 33%)
-            0.33f to Color(0xFFEF15AA), // Mid: #EF15AA (33% - 66%)
-            0.66f to Color(0xFFFA7451)  // End: #FA7451 (66% - 100%)
-        ),
-        start = Offset(0f, 0f), // Left
-        end = Offset(300f, 0f)  // Right (adjust based on button width)
-    )
-
-    val horizontalGradientBrush = Brush.horizontalGradient(
-        colors = listOf(
-            Color(0xFF4D50FB),
-            Color(0xFFEF15AA),
-            Color(0xFFFA7451)
-        )
-    )
 
     Row(
         modifier = modifier,
@@ -64,7 +48,7 @@ fun PremiumButton(
             onClick = onClick,
             shape = RoundedCornerShape(10.dp),
             modifier = Modifier
-                .background(brush = horizontalGradientBrush, shape = RoundedCornerShape(10.dp)), // Apply gradient background
+                .background(brush = premiumHorizontalGradientBrush, shape = RoundedCornerShape(10.dp)), // Apply gradient background
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color.Transparent, // Remove default background
                 contentColor = colors.onPrimary // Ensure text/icon contrast

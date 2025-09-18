@@ -19,6 +19,9 @@ sealed class Page {
     data object OnboardingScreen : Page()
 
     @Serializable
+    data object PermissionScreen : Page()
+
+    @Serializable
     data object PhotoID : Page()
 
     @Serializable
