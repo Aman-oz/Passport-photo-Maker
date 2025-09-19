@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.work.WorkManager
 import com.ots.aipassportphotomaker.common.iab.AppBillingClient
+import com.ots.aipassportphotomaker.common.utils.SharedPrefUtils
 import com.ots.aipassportphotomaker.data.remote.api.CropImageApi
 import com.ots.aipassportphotomaker.data.remote.api.RemoveBackgroundApi
 import com.ots.aipassportphotomaker.data.repository.CropImageRepositoryImpl
@@ -37,7 +38,7 @@ class AppModule {
     @Provides
     @AppSettingsSharedPreference
     fun provideAppSettingsSharedPreference(@ApplicationContext context: Context): SharedPreferences {
-        return context.getSharedPreferences("AppSettings", Context.MODE_PRIVATE)
+        return context.getSharedPreferences(SharedPrefUtils.PREF_KEY, Context.MODE_PRIVATE)
     }
 
     @Provides

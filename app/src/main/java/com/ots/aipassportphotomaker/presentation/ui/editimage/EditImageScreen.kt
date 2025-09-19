@@ -212,7 +212,7 @@ fun EditImagePage(
         onEraseClick = {
             viewModel.onCutoutClicked()
         },
-        onGetProClick = { }
+        onGetProClick = { mainRouter.navigateToPremiumScreen() }
     )
 }
 

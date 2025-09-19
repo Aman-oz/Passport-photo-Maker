@@ -6,6 +6,8 @@ plugins {
     alias(libs.plugins.ksp)
     id ("kotlin-parcelize")
     alias(libs.plugins.serialization)
+    alias(libs.plugins.google.services)
+    alias(libs.plugins.firebase.crashlytics)
 }
 
 val applicationName = "AI Passport Photo Maker"
@@ -94,6 +96,13 @@ dependencies {
     implementation(libs.androidx.constraintlayout.compose)
 //    implementation(libs.compose.colorpicker)
     implementation ("io.mhssn:colorpicker:1.0.0")
+
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.crashlytics)
+//    implementation(libs.firebase.messaging)
+    implementation(libs.firebase.config)
+
     implementation(libs.lottie.compose)
 
     implementation(libs.android.billingclient)

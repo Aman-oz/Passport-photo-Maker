@@ -91,7 +91,7 @@ fun ImageProcessingPage(
         selectedColor = selectedColor,
         imagePath = imagePath,
         onBackClick = { mainRouter.goBack() },
-        onGetProClick = { }
+        onGetProClick = { mainRouter.navigateToPremiumScreen() }
     )
 }
 
@@ -166,7 +166,6 @@ private fun ImageProcessingScreen(
                 },
                 onGetProClick = {
                     onGetProClick.invoke()
-
                 }
             )
 

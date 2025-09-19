@@ -49,6 +49,10 @@ pagerIndicatorVersion = "0.18.0"
 billingV3 = "1.0.45"
 billingClient = "8.0.0"
 
+firebaseBom = "34.3.0"
+crashlytics = "3.0.6"
+messaging = "23.1.2"
+
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -115,6 +119,13 @@ accompanist-pager-indicator = { module = "com.google.accompanist:accompanist-pag
 android-inapp-billing-v3 = { module = "com.anjlab.android.iab.v3:library", version.ref = "billingV3" }
 android-billingclient = { module = "com.android.billingclient:billing", version.ref = "billingClient" }
 
+# Firebase
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
+firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
+firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics-ndk" }
+firebase-messaging = { module = "com.google.firebase:firebase-messaging-ktx" }
+firebase-config = { module = "com.google.firebase:firebase-config" }
+
 
 compose-colorpicker = { module = "com.github.skydoves:colorpicker-compose", version.ref = "colorpicker" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
@@ -135,3 +146,7 @@ ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "serializationGradlePlugin" }
 android-library = { id = "com.android.library", version.ref = "agp" }
+
+# Firebase
+firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "crashlytics" }
+google-services = { id = "com.google.gms.google-services", version = "4.4.3" }

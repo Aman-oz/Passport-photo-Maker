@@ -97,9 +97,40 @@ fun DocumentItem(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
+        val defaultDrawableRes = when (document.type) {
+            "Visa" -> R.drawable.default_visa_icon
+            "Standard" -> R.drawable.default_standard_icon
+            "Driver's License" -> R.drawable.default_drivers_icon
+            "Resident Card" -> R.drawable.default_resident_card_icon
+            "Profile" -> {
+                when(document.name) {
+                    "Facebook" -> R.drawable.facebook_default_icon
+                    "Instagram" -> R.drawable.insta_default_icon
+                    "Twitter" -> R.drawable.x_icon
+                    "LinkedIn" -> R.drawable.linkdin_icon
+                    "YouTube" -> R.drawable.youtube_icon
+                    "TikTok" -> R.drawable.tiktok_icon
+                    "Pinterest" -> R.drawable.pinterest_icon
+                    "Snapchat" -> android.R.drawable.ic_menu_report_image
+                    "Google" -> R.drawable.google_icon
+                    "WhatsApp" -> R.drawable.whatsapp_icons
+                    "Discord" -> R.drawable.discord_icon
+                    else -> R.drawable.default_visa_icon
+                }
+            }
+            "Passport" -> {
+                R.drawable.passport_united_state
+            } // Assuming you have this
+            else -> R.drawable.default_standard_icon // Fallback
+        }
+
         SubcomposeAsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
-                .data(document.image)
+                .data(when {
+                    document.image.isNullOrEmpty() -> defaultDrawableRes
+                    !document.image.startsWith("http") -> defaultDrawableRes
+                    else -> document.image
+                })
                 .scale(Scale.FILL)
                 .size(imageSize.width.toPX(), imageSize.height.toPX())
                 .build(),
@@ -110,7 +141,7 @@ fun DocumentItem(
             modifier = Modifier
                 .weight(1f)
                 .padding(3.dp)
-                .aspectRatio(9 / 16f)
+                .aspectRatio(1f)
                 .scale(animatedScale)
                 .clip(RoundedCornerShape(2))
                 .pointerInput(Unit) {

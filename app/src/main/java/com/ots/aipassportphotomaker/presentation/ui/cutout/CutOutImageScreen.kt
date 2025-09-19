@@ -132,7 +132,7 @@ fun CutOutImagePage(
         processingStage = processingStage,
         selectedColor = selectedColor,
         onBackClick = { mainRouter.goBack() },
-        onGetProClick = { },
+        onGetProClick = { mainRouter.navigateToPremiumScreen() },
         onSaveImage = { bitmap ->
             uiScope.launch {
                 when (viewModel.sourceScreen) {

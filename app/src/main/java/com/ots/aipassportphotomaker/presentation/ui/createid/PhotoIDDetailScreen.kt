@@ -109,6 +109,7 @@ fun PhotoIDDetailPage(
         onQueryChange = viewModel::onSearch,
         onDocumentClick = viewModel::onDocumentClicked,
         onBackClick = { mainRouter.goBack() },
+        onGetProClick = { mainRouter.navigateToPremiumScreen() }
     )
 }
 

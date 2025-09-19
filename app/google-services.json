@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "493488006055",
+    "project_id": "passportphotomaker-photoid",
+    "storage_bucket": "passportphotomaker-photoid.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:493488006055:android:abe85663029895ce72cc82",
+        "android_client_info": {
+          "package_name": "com.tas.passport.id.maker"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCB54IY547e9EQ6FJSMQ5-r1LmuVyqoXrw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -306,14 +306,14 @@ fun DocumentItem(
                 contentScale = ContentScale.Crop,
                 placeholder = painterResource(id = when (item.type) {
                     "Passports" -> R.drawable.passport_united_state
-                    "Visas" -> R.drawable.passport_united_state
-                    "Standards" -> R.drawable.passport_united_state
+                    "Visas" -> R.drawable.default_visa_icon
+                    "Standards" -> R.drawable.default_standard_icon
                     else -> R.drawable.passport_united_state
                 }),
                 error = painterResource(id = when (item.type) {
                     "Passports" -> R.drawable.passport_united_state
-                    "Visas" -> R.drawable.passport_united_state
-                    "Standards" -> R.drawable.passport_united_state
+                    "Visas" -> R.drawable.default_visa_icon
+                    "Standards" -> R.drawable.default_standard_icon
                     else -> R.drawable.passport_united_state
                 })
             )

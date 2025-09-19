@@ -76,7 +76,6 @@ import com.ots.aipassportphotomaker.common.utils.ViewsUtils.premiumHorizontalOpp
 import com.ots.aipassportphotomaker.presentation.ui.bottom_nav.NavigationBarSharedViewModel
 import com.ots.aipassportphotomaker.presentation.ui.components.LoaderFullScreen
 import com.ots.aipassportphotomaker.presentation.ui.main.MainRouter
-import com.ots.aipassportphotomaker.presentation.ui.theme.AppColors
 import com.ots.aipassportphotomaker.presentation.ui.theme.colors
 import com.ots.aipassportphotomaker.presentation.ui.theme.onCustom100
 
@@ -213,7 +212,7 @@ private fun PremiumScreen(
                 }
 
                 Image(
-                    painter = painterResource(id = R.drawable.premium_bg),
+                    painter = painterResource(id = screenBg),
                     contentDescription = stringResource(id = R.string.app_name),
                     modifier = Modifier
                         .fillMaxSize()
@@ -226,7 +225,7 @@ private fun PremiumScreen(
                     modifier = Modifier
                         .padding(start = 20.dp, top = 40.dp)
                         .background(
-                            color = AppColors.LightOnBackground.copy(alpha = 0.08f),
+                            color = colors.onBackground.copy(alpha = 0.08f),
                             shape = RoundedCornerShape(8.dp)
                         )
                 ) {
@@ -234,7 +233,7 @@ private fun PremiumScreen(
                         text = "Restore",
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Medium,
-                        color = AppColors.LightOnBackground,
+                        color = colors.onBackground,
                         modifier = Modifier
                             .align(Alignment.TopEnd)
                             .clickable(
@@ -257,7 +256,7 @@ private fun PremiumScreen(
                                 onCloseClick()
                             }
                         ),
-                    tint = AppColors.LightOnBackground
+                    tint = colors.onBackground
                 )
 
                 Column(
@@ -269,7 +268,7 @@ private fun PremiumScreen(
                     Spacer(modifier = Modifier.height(50.dp))
 
                     Image(
-                        painter = painterResource(id = R.drawable.premium_illustration),
+                        painter = painterResource(id = illustrationImg),
                         contentDescription = stringResource(id = R.string.app_name),
                         modifier = Modifier
                             .padding(horizontal = 28.dp)
@@ -360,7 +359,7 @@ private fun PremiumScreen(
                             text = "Unlock all premium benefits and features.",
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.SemiBold,
-                            color = AppColors.LightOnSurfaceVariant,
+                            color = colors.onSurfaceVariant,
                             textAlign = TextAlign.Start,
                             modifier = Modifier
                                 .align(Alignment.Start)
@@ -383,7 +382,7 @@ private fun PremiumScreen(
                                     Icon(
                                         painter = painterResource(id = R.drawable.unlimited_ai_usage),
                                         contentDescription = "Icon",
-                                        tint = AppColors.LightOnBackground,
+                                        tint = colors.onBackground,
                                         modifier = Modifier
                                             .size(24.dp)
                                     )
@@ -392,7 +391,7 @@ private fun PremiumScreen(
                                         text = "Unlimited Ai Usage",
                                         style = MaterialTheme.typography.labelLarge,
                                         fontWeight = FontWeight.SemiBold,
-                                        color = AppColors.LightOn100,
+                                        color = colors.onCustom100,
                                     )
                                 }
 
@@ -407,7 +406,7 @@ private fun PremiumScreen(
                                     Icon(
                                         painter = painterResource(id = R.drawable.no_ads),
                                         contentDescription = "Icon",
-                                        tint = AppColors.LightOnBackground,
+                                        tint = colors.onBackground,
                                         modifier = Modifier
                                             .size(24.dp)
                                     )
@@ -416,7 +415,7 @@ private fun PremiumScreen(
                                         text = "No Annoying Ads",
                                         style = MaterialTheme.typography.labelLarge,
                                         fontWeight = FontWeight.SemiBold,
-                                        color = AppColors.LightOn100,
+                                        color = colors.onCustom100,
                                     )
                                 }
                             }
@@ -432,7 +431,7 @@ private fun PremiumScreen(
                                     Icon(
                                         painter = painterResource(id = R.drawable.fast_processing),
                                         contentDescription = "Icon",
-                                        tint = AppColors.LightOnBackground,
+                                        tint = colors.onBackground,
                                         modifier = Modifier
                                             .size(24.dp)
                                     )
@@ -441,7 +440,7 @@ private fun PremiumScreen(
                                         text = "Faster Processing",
                                         style = MaterialTheme.typography.labelLarge,
                                         fontWeight = FontWeight.SemiBold,
-                                        color = AppColors.LightOn100,
+                                        color = colors.onCustom100,
                                     )
                                 }
 
@@ -456,7 +455,7 @@ private fun PremiumScreen(
                                     Icon(
                                         painter = painterResource(id = R.drawable.no_watermark),
                                         contentDescription = "Icon",
-                                        tint = AppColors.LightOnBackground,
+                                        tint = colors.onBackground,
                                         modifier = Modifier
                                             .size(24.dp)
                                     )
@@ -465,7 +464,7 @@ private fun PremiumScreen(
                                         text = "No Watermark",
                                         style = MaterialTheme.typography.labelLarge,
                                         fontWeight = FontWeight.SemiBold,
-                                        color = AppColors.LightOn100,
+                                        color = colors.onCustom100,
                                     )
                                 }
                             }
@@ -497,7 +496,7 @@ private fun PremiumScreen(
                                     .fillMaxWidth()
                                     .padding(2.dp)
                                     .background(
-                                        color = AppColors.LightBackground,
+                                        color = colors.background,
                                         shape = RoundedCornerShape(32.dp)
                                     )
 
@@ -512,14 +511,14 @@ private fun PremiumScreen(
                                         text = "Subscribe Weekly",
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.Bold,
-                                        color = AppColors.LightOnBackground
+                                        color = colors.onBackground
                                     )
                                     Text(
                                         modifier = Modifier,
                                         text = weeklyItem?.pricingPhase?.formattedPrice ?: "Rs. 850.00",
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.Bold,
-                                        color = AppColors.LightOnBackground
+                                        color = colors.onBackground
                                     )
                                 }
 
@@ -542,7 +541,7 @@ private fun PremiumScreen(
                             text = "Auto renew, cancel anytime",
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Medium,
-                            color = AppColors.LightOnSurfaceVariant,
+                            color = colors.onSurfaceVariant,
                             textAlign = TextAlign.Center,
                             modifier = Modifier
                                 .align(Alignment.CenterHorizontally)
@@ -565,7 +564,7 @@ private fun PremiumScreen(
                                 style = MaterialTheme.typography.labelMedium,
                                 textDecoration = TextDecoration.Underline,
                                 fontWeight = FontWeight.SemiBold,
-                                color = AppColors.LightOnBackground,
+                                color = colors.onBackground,
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier
                                     .clickable(
@@ -576,7 +575,7 @@ private fun PremiumScreen(
                             )
 
                             VerticalDivider(
-                                color = AppColors.LightOnSurfaceVariant,
+                                color = colors.onSurfaceVariant,
                                 thickness = 1.dp,
                                 modifier = Modifier
                                     .padding(horizontal = 20.dp)
@@ -589,7 +588,7 @@ private fun PremiumScreen(
                                 style = MaterialTheme.typography.labelMedium,
                                 textDecoration = TextDecoration.Underline,
                                 fontWeight = FontWeight.SemiBold,
-                                color = AppColors.LightOnBackground,
+                                color = colors.onBackground,
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier
                                     .clickable(
@@ -688,7 +687,7 @@ fun PremiumMonthlyButton(
                 ) // Smaller radius for tag
                 .border(
                     width = 2.dp,
-                    color = AppColors.LightBackground,
+                    color = colors.background,
                     shape = RoundedCornerShape(16.dp)
                 ), // Adjust padding for tag size
             contentAlignment = Alignment.Center

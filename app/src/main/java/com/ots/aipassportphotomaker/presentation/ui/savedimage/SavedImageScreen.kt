@@ -118,7 +118,7 @@ fun SavedImagePage(
         uiState = uiState,
         sourceScreen = sourceScreen,
         onBackClick = { mainRouter.goBack() },
-        onGetProClick = { },
+        onGetProClick = { mainRouter.navigateToPremiumScreen() },
         onGoToHomeClick = {
 
         },

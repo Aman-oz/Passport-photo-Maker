@@ -122,6 +122,9 @@ fun PhotoIDPage2(
         onQueryChange = viewModel::onSearch,
         onSeeAllClick = viewModel::onSeeAllClicked,
         onBackClick = { mainRouter.goBack() },
+        onGetProClick = {
+            mainRouter.navigateToPremiumScreen()
+        }
     )
 
     BackHandler {

@@ -235,6 +235,9 @@ fun DocumentInfoPage(
         onBackClick = {
             mainRouter.goBack()
         },
+        onGetProClick = {
+            mainRouter.navigateToPremiumScreen()
+        },
         onSetCustomColor = { color ->
             viewModel.setCustomColor(color)
         },
@@ -320,6 +323,7 @@ private fun DocumentInfoScreen(
     onCreatePhotoClick: (type: String) -> Unit,
     onReselectDocument: () -> Unit = {},
     onBackClick: () -> Unit,
+    onGetProClick: () -> Unit = {},
     onSetCustomColor: (Color) -> Unit = {},
     selectPredefinedColor: (ColorFactory.ColorType) -> Unit = {},
     onBackgroundOptionChanged: (BackgroundOption) -> Unit = {},
@@ -456,7 +460,9 @@ private fun DocumentInfoScreen(
                         title = "Document Info",
                         showGetProButton = false,
                         onBackClick = onBackClick,
-                        onGetProClick = {})
+                        onGetProClick = {
+                            onGetProClick()
+                        })
 
                     Box(
                         modifier = Modifier
