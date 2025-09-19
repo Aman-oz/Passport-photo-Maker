@@ -18,7 +18,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.ots.aipassportphotomaker"
+        applicationId = "com.tas.passport.id.maker"
         minSdk = 26
         targetSdk = 35
 
