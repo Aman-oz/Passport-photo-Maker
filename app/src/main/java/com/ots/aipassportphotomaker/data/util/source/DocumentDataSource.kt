@@ -28,6 +28,8 @@ interface DocumentDataSource {
         suspend fun getDocumentFromJson(movieId: Int): Result<DocumentData>*/
         suspend fun saveCreatedImage(createdImage: CreatedImageData)
         suspend fun getCreatedImagesByType(type: String): Result<List<CreatedImageEntity>>
+        suspend fun getAllCreatedImages(): Result<List<CreatedImageEntity>>
+
         suspend fun saveDocuments(movies: List<DocumentData>)
         suspend fun getLastRemoteKey(): DocumentRemoteKeyDbData?
         suspend fun saveRemoteKey(key: DocumentRemoteKeyDbData)

@@ -96,6 +96,9 @@ dependencies {
     implementation ("io.mhssn:colorpicker:1.0.0")
     implementation(libs.lottie.compose)
 
+    implementation(libs.android.billingclient)
+    implementation(libs.android.inapp.billing.v3)
+
     // AndroidX
     implementation(libs.appcompat)
     implementation(libs.lifecycle.viewmodel.ktx)

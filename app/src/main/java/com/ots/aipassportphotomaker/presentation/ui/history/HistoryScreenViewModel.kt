@@ -5,6 +5,7 @@ import androidx.paging.CombinedLoadStates
 import androidx.paging.LoadState
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
 import com.ots.aipassportphotomaker.common.utils.Logger
+import com.ots.aipassportphotomaker.domain.model.dbmodels.CreatedImageEntity
 import com.ots.aipassportphotomaker.domain.repository.DocumentRepository
 import com.ots.aipassportphotomaker.domain.util.NetworkMonitor
 import com.ots.aipassportphotomaker.domain.util.onError
@@ -40,10 +41,13 @@ class HistoryScreenViewModel @Inject constructor(
     private val _refreshListState: MutableSharedFlow<Unit> = singleSharedFlow()
     val refreshListState = _refreshListState.asSharedFlow()
 
+    private val _documents: MutableStateFlow<List<CreatedImageEntity>> = MutableStateFlow(emptyList()) // Updated to CreatedImageEntity
+    val documents = _documents.asStateFlow()
+
     init {
         observeNetworkStatus()
         loadData()
-        getHistoryByType("Passport")
+        getHistoryByType("All")
     }
     private fun loadData() {
         launch {
@@ -61,8 +65,13 @@ class HistoryScreenViewModel @Inject constructor(
         _uiState.update { it.copy(showLoading = showLoading, errorMessage = error) }
     }
 
-    fun onItemClick(name: String) =
-        _navigationState.tryEmit(HistoryScreenNavigationState.PhotoID(name))
+    fun onItemClick(name: String) {
+
+        _navigationState.tryEmit(HistoryScreenNavigationState.DocumentInfoScreen(
+            documentId = _documents.value.firstOrNull { it.name == name }?.id ?: 0,
+            imagePath = _documents.value.firstOrNull { it.name == name }?.createdImage
+        ))
+    }
 
     private fun observeNetworkStatus() {
         networkMonitor.networkState
@@ -75,16 +84,23 @@ class HistoryScreenViewModel @Inject constructor(
 
     fun getHistoryByType(type: String) {
         viewModelScope.launch {
-            documentRepository.getCreatedImagesByType(type)
-                .onSuccess { images ->
-                    // Update UI with list of CreatedImageEntity
-                    // e.g., _historyState.value = images
-                    Logger.i("HistoryScreenViewModel", "Loaded ${images.size} images for type: $type")
-                }
-                .onError { error ->
-                    // Handle error
-                    Logger.e("HistoryScreenViewModel", "Error loading history: ${error.message}")
-                }
+            _uiState.update { it.copy(showLoading = true) }
+            val result = if (type == "All") {
+                Logger.i("HistoryScreenViewModel", "Loading all created images")
+                documentRepository.getAllCreatedImages()
+            } else {
+                Logger.i("HistoryScreenViewModel", "Loading created images for type: $type")
+                documentRepository.getCreatedImagesByType(type)
+            }
+            result.onSuccess { entities ->
+                _documents.value = entities
+                _uiState.update { it.copy(showLoading = false, errorMessage = null) }
+                Logger.i("HistoryScreenViewModel", "Loaded ${entities.size} images for type: $type")
+            }.onError { error ->
+                _uiState.update { it.copy(showLoading = false, errorMessage = error.message) }
+                _documents.value = emptyList()
+                Logger.e("HistoryScreenViewModel", "Error loading history: ${error.message}")
+            }
         }
     }
 

@@ -10,6 +10,7 @@ import coil.util.DebugLogger
 import com.aman.downloader.DownloaderConfig
 import com.aman.downloader.OziDownloader
 import com.aman.downloader.OziDownloader.Companion.create
+import com.ots.aipassportphotomaker.common.iab.AppBillingClient
 import dagger.hilt.android.HiltAndroidApp
 
 // Created by amanullah on 25/07/2025.
@@ -18,6 +19,7 @@ import dagger.hilt.android.HiltAndroidApp
 class App: Application(), ImageLoaderFactory {
 
     var oziDownloader: OziDownloader? = null
+    val appBillingClient: AppBillingClient by lazy { AppBillingClient() }
 
     override fun onCreate() {
         super.onCreate()

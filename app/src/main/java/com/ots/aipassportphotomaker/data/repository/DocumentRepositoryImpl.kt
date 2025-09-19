@@ -135,4 +135,8 @@ class DocumentRepositoryImpl(
     override suspend fun getCreatedImagesByType(type: String): Result<List<CreatedImageEntity>> {
         return local.getCreatedImagesByType(type)
     }
+    // Get all images
+    override suspend fun getAllCreatedImages(): Result<List<CreatedImageEntity>> {
+        return local.getAllCreatedImages()
+    }
 }

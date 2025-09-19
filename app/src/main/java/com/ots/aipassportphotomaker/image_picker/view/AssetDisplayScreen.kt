@@ -473,7 +473,7 @@ private fun AssetContent(viewModel: AssetViewModel, requestType: RequestType) {
     val errorMessage = stringResource(R.string.message_selected_exceed, maxAssets)
     val itemSize: Dp = (LocalConfiguration.current.screenWidthDp.dp / gridCount)
 
-    val sharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+    val sharedPreferences = context.getSharedPreferences(SharedPrefUtils.PREF_KEY, Context.MODE_PRIVATE)
     val isPhotoGuideShown = remember {
         mutableStateOf(
             sharedPreferences.getBoolean(

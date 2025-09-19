@@ -23,4 +23,5 @@ interface DocumentRepository {
 
     suspend fun saveCreatedImage(createdImage: CreatedImageEntity)
     suspend fun getCreatedImagesByType(type: String): Result<List<CreatedImageEntity>>
+    suspend fun getAllCreatedImages(): Result<List<CreatedImageEntity>>
 }

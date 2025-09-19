@@ -1,5 +1,6 @@
 package com.ots.aipassportphotomaker.presentation.ui.premium
 
+import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.net.Uri
@@ -34,9 +35,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -63,14 +66,17 @@ import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
+import com.ots.aipassportphotomaker.common.iab.AppBillingClient
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
 import com.ots.aipassportphotomaker.common.utils.Logger
+import com.ots.aipassportphotomaker.common.utils.SharedPrefUtils
 import com.ots.aipassportphotomaker.common.utils.UrlFactory
 import com.ots.aipassportphotomaker.common.utils.ViewsUtils.premiumHorizontalGradientBrush
 import com.ots.aipassportphotomaker.common.utils.ViewsUtils.premiumHorizontalOppositeGradientBrush
 import com.ots.aipassportphotomaker.presentation.ui.bottom_nav.NavigationBarSharedViewModel
 import com.ots.aipassportphotomaker.presentation.ui.components.LoaderFullScreen
 import com.ots.aipassportphotomaker.presentation.ui.main.MainRouter
+import com.ots.aipassportphotomaker.presentation.ui.theme.AppColors
 import com.ots.aipassportphotomaker.presentation.ui.theme.colors
 import com.ots.aipassportphotomaker.presentation.ui.theme.onCustom100
 
@@ -111,10 +117,10 @@ fun PremiumPage(
             mainRouter.goBack()
         },
         onSubscribeWeekly = {
-
+            viewModel.purchaseSubscription(activityContext,AppBillingClient.SKU_ITEM_ONE_WEEK)
         },
         onSubscribeMonthly = {
-
+            viewModel.purchaseSubscription(activityContext,AppBillingClient.SKU_ITEM_ONE_MONTH)
         },
         onTermsClick = {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(UrlFactory.TERMS_AND_CONDITIONS_URL))
@@ -144,6 +150,16 @@ private fun PremiumScreen(
     val context = LocalContext.current
     val uiScope = rememberCoroutineScope()
 
+    val sharedPreferences = context.getSharedPreferences(SharedPrefUtils.PREF_KEY, Context.MODE_PRIVATE)
+    val isDarkMode = remember {
+        mutableStateOf(
+            sharedPreferences.getBoolean(
+                SharedPrefUtils.DARK_MODE,
+                false
+            )
+        )
+    }
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = Color.Transparent
@@ -152,7 +168,14 @@ private fun PremiumScreen(
         val isLoading = uiState.showLoading
         val errorMessage = uiState.errorMessage
 
-        if (errorMessage != null) Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+        // Show Toast when errorMessage changes
+        LaunchedEffect(errorMessage) {
+            if (!isLoading && errorMessage != null) {
+                Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+            }
+        }
+
+//        if (errorMessage != null) Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
 
         if (isLoading) {
             LoaderFullScreen()
@@ -177,6 +200,17 @@ private fun PremiumScreen(
             Box(
                 modifier = Modifier.fillMaxSize()
             ) {
+                val screenBg = if (isDarkMode.value) {
+                    R.drawable.premium_bg_dark
+                } else {
+                    R.drawable.premium_bg
+                }
+
+                val illustrationImg = if (isDarkMode.value) {
+                    R.drawable.premium_illustration_dark
+                } else {
+                    R.drawable.premium_illustration
+                }
 
                 Image(
                     painter = painterResource(id = R.drawable.premium_bg),
@@ -192,7 +226,7 @@ private fun PremiumScreen(
                     modifier = Modifier
                         .padding(start = 20.dp, top = 40.dp)
                         .background(
-                            color = colors.onBackground.copy(alpha = 0.08f),
+                            color = AppColors.LightOnBackground.copy(alpha = 0.08f),
                             shape = RoundedCornerShape(8.dp)
                         )
                 ) {
@@ -200,7 +234,7 @@ private fun PremiumScreen(
                         text = "Restore",
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Medium,
-                        color = colors.onBackground,
+                        color = AppColors.LightOnBackground,
                         modifier = Modifier
                             .align(Alignment.TopEnd)
                             .clickable(
@@ -223,7 +257,7 @@ private fun PremiumScreen(
                                 onCloseClick()
                             }
                         ),
-                    tint = colors.onBackground
+                    tint = AppColors.LightOnBackground
                 )
 
                 Column(
@@ -326,7 +360,7 @@ private fun PremiumScreen(
                             text = "Unlock all premium benefits and features.",
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.SemiBold,
-                            color = colors.onSurfaceVariant,
+                            color = AppColors.LightOnSurfaceVariant,
                             textAlign = TextAlign.Start,
                             modifier = Modifier
                                 .align(Alignment.Start)
@@ -349,7 +383,7 @@ private fun PremiumScreen(
                                     Icon(
                                         painter = painterResource(id = R.drawable.unlimited_ai_usage),
                                         contentDescription = "Icon",
-                                        tint = colors.onBackground,
+                                        tint = AppColors.LightOnBackground,
                                         modifier = Modifier
                                             .size(24.dp)
                                     )
@@ -358,7 +392,7 @@ private fun PremiumScreen(
                                         text = "Unlimited Ai Usage",
                                         style = MaterialTheme.typography.labelLarge,
                                         fontWeight = FontWeight.SemiBold,
-                                        color = colors.onCustom100,
+                                        color = AppColors.LightOn100,
                                     )
                                 }
 
@@ -373,7 +407,7 @@ private fun PremiumScreen(
                                     Icon(
                                         painter = painterResource(id = R.drawable.no_ads),
                                         contentDescription = "Icon",
-                                        tint = colors.onBackground,
+                                        tint = AppColors.LightOnBackground,
                                         modifier = Modifier
                                             .size(24.dp)
                                     )
@@ -382,7 +416,7 @@ private fun PremiumScreen(
                                         text = "No Annoying Ads",
                                         style = MaterialTheme.typography.labelLarge,
                                         fontWeight = FontWeight.SemiBold,
-                                        color = colors.onCustom100,
+                                        color = AppColors.LightOn100,
                                     )
                                 }
                             }
@@ -398,7 +432,7 @@ private fun PremiumScreen(
                                     Icon(
                                         painter = painterResource(id = R.drawable.fast_processing),
                                         contentDescription = "Icon",
-                                        tint = colors.onBackground,
+                                        tint = AppColors.LightOnBackground,
                                         modifier = Modifier
                                             .size(24.dp)
                                     )
@@ -407,7 +441,7 @@ private fun PremiumScreen(
                                         text = "Faster Processing",
                                         style = MaterialTheme.typography.labelLarge,
                                         fontWeight = FontWeight.SemiBold,
-                                        color = colors.onCustom100,
+                                        color = AppColors.LightOn100,
                                     )
                                 }
 
@@ -422,7 +456,7 @@ private fun PremiumScreen(
                                     Icon(
                                         painter = painterResource(id = R.drawable.no_watermark),
                                         contentDescription = "Icon",
-                                        tint = colors.onBackground,
+                                        tint = AppColors.LightOnBackground,
                                         modifier = Modifier
                                             .size(24.dp)
                                     )
@@ -431,7 +465,7 @@ private fun PremiumScreen(
                                         text = "No Watermark",
                                         style = MaterialTheme.typography.labelLarge,
                                         fontWeight = FontWeight.SemiBold,
-                                        color = colors.onCustom100,
+                                        color = AppColors.LightOn100,
                                     )
                                 }
                             }
@@ -439,6 +473,9 @@ private fun PremiumScreen(
                         }
 
                         Spacer(modifier = Modifier.height(8.dp))
+
+                        // Weekly Subscription Button
+                        val weeklyItem = uiState.subscriptionItems.find { it.sku == AppBillingClient.SKU_ITEM_ONE_WEEK }
 
                         Box(
                             modifier = Modifier
@@ -460,7 +497,7 @@ private fun PremiumScreen(
                                     .fillMaxWidth()
                                     .padding(2.dp)
                                     .background(
-                                        color = colors.background,
+                                        color = AppColors.LightBackground,
                                         shape = RoundedCornerShape(32.dp)
                                     )
 
@@ -475,14 +512,14 @@ private fun PremiumScreen(
                                         text = "Subscribe Weekly",
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.Bold,
-                                        color = colors.onBackground
+                                        color = AppColors.LightOnBackground
                                     )
                                     Text(
                                         modifier = Modifier,
-                                        text = "Rs. 850.00",
+                                        text = weeklyItem?.pricingPhase?.formattedPrice ?: "Rs. 850.00",
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.Bold,
-                                        color = colors.onBackground
+                                        color = AppColors.LightOnBackground
                                     )
                                 }
 
@@ -491,9 +528,11 @@ private fun PremiumScreen(
 
                         Spacer(modifier = Modifier.height(8.dp))
 
+                        // Monthly Subscription Button
+                        val monthlyItem = uiState.subscriptionItems.find { it.sku == AppBillingClient.SKU_ITEM_ONE_MONTH }
                         PremiumMonthlyButton(
                             buttonText = "Subscribe Monthly",
-                            buttonPrice = "Rs. 1,499.00",
+                            buttonPrice = monthlyItem?.pricingPhase?.formattedPrice ?: "Rs. 1,499.00",
                             onSubscribeMonthly = {
                                 onSubscribeMonthly()
                             },
@@ -503,7 +542,7 @@ private fun PremiumScreen(
                             text = "Auto renew, cancel anytime",
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Medium,
-                            color = colors.onSurfaceVariant,
+                            color = AppColors.LightOnSurfaceVariant,
                             textAlign = TextAlign.Center,
                             modifier = Modifier
                                 .align(Alignment.CenterHorizontally)
@@ -526,7 +565,7 @@ private fun PremiumScreen(
                                 style = MaterialTheme.typography.labelMedium,
                                 textDecoration = TextDecoration.Underline,
                                 fontWeight = FontWeight.SemiBold,
-                                color = colors.onBackground,
+                                color = AppColors.LightOnBackground,
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier
                                     .clickable(
@@ -537,7 +576,7 @@ private fun PremiumScreen(
                             )
 
                             VerticalDivider(
-                                color = colors.onSurfaceVariant,
+                                color = AppColors.LightOnSurfaceVariant,
                                 thickness = 1.dp,
                                 modifier = Modifier
                                     .padding(horizontal = 20.dp)
@@ -550,7 +589,7 @@ private fun PremiumScreen(
                                 style = MaterialTheme.typography.labelMedium,
                                 textDecoration = TextDecoration.Underline,
                                 fontWeight = FontWeight.SemiBold,
-                                color = colors.onBackground,
+                                color = AppColors.LightOnBackground,
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier
                                     .clickable(
@@ -649,7 +688,7 @@ fun PremiumMonthlyButton(
                 ) // Smaller radius for tag
                 .border(
                     width = 2.dp,
-                    color = colors.background,
+                    color = AppColors.LightBackground,
                     shape = RoundedCornerShape(16.dp)
                 ), // Adjust padding for tag size
             contentAlignment = Alignment.Center

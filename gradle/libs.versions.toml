@@ -46,6 +46,9 @@ captureVersion = "2.1.0"
 pagerVersion = "0.20.0"
 pagerIndicatorVersion = "0.18.0"
 
+billingV3 = "1.0.45"
+billingClient = "8.0.0"
+
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -107,6 +110,10 @@ compose-capturable = { module = "dev.shreyaspatil:capturable", version.ref = "ca
 
 accompanist-pager = { module = "com.google.accompanist:accompanist-pager", version.ref = "pagerVersion" }
 accompanist-pager-indicator = { module = "com.google.accompanist:accompanist-pager-indicators", version.ref = "pagerIndicatorVersion" }
+
+#Billing
+android-inapp-billing-v3 = { module = "com.anjlab.android.iab.v3:library", version.ref = "billingV3" }
+android-billingclient = { module = "com.android.billingclient:billing", version.ref = "billingClient" }
 
 
 compose-colorpicker = { module = "com.github.skydoves:colorpicker-compose", version.ref = "colorpicker" }

@@ -3,6 +3,7 @@ package com.ots.aipassportphotomaker.di
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.work.WorkManager
+import com.ots.aipassportphotomaker.common.iab.AppBillingClient
 import com.ots.aipassportphotomaker.data.remote.api.CropImageApi
 import com.ots.aipassportphotomaker.data.remote.api.RemoveBackgroundApi
 import com.ots.aipassportphotomaker.data.repository.CropImageRepositoryImpl
@@ -68,5 +69,11 @@ class AppModule {
     @Singleton
     fun provideSuitsRepository(suitsDataSource: SuitsDataSource): SuitsRepository {
         return SuitsRepositoryImpl(suitsDataSource)
+    }
+
+    @Provides
+    @Singleton
+    fun provideBillingClient() : AppBillingClient {
+        return AppBillingClient()
     }
 }

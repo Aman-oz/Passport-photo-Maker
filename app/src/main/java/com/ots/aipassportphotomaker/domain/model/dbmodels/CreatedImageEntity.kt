@@ -4,6 +4,7 @@ import com.ots.aipassportphotomaker.data.model.mapper.CreatedImageData
 
 data class CreatedImageEntity(
     val id: Int = 0,
+    val documentId: Int = 0,
     val name: String,
     val type: String,
     val documentImage: String,
@@ -15,7 +16,14 @@ data class CreatedImageEntity(
 )
 
 fun CreatedImageEntity.toData(): CreatedImageData = CreatedImageData(
-    id = id, name = name, type = type, documentImage = documentImage,
-    createdImage = createdImage, documentSize = documentSize, unit = unit,
-    pixel = pixel, resolution = resolution
+    id = id,
+    documentId = documentId,
+    name = name,
+    type = type,
+    documentImage = documentImage,
+    createdImage = createdImage,
+    documentSize = documentSize,
+    unit = unit,
+    pixel = pixel,
+    resolution = resolution
 )

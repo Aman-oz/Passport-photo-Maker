@@ -8,6 +8,8 @@ import androidx.room.PrimaryKey
 data class CreatedImageDbData(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
+    @ColumnInfo(name = "document_id")
+    val documentId: Int = 0, // Foreign key reference to DocumentDbData if
     @ColumnInfo(name = "name")
     val name: String,
     @ColumnInfo(name = "type")
@@ -28,6 +30,7 @@ data class CreatedImageDbData(
     // Optional: Converter to domain model
     fun toDomain(): CreatedImageEntity = CreatedImageEntity(
         id = id,
+        documentId = documentId,
         name = name,
         type = type,
         documentImage = documentImage,

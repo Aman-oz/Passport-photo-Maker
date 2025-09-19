@@ -4,6 +4,7 @@ import com.ots.aipassportphotomaker.domain.model.dbmodels.CreatedImageDbData
 
 data class CreatedImageData(
     val id: Int = 0,
+    val documentId: Int = 0,
     val name: String,
     val type: String,
     val documentImage: String,

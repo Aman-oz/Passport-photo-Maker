@@ -72,4 +72,13 @@ class DocumentLocalDataSource(
             Result.Error(DataNotAvailableException())
         }
     }
+
+    override suspend fun getAllCreatedImages() : Result<List<CreatedImageEntity>> {
+        val images = documentDao.getAllCreatedImages()
+        return if (images.isNotEmpty()) {
+            Result.Success(images.map { it.toDomain() })
+        } else {
+            Result.Error(DataNotAvailableException())
+        }
+    }
 }
