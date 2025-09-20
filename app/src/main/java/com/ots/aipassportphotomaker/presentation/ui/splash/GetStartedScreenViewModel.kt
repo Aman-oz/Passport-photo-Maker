@@ -7,7 +7,9 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import com.ots.aipassportphotomaker.adsmanager.admob.AdsManager
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
+import com.ots.aipassportphotomaker.common.managers.AnalyticsManager
 import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.domain.model.CustomDocumentData
 import com.ots.aipassportphotomaker.domain.model.DocumentEntity
@@ -33,6 +35,8 @@ import kotlinx.coroutines.flow.update
 @HiltViewModel
 class GetStartedScreenViewModel @Inject constructor(
     getStartedScreenBundle: GetStartedScreenBundle,
+    private val adsManager: AdsManager,
+    private val analyticsManager: AnalyticsManager
 ) : BaseViewModel() {
 
     private val _uiState: MutableStateFlow<GetStartedScreenUiState> = MutableStateFlow(
@@ -44,7 +48,6 @@ class GetStartedScreenViewModel @Inject constructor(
     val navigationState = _navigationState.asSharedFlow()
 
     init {
-
         onInitialState()
         loadState(false)
     }

@@ -1,11 +1,12 @@
 package com.ots.aipassportphotomaker.presentation.ui.splash
 
+import android.app.Activity
 import android.content.res.Configuration
 import android.os.Build
 import android.util.Log
 import android.widget.Toast
-import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -16,15 +17,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -43,7 +47,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.rememberLottieComposition
+import com.google.android.gms.ads.AdSize
+import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.ots.aipassportphotomaker.R
+import com.ots.aipassportphotomaker.adsmanager.admob.AdMobBanner
+import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
+import com.ots.aipassportphotomaker.adsmanager.admob.adids.TestAdIds
+import com.ots.aipassportphotomaker.adsmanager.admob.loadFullScreenAd
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
 import com.ots.aipassportphotomaker.common.utils.Logger
@@ -64,7 +78,31 @@ fun GetStartedPage(
 
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
-    val activityContext = context as ComponentActivity
+    val activityContext = context as Activity
+
+    var interstitialAd by remember { mutableStateOf<InterstitialAd?>(null) }
+    var isAdLoading by remember { mutableStateOf(true) }
+
+    // Load an interstitial ad
+    LaunchedEffect(Unit) {
+        context.loadFullScreenAd(
+            adUnitId = AdIdsFactory.getWelcomeInterstitialAdId(),
+            onAdLoaded = { ad ->
+                isAdLoading = false
+                Logger.i(TAG, "$TAG: Interstitial ad loaded.")
+                interstitialAd = ad
+            },
+            onAdFailedToLoad = {
+                isAdLoading = false
+                Logger.e(TAG, "$TAG: Interstitial ad failed to load: $it")
+            },
+            onAdDismissed = {
+                Logger.i(TAG, "$TAG: Interstitial ad dismissed.")
+                onGetStartedClick()
+                interstitialAd = null
+            }
+        )
+    }
 
     Logger.d(TAG, "GetStartedPage: UI State: $uiState")
 
@@ -89,11 +127,20 @@ fun GetStartedPage(
 
     GetStartedScreen(
         uiState = uiState,
-
+        isAdLoading = isAdLoading,
         onBackClick = {
             mainRouter.goBack()
         },
-        onGetStartedClick = onGetStartedClick
+        onGetStartedClick = {
+            interstitialAd?.let {
+                it.show(context)
+            } ?: run {
+                onGetStartedClick()
+                Logger.e(TAG, "$TAG: Interstitial ad not ready yet.")
+            }
+
+
+        }
     )
 
 }
@@ -102,6 +149,7 @@ fun GetStartedPage(
 @Composable
 private fun GetStartedScreen(
     uiState: GetStartedScreenUiState,
+    isAdLoading: Boolean,
     onBackClick: () -> Unit,
     onGetStartedClick: () -> Unit
 ) {
@@ -117,6 +165,7 @@ private fun GetStartedScreen(
 
         val isLoading = uiState.showLoading
         val errorMessage = uiState.errorMessage
+        val composition by rememberLottieComposition(spec = LottieCompositionSpec.RawRes(R.raw.loading_white))
 
         if (errorMessage != null) Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
 
@@ -240,35 +289,63 @@ private fun GetStartedScreen(
                             .padding(horizontal = 16.dp, vertical = 4.dp)
                             .scale(buttonAnimatedScale),
                     ) {
-                        Text(
+                        if (isAdLoading) {
+                            LottieAnimation(
+                                composition = composition,
+                                iterations = LottieConstants.IterateForever,
                                 modifier = Modifier
-                                .padding(vertical = 4.dp),
-                            text = "Get Started",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = colors.onPrimary)
+                                    .size(32.dp)
+                                    .align(Alignment.CenterVertically)
+                            )
+                        } else {
+                            Text(
+                                modifier = Modifier
+                                    .padding(vertical = 4.dp),
+                                text = "Get Started",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = colors.onPrimary
+                            )
+                        }
+
                     }
 
 
                     Spacer(modifier = Modifier.height(8.dp))
 
+                    var adLoadState by remember { mutableStateOf(false) }
+
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(50.dp)
+                            .height(52.dp) // match banner height
                     ) {
-                        Text(
-                            text = "Advertisement",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Medium,
-                            color = colors.onSurfaceVariant,
-                            modifier = Modifier
-                                .align(Alignment.CenterHorizontally)
-                                .padding(horizontal = 16.dp)
-                                .fillMaxWidth()
-                                .wrapContentSize(align = Alignment.Center)
-                        )
+                        Box(contentAlignment = Alignment.Center) {
+                            if (!adLoadState) {
+                                Text(
+                                    text = "Advertisement",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium,
+                                    color = colors.onSurfaceVariant,
+                                    modifier = Modifier
+                                        .padding(horizontal = 16.dp)
+                                        .fillMaxWidth()
+                                        .wrapContentSize(align = Alignment.Center)
+                                )
+                            }
 
+                            AdMobBanner(
+                                adUnit = AdIdsFactory.getSplashBannerAdId(),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .align(Alignment.Center),
+                                adSize = AdSize.BANNER, // or adaptive size if needed
+                                onAdLoaded = { isLoaded ->
+                                    adLoadState = isLoaded
+                                }
+                            )
+                        }
                     }
+
 
                     Spacer(modifier = Modifier.height(12.dp))
 
@@ -292,6 +369,7 @@ fun DocumentInfoScreenPreview() {
                 showLoading = false,
                 errorMessage = null
             ),
+            isAdLoading = false,
             onBackClick = {},
             onGetStartedClick = {}
         )

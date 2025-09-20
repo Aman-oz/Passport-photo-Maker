@@ -35,6 +35,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -61,6 +62,8 @@ import com.google.accompanist.pager.HorizontalPagerIndicator
 import com.google.accompanist.pager.PagerState
 import com.google.accompanist.pager.rememberPagerState
 import com.ots.aipassportphotomaker.R
+import com.ots.aipassportphotomaker.adsmanager.admob.AdMobBanner
+import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
 import com.ots.aipassportphotomaker.common.utils.Logger
@@ -284,6 +287,7 @@ fun BottomSection(
     item: OnBoardingItem = OnBoardingItem.get()[index],
     onNextClicked: () -> Unit
 ) {
+    val TAG = "OnboardingScreen"
     Box(
         modifier = Modifier
             .background(colors.background)
@@ -342,22 +346,37 @@ fun BottomSection(
                     color = colors.onPrimary)
             }
 
+            var adLoadState by remember { mutableStateOf(false) }
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp)
+                    .height(52.dp)
             ) {
-                Text(
-                    text = "Advertisement",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium,
-                    color = colors.onSurfaceVariant,
+
+                AdMobBanner(
+                    adUnit = AdIdsFactory.getOnboardingBannerAdId(),
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
-                        .padding(horizontal = 16.dp)
-                        .fillMaxWidth()
-                        .wrapContentSize(align = Alignment.Center)
+                        .fillMaxSize()
+                        .wrapContentSize(align = Alignment.Center),
+                    onAdLoaded = { isLoaded ->
+                        adLoadState = isLoaded
+                        Log.d(TAG, "Onboarding: Banner Ad Loaded.")
+                    }
                 )
+                if (!adLoadState) {
+                    Text(
+                        text = "Advertisement",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = colors.onSurfaceVariant,
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .padding(horizontal = 16.dp)
+                            .fillMaxWidth()
+                            .wrapContentSize(align = Alignment.Center)
+                    )
+                }
 
             }
 

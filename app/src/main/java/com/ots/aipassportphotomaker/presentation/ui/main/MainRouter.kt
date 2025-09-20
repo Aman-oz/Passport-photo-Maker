@@ -15,6 +15,16 @@ class MainRouter(
         mainNavController.popBackStack()
     }
 
+    fun navigateToHomeScreen() {
+        mainNavController.navigate(Page.NavigationBar) {
+            // Clear entire back stack to prevent going back to Home screen
+
+            popUpTo(Page.NavigationBar::class) {
+                inclusive = true
+            }
+        }
+    }
+
     fun navigateToItemDetailScreen(name: String) {
         mainNavController.navigate(Page.ItemDetailScreen(name))
     }

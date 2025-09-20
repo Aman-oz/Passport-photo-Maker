@@ -120,7 +120,7 @@ fun SavedImagePage(
         onBackClick = { mainRouter.goBack() },
         onGetProClick = { mainRouter.navigateToPremiumScreen() },
         onGoToHomeClick = {
-
+            mainRouter.navigateToHomeScreen()
         },
         onDeleteClick = {
             viewModel.deleteImage(
@@ -471,7 +471,7 @@ private fun SavedImageScreen(
                             .align(Alignment.CenterHorizontally)
                             .padding(8.dp)
                             .clickable {
-                                onBackClick.invoke()
+                                onGoToHomeClick.invoke()
                             }
                     ) {
                         Icon(
@@ -489,9 +489,6 @@ private fun SavedImageScreen(
                             fontWeight = FontWeight.Medium,
                             color = colors.onBackground,
                             modifier = Modifier
-                                .clickable {
-                                    onGoToHomeClick.invoke()
-                                }
                                 .align(Alignment.CenterVertically)
                         )
                     }

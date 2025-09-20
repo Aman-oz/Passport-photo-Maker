@@ -103,6 +103,8 @@ dependencies {
 //    implementation(libs.firebase.messaging)
     implementation(libs.firebase.config)
 
+    implementation(libs.android.gms)
+
     implementation(libs.lottie.compose)
 
     implementation(libs.android.billingclient)

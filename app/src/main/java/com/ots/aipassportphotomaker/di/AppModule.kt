@@ -3,7 +3,10 @@ package com.ots.aipassportphotomaker.di
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.work.WorkManager
+import com.ots.aipassportphotomaker.adsmanager.admob.AdsManager
 import com.ots.aipassportphotomaker.common.iab.AppBillingClient
+import com.ots.aipassportphotomaker.common.managers.AnalyticsManager
+import com.ots.aipassportphotomaker.common.managers.PreferencesHelper
 import com.ots.aipassportphotomaker.common.utils.SharedPrefUtils
 import com.ots.aipassportphotomaker.data.remote.api.CropImageApi
 import com.ots.aipassportphotomaker.data.remote.api.RemoveBackgroundApi
@@ -39,6 +42,24 @@ class AppModule {
     @AppSettingsSharedPreference
     fun provideAppSettingsSharedPreference(@ApplicationContext context: Context): SharedPreferences {
         return context.getSharedPreferences(SharedPrefUtils.PREF_KEY, Context.MODE_PRIVATE)
+    }
+
+    @Provides
+    @Singleton
+    fun providePreferencesHelper(@ApplicationContext context: Context): PreferencesHelper {
+        return PreferencesHelper(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAnalyticsManager(@ApplicationContext context: Context): AnalyticsManager {
+        return AnalyticsManager(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAdsManager(@ApplicationContext context: Context, analyticsManager: AnalyticsManager, preferencesHelper: PreferencesHelper): AdsManager {
+        return AdsManager(context, analyticsManager, preferencesHelper)
     }
 
     @Provides

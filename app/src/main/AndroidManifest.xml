@@ -49,6 +49,10 @@
 
             />
 
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="@string/app_id"/>
+
         <!--<service
             android:name=".java.MyFirebaseMessagingService"
             android:exported="false">

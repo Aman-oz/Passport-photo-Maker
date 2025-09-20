@@ -126,6 +126,9 @@ firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics-ndk"
 firebase-messaging = { module = "com.google.firebase:firebase-messaging-ktx" }
 firebase-config = { module = "com.google.firebase:firebase-config" }
 
+# Gms
+android-gms = { module = "com.google.android.gms:play-services-ads", version = "24.6.0" }
+
 
 compose-colorpicker = { module = "com.github.skydoves:colorpicker-compose", version.ref = "colorpicker" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
