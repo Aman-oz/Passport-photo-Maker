@@ -13,6 +13,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -27,9 +28,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -46,7 +49,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.google.android.gms.ads.AdSize
 import com.ots.aipassportphotomaker.R
+import com.ots.aipassportphotomaker.adsmanager.admob.AdMobBanner
+import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
 import com.ots.aipassportphotomaker.common.utils.Logger
@@ -112,29 +118,37 @@ fun PermissionPage(
     val multiplePermissionResultLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions(),
         onResult = { perms ->
-            permissionsToRequest.forEach { permission ->
-                val isGranted = perms[permission] == true
-                if (isGranted) {
-                    Logger.d(TAG, "$permission granted")
+            val allGranted = permissionsToRequest.all { perms[it] == true }
+            if (allGranted) {
+                // ✅ Only trigger once when *all* are granted
+                viewModel.showInterstitialAd(activityContext) {
                     onGetStartedClick()
-                } else {
-                    Logger.d(TAG, "$permission denied")
-                    viewModel.onPermissionResult(
-                        permission = permission,
-                        isGranted = perms[permission] == true
-                    )
                 }
-
+            } else {
+                // Handle each denied separately
+                permissionsToRequest.forEach { permission ->
+                    if (perms[permission] != true) {
+                        viewModel.onPermissionResult(
+                            permission = permission,
+                            isGranted = false
+                        )
+                    }
+                }
             }
         }
     )
+
 
 
     PermissionScreen(
         uiState = uiState,
 
         onCloseClick = {
-            onGetStartedClick()
+
+            viewModel.showInterstitialAd(activityContext) { isAdShown ->
+
+                onGetStartedClick()
+            }
         },
 
         onAllowPermissionClick = {
@@ -318,22 +332,38 @@ private fun PermissionScreen(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
+                    var adLoadState by remember { mutableStateOf(false) }
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(50.dp)
+                            .height(52.dp) // match banner height
                     ) {
-                        Text(
-                            text = "Advertisement",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Medium,
-                            color = colors.onSurfaceVariant,
-                            modifier = Modifier
-                                .align(Alignment.CenterHorizontally)
-                                .padding(horizontal = 16.dp)
-                                .fillMaxWidth()
-                                .wrapContentSize(align = Alignment.Center)
-                        )
+                        Box(contentAlignment = Alignment.Center) {
+                            if (!adLoadState) {
+                                Text(
+                                    text = "Advertisement",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium,
+                                    color = colors.onSurfaceVariant,
+                                    modifier = Modifier
+                                        .padding(horizontal = 16.dp)
+                                        .fillMaxWidth()
+                                        .wrapContentSize(align = Alignment.Center)
+                                )
+                            }
+
+                            AdMobBanner(
+                                adUnit = AdIdsFactory.getOnboardingBannerAdId(),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .align(Alignment.Center),
+                                adSize = AdSize.BANNER, // or adaptive size if needed
+                                onAdLoaded = { isLoaded ->
+                                    adLoadState = isLoaded
+                                    Logger.d(TAG, "OnboardingScreen: Ad Loaded: $isLoaded")
+                                }
+                            )
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))

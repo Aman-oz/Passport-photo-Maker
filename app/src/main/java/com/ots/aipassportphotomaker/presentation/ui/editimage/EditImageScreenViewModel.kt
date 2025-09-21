@@ -1,5 +1,6 @@
 package com.ots.aipassportphotomaker.presentation.ui.editimage
 
+import android.app.Activity
 import android.content.Context
 import android.net.Uri
 import androidx.compose.ui.graphics.Color
@@ -9,7 +10,9 @@ import androidx.paging.LoadState
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.aman.downloader.OziDownloader
+import com.ots.aipassportphotomaker.adsmanager.admob.MyAdsManager
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
+import com.ots.aipassportphotomaker.common.managers.AnalyticsManager
 import com.ots.aipassportphotomaker.common.utils.ColorUtils.parseColorFromString
 import com.ots.aipassportphotomaker.common.utils.FileUtils
 import com.ots.aipassportphotomaker.common.utils.Logger
@@ -59,7 +62,9 @@ class EditImageScreenViewModel @Inject constructor(
     private val oziDownloader: OziDownloader,
     val colorFactory: ColorFactory,
     private val getSuitsUseCase: GetSuitsUseCase,
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val adsManager: MyAdsManager,
+    private val analyticsManager: AnalyticsManager
 ) : BaseViewModel() {
 
     val suits: Flow<PagingData<SuitsEntity>> = getSuitsUseCase.suits(
@@ -633,6 +638,16 @@ class EditImageScreenViewModel @Inject constructor(
         } catch (e: Exception) {
             Logger.e("ImageProcessingScreenViewModel", "Error saving image: ${e.message}", e)
             return null
+        }
+    }
+
+    fun showInterstitialAd(activity: Activity, onAdClosed: (Boolean) -> Unit) {
+        adsManager.showInterstitial(activity, true) { isAdShown ->
+            if (isAdShown == true) {
+                onAdClosed.invoke(true)
+            } else {
+                onAdClosed.invoke(false)
+            }
         }
     }
 

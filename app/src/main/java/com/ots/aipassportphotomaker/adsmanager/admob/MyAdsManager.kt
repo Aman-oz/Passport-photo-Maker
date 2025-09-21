@@ -14,7 +14,6 @@ import com.google.android.gms.ads.initialization.OnInitializationCompleteListene
 import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import com.google.firebase.analytics.FirebaseAnalytics
-import com.ots.aipassportphotomaker.adsmanager.admob.AdsManager.Companion.isOtherAdShowing
 import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory.getInterstitialAdId
 import com.ots.aipassportphotomaker.common.managers.AnalyticsManager
 import com.ots.aipassportphotomaker.common.managers.PreferencesHelper
@@ -128,7 +127,7 @@ class MyAdsManager(
             })
     }
 
-    fun showInterstitial(activity: Activity?, callback: Consumer<Boolean?>) {
+    fun showInterstitial(activity: Activity?, shouldShow: Boolean, callback: Consumer<Boolean?>) {
         TimeManager.getInstance().start()
 
         if (activity == null) {
@@ -146,7 +145,7 @@ class MyAdsManager(
 
         if (mInterstitialAd != null) {
             Logger.d(TAG, "showInterstitial: mInterstitialAd != null")
-            if (TimeManager.getInstance().getElapsedTimeInSecs() >= getInterstitialAdDelay()) {
+            if (TimeManager.getInstance().getElapsedTimeInSecs() >= getInterstitialAdDelay() || shouldShow) {
                 Logger.d(
                     TAG,
                     "showInterstitial: mInterstitialAdCount > getInterstitialAdCount() || TimeManager.getInstance().elapsedTimeInSecs >= getInterstitialAdDelay()"
@@ -211,5 +210,11 @@ class MyAdsManager(
         Logger.d(TAG, "logAdRevenue Currency : $currency")
         Logger.d(TAG, "logAdRevenue Price : $adValue")
         Logger.d(TAG, "logAdRevenue Price divide by 1m : $price")
+    }
+
+    companion object {
+
+        var isOtherAdShowing: Boolean = false
+
     }
 }

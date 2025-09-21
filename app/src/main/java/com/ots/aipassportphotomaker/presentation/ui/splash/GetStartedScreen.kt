@@ -98,7 +98,7 @@ fun GetStartedPage(
             },
             onAdDismissed = {
                 Logger.i(TAG, "$TAG: Interstitial ad dismissed.")
-                onGetStartedClick()
+//                onGetStartedClick()
                 interstitialAd = null
             }
         )
@@ -132,10 +132,9 @@ fun GetStartedPage(
             mainRouter.goBack()
         },
         onGetStartedClick = {
-            interstitialAd?.let {
-                it.show(context)
-            } ?: run {
-                onGetStartedClick()
+            onGetStartedClick()
+
+            interstitialAd?.show(context) ?: run {
                 Logger.e(TAG, "$TAG: Interstitial ad not ready yet.")
             }
 
@@ -282,6 +281,8 @@ private fun GetStartedScreen(
 
                     Button(
                         onClick = {
+                            if (isAdLoading) return@Button
+
                             onGetStartedClick()
                         },
                         modifier = Modifier
@@ -341,6 +342,7 @@ private fun GetStartedScreen(
                                 adSize = AdSize.BANNER, // or adaptive size if needed
                                 onAdLoaded = { isLoaded ->
                                     adLoadState = isLoaded
+                                    Logger.d(TAG, "AdMobBanner: onAdLoaded: $isLoaded")
                                 }
                             )
                         }

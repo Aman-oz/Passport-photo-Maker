@@ -1,5 +1,6 @@
 package com.ots.aipassportphotomaker.presentation.ui.documentinfo
 
+import android.app.Activity
 import android.os.Build
 import android.widget.Toast
 import androidx.annotation.RequiresApi
@@ -7,7 +8,9 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import com.ots.aipassportphotomaker.adsmanager.admob.MyAdsManager
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
+import com.ots.aipassportphotomaker.common.managers.AnalyticsManager
 import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.domain.model.CustomDocumentData
 import com.ots.aipassportphotomaker.domain.model.DocumentEntity
@@ -31,6 +34,8 @@ class DocumentInfoScreenViewModel @Inject constructor(
     private val getDocumentDetails: GetDocumentDetails,
     documentDetailsBundle: DocumentDetailsBundle,
     val colorFactory: ColorFactory,
+    private val adsManager: MyAdsManager,
+    private val analyticsManager: AnalyticsManager
 ) : BaseViewModel() {
 
     private val _uiState: MutableStateFlow<DocumentInfoScreenUiState> = MutableStateFlow(DocumentInfoScreenUiState())
@@ -205,5 +210,15 @@ class DocumentInfoScreenViewModel @Inject constructor(
     }
 
     private suspend fun getDocumentById(documentId: Int): Result<DocumentEntity> = getDocumentDetails(documentId)
+
+    fun showInterstitialAd(activity: Activity, onAdClosed: (Boolean) -> Unit) {
+        adsManager.showInterstitial(activity, true) { isAdShown ->
+            if (isAdShown == true) {
+                onAdClosed.invoke(true)
+            } else {
+                onAdClosed.invoke(false)
+            }
+        }
+    }
 
 }

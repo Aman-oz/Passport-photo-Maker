@@ -7,6 +7,7 @@ import android.os.Build
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
@@ -31,6 +32,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -68,7 +70,10 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.google.android.gms.ads.AdSize
 import com.ots.aipassportphotomaker.R
+import com.ots.aipassportphotomaker.adsmanager.admob.AdMobBanner
+import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
 import com.ots.aipassportphotomaker.common.utils.Logger
@@ -228,12 +233,17 @@ fun DocumentInfoPage(
         },
         onCreatePhotoClick = { type ->
             viewModel.onCreatePhotoClicked()
+            viewModel.showInterstitialAd(activityContext) {  }
         },
         onReselectDocument = {
             mainRouter.goBack()
+
+            viewModel.showInterstitialAd(activityContext) {  }
         },
         onBackClick = {
             mainRouter.goBack()
+
+            viewModel.showInterstitialAd(activityContext) {  }
         },
         onGetProClick = {
             mainRouter.navigateToPremiumScreen()
@@ -307,6 +317,11 @@ fun DocumentInfoPage(
                 onGoToAppSettingsClick = { activityContext.openAppSettings() }
             )
         }
+
+    BackHandler {
+        mainRouter.goBack()
+        viewModel.showInterstitialAd(activityContext) {  }
+    }
 
 }
 
@@ -622,6 +637,9 @@ private fun DocumentInfoScreen(
                                 isChecked = true,
                                 onSelectDpi = { dpi ->
                                     onSelectDpi(dpi)
+                                },
+                                onGetProClick = {
+                                    onGetProClick()
                                 }
                             )
                             ChecklistItem(
@@ -648,163 +666,198 @@ private fun DocumentInfoScreen(
 
                 // Bottom Button Layout
 
-                if (isImageSelected) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp)
-                            .align(Alignment.BottomCenter),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .padding(16.dp)
-                                .pointerInput(Unit) {
-                                    detectTapGestures(
-                                        onPress = {
-                                            scale1 = 0.90f
-                                            tryAwaitRelease()
-                                            scale1 = 1f
-                                        },
-                                        onTap = {
-                                            onOpenGalleryClick()
-                                        }
-                                    )
-                                }
-                                .scale(textAnimatedScale),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.arrow_circle),
-                                contentDescription = null,
-                                tint = colors.onBackground,
-                                modifier = Modifier
-                                    .align(Alignment.CenterVertically)
-                            )
-                            Text(
-                                text = "Retake image",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = colors.onBackground,
-                                modifier = Modifier
-                                    .padding(start = 10.dp) // Adjusted padding for better spacing
-                            )
-                        }
-
-                        Button(
-                            onClick = {
-                                onCreatePhotoClick(uiState.documentType)
-                            },
-                            shape = RoundedCornerShape(24.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = colors.primary),
+                Column(
+                    modifier = Modifier
+                        .padding(bottom = 12.dp)
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter),
+                ) {
+                    if (isImageSelected) {
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(bottom = 8.dp)
-                                .height(48.dp)
-                                .pointerInput(Unit) {
-                                    detectTapGestures(
-                                        onPress = {
-                                            scale2 = 0.90f
-                                            tryAwaitRelease()
-                                            scale2 = 1f
-                                        },
-                                        onTap = {
-                                            onCreatePhotoClick(uiState.documentType)
-                                        }
-                                    )
-                                }
-                                .scale(buttonAnimatedScale)
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text(
-                                text = "Create Photo",
-                                color = colors.onPrimary,
-                                fontSize = 16.sp
-                            )
-                        }
-                    }
-
-                } else {
-                    var preparedUri: Uri? by remember { mutableStateOf(null) }
-                    val cameraLauncher = rememberLauncherForActivityResult(
-                        contract = ActivityResultContracts.TakePicture()
-                    ) { success ->
-                        if (success) {
-                            preparedUri?.let {
-                                onTakePhotoClick(it)
-                            }
-                        }
-                    }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp)
-                            .align(Alignment.BottomCenter),
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        Button(
-                            onClick = {
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                    galleryPermissionLauncher.launch(arrayOf(Manifest.permission.READ_MEDIA_IMAGES))
-                                } else {
-                                    galleryPermissionLauncher.launch(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE))
-                                }
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = colors.primary), // Blue color from image
-                            shape = RoundedCornerShape(24.dp),
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(end = 8.dp, bottom = 8.dp)
-                                .height(48.dp)
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                            Row(
+                                modifier = Modifier
+                                    .padding(16.dp)
+                                    .pointerInput(Unit) {
+                                        detectTapGestures(
+                                            onPress = {
+                                                scale1 = 0.90f
+                                                tryAwaitRelease()
+                                                scale1 = 1f
+                                            },
+                                            onTap = {
+                                                onOpenGalleryClick()
+                                            }
+                                        )
+                                    }
+                                    .scale(textAnimatedScale),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
                                 Icon(
-                                    painter = painterResource(id = R.drawable.gallery_icon), // Replace with gallery icon
-                                    contentDescription = "Open Gallery",
-                                    tint = colors.onPrimary,
-                                    modifier = Modifier.size(20.dp)
+                                    painter = painterResource(id = R.drawable.arrow_circle),
+                                    contentDescription = null,
+                                    tint = colors.onBackground,
+                                    modifier = Modifier
+                                        .align(Alignment.CenterVertically)
                                 )
-                                Spacer(modifier = Modifier.width(4.dp))
                                 Text(
-                                    text = "Open Gallery",
+                                    text = "Retake image",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = colors.onBackground,
+                                    modifier = Modifier
+                                        .padding(start = 10.dp) // Adjusted padding for better spacing
+                                )
+                            }
+
+                            Button(
+                                onClick = {
+                                    onCreatePhotoClick(uiState.documentType)
+                                },
+                                shape = RoundedCornerShape(24.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = colors.primary),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 8.dp)
+                                    .height(48.dp)
+                                    .pointerInput(Unit) {
+                                        detectTapGestures(
+                                            onPress = {
+                                                scale2 = 0.90f
+                                                tryAwaitRelease()
+                                                scale2 = 1f
+                                            },
+                                            onTap = {
+                                                onCreatePhotoClick(uiState.documentType)
+                                            }
+                                        )
+                                    }
+                                    .scale(buttonAnimatedScale)
+                            ) {
+                                Text(
+                                    text = "Create Photo",
                                     color = colors.onPrimary,
                                     fontSize = 16.sp
                                 )
                             }
                         }
 
-                        Button(
-                            onClick = {
-                                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-                                /*preparedUri = createImageUri(context)
-                                preparedUri?.let { uri ->
-                                    cameraLauncher.launch(uri)
-                                    Logger.i("DocumentInfoScreen", "Camera URI: $uri")
-                                }*/
-                            },
-                            shape = RoundedCornerShape(24.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                            border = BorderStroke(2.dp, colors.primary),
+                    }
+                    else {
+                        var preparedUri: Uri? by remember { mutableStateOf(null) }
+                        val cameraLauncher = rememberLauncherForActivityResult(
+                            contract = ActivityResultContracts.TakePicture()
+                        ) { success ->
+                            if (success) {
+                                preparedUri?.let {
+                                    onTakePhotoClick(it)
+                                }
+                            }
+                        }
+                        Row(
                             modifier = Modifier
-                                .weight(1f)
-                                .padding(start = 8.dp, bottom = 8.dp)
-                                .height(48.dp)
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceEvenly
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.camera_icon_outline), // Replace with camera icon
-                                    contentDescription = "Take Photo",
-                                    tint = colors.primary,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = "Take Photo",
-                                    color = colors.primary,
-                                    fontSize = 16.sp
-                                )
+                            Button(
+                                onClick = {
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                        galleryPermissionLauncher.launch(arrayOf(Manifest.permission.READ_MEDIA_IMAGES))
+                                    } else {
+                                        galleryPermissionLauncher.launch(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE))
+                                    }
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = colors.primary), // Blue color from image
+                                shape = RoundedCornerShape(24.dp),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(end = 8.dp, bottom = 8.dp)
+                                    .height(48.dp)
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.gallery_icon), // Replace with gallery icon
+                                        contentDescription = "Open Gallery",
+                                        tint = colors.onPrimary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "Open Gallery",
+                                        color = colors.onPrimary,
+                                        fontSize = 16.sp
+                                    )
+                                }
+                            }
+
+                            Button(
+                                onClick = {
+                                    cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                                },
+                                shape = RoundedCornerShape(24.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                                border = BorderStroke(2.dp, colors.primary),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(start = 8.dp, bottom = 8.dp)
+                                    .height(48.dp)
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.camera_icon_outline), // Replace with camera icon
+                                        contentDescription = "Take Photo",
+                                        tint = colors.primary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "Take Photo",
+                                        color = colors.primary,
+                                        fontSize = 16.sp
+                                    )
+                                }
                             }
                         }
                     }
+                    var adLoadState by remember { mutableStateOf(false) }
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp) // match banner height
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            if (!adLoadState) {
+                                Text(
+                                    text = "Advertisement",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium,
+                                    color = colors.onSurfaceVariant,
+                                    modifier = Modifier
+                                        .padding(horizontal = 16.dp)
+                                        .fillMaxWidth()
+                                        .wrapContentSize(align = Alignment.Center)
+                                )
+                            }
+
+                            AdMobBanner(
+                                adUnit = AdIdsFactory.getBannerAdId(),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .align(Alignment.Center),
+                                adSize = AdSize.BANNER, // or adaptive size if needed
+                                onAdLoaded = { isLoaded ->
+                                    adLoadState = isLoaded
+                                    Logger.d(TAG, "OnboardingScreen: Ad Loaded: $isLoaded")
+                                }
+                            )
+                        }
+                    }
                 }
+
 
             }
         }
@@ -824,6 +877,7 @@ fun ChecklistItem(
     onBackgroundOptionChanged: (BackgroundOption) -> Unit = {},
     selectPredefinedColor: (ColorFactory.ColorType) -> Unit = {},
     onApplySelectedColor: () -> Unit = {},
+    onGetProClick: () -> Unit = {}
 ) {
     val scope = rememberCoroutineScope()
     var showColorPickerBottomSheet by rememberSaveable { mutableStateOf(false) }
@@ -1253,7 +1307,12 @@ fun ChecklistItem(
                 }
 
                 PremiumButton {
-                    // go to premium
+                    scope.launch {
+                        resolutionBottomSheetState.hide()
+                    }
+                    showResolutionBottomSheet = false
+
+                    onGetProClick()
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))

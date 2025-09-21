@@ -7,12 +7,12 @@ import android.graphics.drawable.BitmapDrawable
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -26,7 +26,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -84,7 +83,6 @@ import com.ots.aipassportphotomaker.presentation.ui.components.CustomTab
 import com.ots.aipassportphotomaker.presentation.ui.components.LoaderFullScreen
 import com.ots.aipassportphotomaker.presentation.ui.main.MainRouter
 import com.ots.aipassportphotomaker.presentation.ui.theme.colors
-import com.ots.aipassportphotomaker.presentation.ui.theme.custom100
 import com.ots.aipassportphotomaker.presentation.ui.theme.custom300
 import com.ots.aipassportphotomaker.presentation.viewmodel.SharedViewModel
 import kotlinx.coroutines.delay
@@ -105,6 +103,7 @@ fun CutOutImagePage(
 
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+    val activity = context as ComponentActivity
     val uiScope = rememberCoroutineScope()
 
     val imageUrl = viewModel.imageUrl
@@ -124,14 +123,17 @@ fun CutOutImagePage(
 
     val processingStage by viewModel.processingStage.collectAsState()
 
-    val activity = context as ComponentActivity
     val commonSharedViewModel: SharedViewModel = hiltViewModel(activity)
 
     CutOutImageScreen(
         uiState = uiState,
         processingStage = processingStage,
         selectedColor = selectedColor,
-        onBackClick = { mainRouter.goBack() },
+        onBackClick = {
+            mainRouter.goBack()
+
+            viewModel.showInterstitialAd(activity) { }
+        },
         onGetProClick = { mainRouter.navigateToPremiumScreen() },
         onSaveImage = { bitmap ->
             uiScope.launch {
@@ -147,6 +149,8 @@ fun CutOutImagePage(
                             delay(100)
                             mainRouter.goBack()
 
+                            viewModel.showInterstitialAd(activity) { }
+
                         } else {
                             Logger.e(TAG, "Failed to save image")
                         }
@@ -158,6 +162,9 @@ fun CutOutImagePage(
                         if (savedUri != null) {
                             Logger.i(TAG, "Image saved successfully: $savedUri")
                             viewModel.onImageSaved(savedUri.toString())
+
+                            // Rewarded ad
+                            viewModel.showInterstitialAd(activity) { }
 
                         } else {
                             Logger.e(TAG, "Failed to save image")
@@ -194,6 +201,11 @@ fun CutOutImagePage(
             }
         }
     )
+
+    BackHandler {
+        mainRouter.goBack()
+        viewModel.showInterstitialAd(activity) {  }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -771,7 +783,8 @@ private fun CutOutImageScreen(
                                 LaunchedEffect(processingStage) {
                                     if (processingStage == ProcessingStage.COMPLETED ||
                                         processingStage == ProcessingStage.ERROR ||
-                                        processingStage == ProcessingStage.NO_NETWORK_AVAILABLE) {
+                                        processingStage == ProcessingStage.NO_NETWORK_AVAILABLE
+                                    ) {
 
                                         removeBackgroundBitmap = null
                                     }
@@ -806,26 +819,34 @@ private fun CutOutImageScreen(
                                         modifier = Modifier.fillMaxWidth(),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Button(onClick = { removeBackgroundBitmap = null },
+                                        Button(
+                                            onClick = { removeBackgroundBitmap = null },
                                             modifier = Modifier
                                                 .weight(1f) // Takes 50% of the width
                                                 .padding(end = 3.dp)
                                         ) {
-                                            Text("No", modifier = Modifier.padding(horizontal = 10.dp))
+                                            Text(
+                                                "No",
+                                                modifier = Modifier.padding(horizontal = 10.dp)
+                                            )
                                         }
 
                                         Spacer(Modifier.size(6.dp))
 
-                                        Button(onClick = {
-                                            removeBg = true
-                                            onRemoveBackgroundAi(bitmap)
+                                        Button(
+                                            onClick = {
+                                                removeBg = true
+                                                onRemoveBackgroundAi(bitmap)
 
-                                        },
+                                            },
                                             modifier = Modifier
                                                 .weight(1f) // Takes 50% of the width
                                                 .padding(end = 3.dp)
                                         ) {
-                                            Text("Yes", modifier = Modifier.padding(horizontal = 10.dp))
+                                            Text(
+                                                "Yes",
+                                                modifier = Modifier.padding(horizontal = 10.dp)
+                                            )
                                         }
                                     }
                                 }

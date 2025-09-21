@@ -12,6 +12,7 @@ import android.os.Environment
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
@@ -32,6 +33,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -40,6 +42,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
@@ -70,6 +73,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -88,7 +92,10 @@ import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import com.google.android.gms.ads.AdSize
 import com.ots.aipassportphotomaker.R
+import com.ots.aipassportphotomaker.adsmanager.admob.AdMobBanner
+import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
 import com.ots.aipassportphotomaker.common.ext.animatedBorder
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
@@ -197,6 +204,9 @@ fun EditImagePage(
         colorFactory = colorFactory,
         onImageSaved = { imagePath ->
             viewModel.onImageSaved(imagePath)
+
+            //Rewarded ad
+            viewModel.showInterstitialAd(activity) { }
         },
         onColorChange = { color, colorType ->
             if (uiState.sourceScreen == "HomeScreen" && !uiState.isBgRemoved && shouldRemoveBackground) {
@@ -208,12 +218,22 @@ fun EditImagePage(
                 viewModel.selectColor(color, colorType)
             }
         },
-        onBackClick = { mainRouter.goBack() },
+        onBackClick = {
+            mainRouter.goBack()
+
+            viewModel.showInterstitialAd(activity) {  }
+        },
         onEraseClick = {
             viewModel.onCutoutClicked()
         },
         onGetProClick = { mainRouter.navigateToPremiumScreen() }
     )
+
+    BackHandler {
+        mainRouter.goBack()
+        viewModel.showInterstitialAd(activity) {  }
+    }
+
 }
 
 @OptIn(
@@ -235,7 +255,7 @@ private fun EditImageScreen(
     onBackClick: () -> Unit = {},
     onGetProClick: () -> Unit = {},
 ) {
-
+    val TAG = "EditImageScreen"
 
     val context = LocalContext.current
 
@@ -511,7 +531,10 @@ private fun EditImageScreen(
                             if (isSuitLoading) {
                                 Box(
                                     modifier = Modifier
-                                        .background(color = colors.background, shape = RoundedCornerShape(10.dp))
+                                        .background(
+                                            color = colors.background,
+                                            shape = RoundedCornerShape(10.dp)
+                                        )
                                         .size(60.dp)
                                         .align(Alignment.Center),
                                     contentAlignment = Alignment.Center
@@ -950,6 +973,46 @@ private fun EditImageScreen(
                                 }
                             }
                         }
+
+                        Spacer(modifier = Modifier.weight(1f))
+
+                        var adLoadState by remember { mutableStateOf(false) }
+
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp) // match banner height
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                if (!adLoadState) {
+                                    Text(
+                                        text = "Advertisement",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium,
+                                        color = colors.onSurfaceVariant,
+                                        modifier = Modifier
+                                            .padding(horizontal = 16.dp)
+                                            .fillMaxWidth()
+                                            .wrapContentSize(align = Alignment.Center)
+                                    )
+                                }
+
+                                AdMobBanner(
+                                    adUnit = AdIdsFactory.getBannerAdId(),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .align(Alignment.Center),
+                                    adSize = AdSize.BANNER, // or adaptive size if needed
+                                    onAdLoaded = { isLoaded ->
+                                        adLoadState = isLoaded
+                                        Logger.d(TAG, "AdMobBanner: onAdLoaded: $isLoaded")
+                                    }
+                                )
+                            }
+                        }
+
+
+                        Spacer(modifier = Modifier.height(12.dp))
 
                         // Add SnackbarHost to display permission rationale
                         SnackbarHost(

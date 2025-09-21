@@ -27,18 +27,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
+import com.ots.aipassportphotomaker.adsmanager.admob.MyAdsManager
 import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.common.utils.SharedPrefUtils
 import com.ots.aipassportphotomaker.common.utils.UrlFactory
 import com.ots.aipassportphotomaker.di.AppSettingsSharedPreference
 import com.ots.aipassportphotomaker.domain.bottom_nav.Page
+import com.ots.aipassportphotomaker.domain.bottom_nav.route
 import com.ots.aipassportphotomaker.domain.permission.PermissionsHelper
 import com.ots.aipassportphotomaker.domain.util.NetworkMonitor
 import com.ots.aipassportphotomaker.presentation.ui.components.CameraPermissionTextProvider
 import com.ots.aipassportphotomaker.presentation.ui.components.ChangeThemDialog
+import com.ots.aipassportphotomaker.presentation.ui.components.ExitDialog
 import com.ots.aipassportphotomaker.presentation.ui.components.NoInternetConnectionBanner
 import com.ots.aipassportphotomaker.presentation.ui.components.PermissionDialog
 import com.ots.aipassportphotomaker.presentation.ui.components.SettingsScreen
@@ -50,9 +54,11 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.compareTo
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    private val TAG = "MainActivity"
 
     @Inject
     @AppSettingsSharedPreference
@@ -63,6 +69,17 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var permissionsHelper: PermissionsHelper
+
+    @Inject
+    lateinit var adsManager: MyAdsManager
+
+    private var isHomeScreen = false
+    val isOnHomeTab = mutableStateOf(true)
+    private var showExitDialog = false
+    // Add this function to set the home screen state
+    fun setIsHomeScreen(isHome: Boolean) {
+        isHomeScreen = isHome
+    }
 
     //Camera and Read External Storage for android 13 and below
     private val permissionsForAndroid13AndBelow = listOf(
@@ -102,23 +119,27 @@ class MainActivity : ComponentActivity() {
 
         setContent {
 
+            val viewModel = viewModel<MainViewModel>()
             val navController = rememberNavController()
             var darkMode by remember { mutableStateOf(isDarkModeEnabled()) }
 
             val scope = rememberCoroutineScope()
 
             val customBottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-            val changeThemeBottomSheetState =
-                rememberModalBottomSheetState(skipPartiallyExpanded = true)
+            val changeThemeBottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+            val exitBottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
             var showSettingsDialog by rememberSaveable { mutableStateOf(false) }
             var showChangeThemeDialog by rememberSaveable { mutableStateOf(false) }
+//            var showExitDialog by rememberSaveable { mutableStateOf(false) }
+//            var showExitDialogState by remember { mutableStateOf(false) }
+            val showExitDialog by viewModel.showExitDialog.collectAsState()
 
             var selectedTheme by rememberSaveable { mutableIntStateOf(getInitialThemeIndex()) }
 
+
             AppTheme(darkMode) {
 
-                val viewModel = viewModel<MainViewModel>()
                 val dialogQueue = viewModel.visiblePermissionDialogQueue
 
                 val cameraPermissionResultLauncher = rememberLauncherForActivityResult(
@@ -150,14 +171,21 @@ class MainActivity : ComponentActivity() {
                     }
                 }*/
 
+                LaunchedEffect(navController) {
+                    navController.addOnDestinationChangedListener { _, destination, _ ->
+                        Logger.d(TAG, "Destination changed to: ${destination.route} = ${Page.NavigationBar.route()}")
+                        isHomeScreen = destination.route == Page.NavigationBar.route()
+                    }
+                }
+
                 Column {
                     val networkStatus by networkMonitor.networkState.collectAsState(null)
 
-                    networkStatus?.let {
+                    /*networkStatus?.let {
                         if (it.isOnline.not()) {
                             NoInternetConnectionBanner()
                         }
-                    }
+                    }*/
 
                     MainGraph(
                         mainNavController = navController,
@@ -185,6 +213,10 @@ class MainActivity : ComponentActivity() {
                                     popUpTo(Page.GetStartedScreen) { inclusive = true }
                                 }
                             }
+                        },
+                        onBottomNavTabChanged = { isHomeScreen ->
+                            Logger.d("MainActivity", "Bottom nav tab changed, isHomeScreen: $isHomeScreen")
+                            isOnHomeTab .value = isHomeScreen
                         }
                     )
 
@@ -334,6 +366,7 @@ class MainActivity : ComponentActivity() {
                             selectedOption = selectedTheme
                         ) { themeIndex ->
 
+                            adsManager.showInterstitial(this@MainActivity, true) { isAdShown -> }
                             when (themeIndex) {
                                 0 -> {
                                     val systemDarkMode = isSystemInDarkMode()
@@ -365,7 +398,53 @@ class MainActivity : ComponentActivity() {
 
                     }
                 }
+
+                if (showExitDialog) {
+
+                    ModalBottomSheet(
+                        onDismissRequest = {
+                            scope.launch {
+                                exitBottomSheetState.hide()
+                            }
+                            viewModel.hideExitDialog()
+                        },
+                        containerColor = colors.background,
+                        sheetState = exitBottomSheetState
+                    ) {
+                        ExitDialog(
+                            onCancelClick = {
+
+                                scope.launch {
+                                    exitBottomSheetState.hide()
+                                }
+                                viewModel.hideExitDialog()
+                            },
+                            onExitClick = {
+                                scope.launch {
+                                    exitBottomSheetState.hide()
+                                }
+                                viewModel.hideExitDialog()
+                                finishAffinity()
+                            }
+                        )
+
+                    }
+                }
             }
+            onBackPressedDispatcher.addCallback(
+                this, // LifecycleOwner
+                object : androidx.activity.OnBackPressedCallback(true) {
+                    override fun handleOnBackPressed() {
+                        Logger.d(TAG, "Back pressed, isHomeScreen: $isHomeScreen")
+                        if (isHomeScreen && isOnHomeTab.value) {
+                            viewModel.showExitDialog()
+                        } else {
+                            isEnabled = false
+                            onBackPressedDispatcher.onBackPressed()
+                        }
+                    }
+                }
+            )
         }
     }
 
@@ -382,6 +461,20 @@ class MainActivity : ComponentActivity() {
             0 // Default to system theme if no preference set
         }
     }
+
+    /*@Deprecated("Deprecated in Java")
+    override fun onBackPressed() {
+        if (isHomeScreen && isOnHomeTab.value) {
+            Logger.d(TAG, "Back pressed on Home Screen, showing exit dialog")
+            // Use runOnUiThread to ensure UI updates happen on the main thread
+            lifecycleScope.launch {
+                showExitDialog = true
+            }
+        } else {
+            Logger.d(TAG, "Back pressed on non-Home Screen, going back")
+            super.onBackPressed()
+        }
+    }*/
 }
 
 fun Activity.openAppSettings() {

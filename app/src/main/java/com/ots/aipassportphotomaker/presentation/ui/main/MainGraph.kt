@@ -53,6 +53,7 @@ fun MainGraph(
     onSettingClick: () -> Unit,
     onThemeUpdated: () -> Unit,
     onGetStartedCompleted: (Page) -> Unit,
+    onBottomNavTabChanged: (Boolean) -> Unit = {},
 ) {
     NavHost(
         navController = mainNavController,
@@ -131,7 +132,8 @@ fun MainGraph(
                 NavigationBarNestedGraph(
                     navController = nestedNavController,
                     mainNavController = mainNavController,
-                    parentRoute = Graph.Main::class
+                    parentRoute = Graph.Main::class,
+                    onBottomNavTabChanged = onBottomNavTabChanged
                 )
             }
         }

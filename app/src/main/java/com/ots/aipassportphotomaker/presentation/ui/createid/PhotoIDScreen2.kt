@@ -129,7 +129,6 @@ fun PhotoIDPage2(
 
     BackHandler {
         viewModel.resetAllData()
-        Toast.makeText(context, "Clear cache and go back from PhotoID: ${uiState.imagePath}", Toast.LENGTH_SHORT).show()
         mainRouter.goBack()
     }
 }

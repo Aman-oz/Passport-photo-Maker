@@ -13,13 +13,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -33,9 +36,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.google.android.gms.ads.AdSize
+import com.google.android.gms.ads.nativead.NativeAd
+import com.ots.aipassportphotomaker.adsmanager.admob.AdMobBanner
+import com.ots.aipassportphotomaker.adsmanager.admob.AdMobCollapsableBanner
+import com.ots.aipassportphotomaker.adsmanager.admob.CallNativeAd
+import com.ots.aipassportphotomaker.adsmanager.admob.CollapseDirection
+import com.ots.aipassportphotomaker.adsmanager.admob.NativeAdComposable
+import com.ots.aipassportphotomaker.adsmanager.admob.NativeAdPreview
+import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
+import com.ots.aipassportphotomaker.adsmanager.admob.loadNativeAd
 import com.ots.aipassportphotomaker.common.ext.animatedBorder
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
+import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.domain.model.ProcessingStage
 import com.ots.aipassportphotomaker.presentation.ui.bottom_nav.NavigationBarSharedViewModel
 import com.ots.aipassportphotomaker.presentation.ui.components.CommonTopBar
@@ -105,6 +119,7 @@ private fun ImageProcessingScreen(
     onBackClick: () -> Unit = {},
     onGetProClick: () -> Unit = {},
 ) {
+    val TAG = "ImageProcessingScreen"
 
     Surface {
 
@@ -160,6 +175,7 @@ private fun ImageProcessingScreen(
         ) {
             CommonTopBar(
                 title = "Processing",
+                showGetProButton = false,
                 onBackClick = {
                     onBackClick.invoke()
 
@@ -229,12 +245,68 @@ private fun ImageProcessingScreen(
 
                 }
 
-                Box() {
-                    Box(
-                        modifier = Modifier
-                            .offset()
-                    )
+                Spacer(modifier = Modifier.weight(1f))
+
+                var adLoadState by remember { mutableStateOf(false) }
+
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp) // match banner height
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        if (!adLoadState) {
+                            Text(
+                                text = "Advertisement",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                                color = colors.onSurfaceVariant,
+                                modifier = Modifier
+                                    .padding(horizontal = 16.dp)
+                                    .fillMaxWidth()
+                                    .wrapContentSize(align = Alignment.Center)
+                            )
+                        }
+
+                        AdMobCollapsableBanner(
+                            adUnit = AdIdsFactory.getSplashBannerAdId(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .align(Alignment.Center),
+                            adSize = AdSize.FULL_BANNER, // or adaptive size if needed
+                            collapseDirection = CollapseDirection.TOP
+                            ,
+                            onAdLoaded = { isLoaded ->
+                                adLoadState = isLoaded
+                                Logger.d(TAG, "AdMobBanner: onAdLoaded: $isLoaded")
+                            }
+                        )
+                    }
                 }
+
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                /*var nativeAd by remember { mutableStateOf<NativeAd?>(null) }
+
+                LaunchedEffect(null) {
+                    loadNativeAd(context, AdIdsFactory.getNativeAdId()) {
+                        nativeAd = it
+                    }
+                }
+
+                nativeAd?.let {
+                    CallNativeAd(nativeAd = it)
+                }*/
+
+
+                /*NativeAdComposable(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    adUnitId = AdIdsFactory.getNativeAdId() // Sample AdMob native ad unit ID
+                )*/
+
+                Spacer(modifier = Modifier.height(12.dp))
             }
         }
     }

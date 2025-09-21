@@ -1,10 +1,13 @@
 package com.ots.aipassportphotomaker.presentation.ui.cutout
 
+import android.app.Activity
 import android.content.Context
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewModelScope
 import com.aman.downloader.OziDownloader
+import com.ots.aipassportphotomaker.adsmanager.admob.MyAdsManager
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
+import com.ots.aipassportphotomaker.common.managers.AnalyticsManager
 import com.ots.aipassportphotomaker.common.utils.ColorUtils.parseColorFromString
 import com.ots.aipassportphotomaker.common.utils.FileUtils
 import com.ots.aipassportphotomaker.common.utils.Logger
@@ -45,7 +48,9 @@ class CutOutImageScreenViewModel @Inject constructor(
     private val networkMonitor: NetworkMonitor,
     private val removeBackgroundRepository: RemoveBackgroundRepository,
     private val oziDownloader: OziDownloader,
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val adsManager: MyAdsManager,
+    private val analyticsManager: AnalyticsManager
 ): BaseViewModel() {
 
     private val _uiState: MutableStateFlow<CutOutImageScreenUiState> =
@@ -345,6 +350,16 @@ class CutOutImageScreenViewModel @Inject constructor(
         } catch (e: Exception) {
             Logger.e("ImageProcessingScreenViewModel", "Error saving image: ${e.message}", e)
             return null
+        }
+    }
+
+    fun showInterstitialAd(activity: Activity, onAdClosed: (Boolean) -> Unit) {
+        adsManager.showInterstitial(activity, true) { isAdShown ->
+            if (isAdShown == true) {
+                onAdClosed.invoke(true)
+            } else {
+                onAdClosed.invoke(false)
+            }
         }
     }
 }

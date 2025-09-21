@@ -61,6 +61,7 @@ import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.HorizontalPagerIndicator
 import com.google.accompanist.pager.PagerState
 import com.google.accompanist.pager.rememberPagerState
+import com.google.android.gms.ads.AdSize
 import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.adsmanager.admob.AdMobBanner
 import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
@@ -350,34 +351,34 @@ fun BottomSection(
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp)
+                    .height(52.dp) // match banner height
             ) {
-
-                AdMobBanner(
-                    adUnit = AdIdsFactory.getOnboardingBannerAdId(),
-                    modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .fillMaxSize()
-                        .wrapContentSize(align = Alignment.Center),
-                    onAdLoaded = { isLoaded ->
-                        adLoadState = isLoaded
-                        Log.d(TAG, "Onboarding: Banner Ad Loaded.")
+                Box(contentAlignment = Alignment.Center) {
+                    if (!adLoadState) {
+                        Text(
+                            text = "Advertisement",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                            color = colors.onSurfaceVariant,
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp)
+                                .fillMaxWidth()
+                                .wrapContentSize(align = Alignment.Center)
+                        )
                     }
-                )
-                if (!adLoadState) {
-                    Text(
-                        text = "Advertisement",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = colors.onSurfaceVariant,
+
+                    AdMobBanner(
+                        adUnit = AdIdsFactory.getOnboardingBannerAdId(),
                         modifier = Modifier
-                            .align(Alignment.CenterHorizontally)
-                            .padding(horizontal = 16.dp)
                             .fillMaxWidth()
-                            .wrapContentSize(align = Alignment.Center)
+                            .align(Alignment.Center),
+                        adSize = AdSize.BANNER, // or adaptive size if needed
+                        onAdLoaded = { isLoaded ->
+                            adLoadState = isLoaded
+                            Logger.d(TAG, "OnboardingScreen: Ad Loaded: $isLoaded")
+                        }
                     )
                 }
-
             }
 
             Spacer(modifier = Modifier.height(10.dp))

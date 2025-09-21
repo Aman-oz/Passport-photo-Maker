@@ -1,5 +1,6 @@
 package com.ots.aipassportphotomaker.presentation.ui.savedimage
 
+import android.app.Activity
 import android.content.Context
 import android.net.Uri
 import android.os.Build
@@ -8,12 +9,14 @@ import androidx.core.net.toUri
 import androidx.lifecycle.viewModelScope
 import androidx.paging.CombinedLoadStates
 import androidx.paging.LoadState
+import com.ots.aipassportphotomaker.adsmanager.admob.MyAdsManager
 import com.ots.aipassportphotomaker.common.ext.FacebookPackage
 import com.ots.aipassportphotomaker.common.ext.InstagramPackage
 import com.ots.aipassportphotomaker.common.ext.SharePackage
 import com.ots.aipassportphotomaker.common.ext.WhatsappPackage
 import com.ots.aipassportphotomaker.common.ext.shareMedia
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
+import com.ots.aipassportphotomaker.common.managers.AnalyticsManager
 import com.ots.aipassportphotomaker.common.utils.ImageUtils.getFileSizeInfo
 import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.domain.model.DocumentEntity
@@ -47,7 +50,9 @@ class SavedImageScreenViewModel @Inject constructor(
     private val getDocumentDetails: GetDocumentDetails,
     savedImageScreenBundle: SavedImageScreenBundle,
     private val dispatcher: DispatchersProvider,
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val adsManager: MyAdsManager,
+    private val analyticsManager: AnalyticsManager
 ): BaseViewModel() {
 
     private val _uiState: MutableStateFlow<SavedImageScreenUiState> =
@@ -237,5 +242,15 @@ class SavedImageScreenViewModel @Inject constructor(
     }
 
     private suspend fun getDocumentById(documentId: Int): Result<DocumentEntity> = getDocumentDetails(documentId)
+
+    fun showInterstitialAd(activity: Activity, onAdClosed: (Boolean) -> Unit) {
+        adsManager.showInterstitial(activity, true) { isAdShown ->
+            if (isAdShown == true) {
+                onAdClosed.invoke(true)
+            } else {
+                onAdClosed.invoke(false)
+            }
+        }
+    }
 
 }

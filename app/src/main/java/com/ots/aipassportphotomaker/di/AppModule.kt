@@ -3,7 +3,7 @@ package com.ots.aipassportphotomaker.di
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.work.WorkManager
-import com.ots.aipassportphotomaker.adsmanager.admob.AdsManager
+import com.ots.aipassportphotomaker.adsmanager.admob.MyAdsManager
 import com.ots.aipassportphotomaker.common.iab.AppBillingClient
 import com.ots.aipassportphotomaker.common.managers.AnalyticsManager
 import com.ots.aipassportphotomaker.common.managers.PreferencesHelper
@@ -58,8 +58,8 @@ class AppModule {
 
     @Provides
     @Singleton
-    fun provideAdsManager(@ApplicationContext context: Context, analyticsManager: AnalyticsManager, preferencesHelper: PreferencesHelper): AdsManager {
-        return AdsManager(context, analyticsManager, preferencesHelper)
+    fun provideAdsManager(@ApplicationContext context: Context, analyticsManager: AnalyticsManager, preferencesHelper: PreferencesHelper): MyAdsManager {
+        return MyAdsManager(context, analyticsManager, preferencesHelper)
     }
 
     @Provides

@@ -6,6 +6,8 @@ import android.content.res.Configuration
 import android.os.Build
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -26,6 +28,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
@@ -70,7 +73,10 @@ import coil.compose.AsyncImagePainter
 import coil.request.ImageRequest
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import com.google.android.gms.ads.AdSize
 import com.ots.aipassportphotomaker.R
+import com.ots.aipassportphotomaker.adsmanager.admob.AdMobBanner
+import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.ext.segmentedShadow
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
@@ -102,6 +108,7 @@ fun SavedImagePage(
 
     val imagePath = viewModel.imagePath
     val context = LocalContext.current
+    val activityContext = context as ComponentActivity
     val sourceScreen = viewModel.sourceScreen
 
     viewModel.navigationState.collectAsEffect { navigationState ->
@@ -117,22 +124,31 @@ fun SavedImagePage(
     SavedImageScreen(
         uiState = uiState,
         sourceScreen = sourceScreen,
-        onBackClick = { mainRouter.goBack() },
+        onBackClick = {
+            mainRouter.goBack()
+
+            viewModel.showInterstitialAd(activityContext) {  }
+                      },
         onGetProClick = { mainRouter.navigateToPremiumScreen() },
         onGoToHomeClick = {
             mainRouter.navigateToHomeScreen()
+
+            viewModel.showInterstitialAd(activityContext) {  }
         },
         onDeleteClick = {
+
+            viewModel.showInterstitialAd(activityContext) {
             viewModel.deleteImage(
                 imagePath = uiState.imagePath,
                 onSuccess = {
                     Toast.makeText(context, "Image deleted successfully", Toast.LENGTH_SHORT).show()
-                    mainRouter.goBack()
+                    mainRouter.navigateToHomeScreen()
                 },
                 onError = { errorMessage ->
                     Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
                 }
             )
+        }
         },
         onWhatsAppShare = {
             viewModel.shareToWhatsApp(context,it)
@@ -148,6 +164,11 @@ fun SavedImagePage(
         },
 
         )
+
+    BackHandler {
+        mainRouter.goBack()
+        viewModel.showInterstitialAd(activityContext) {  }
+    }
 }
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -166,19 +187,11 @@ private fun SavedImageScreen(
     onShare: (String) -> Unit = {},
 ) {
 
-
+    val TAG = "SavedImageScreen"
     val context = LocalContext.current
 
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
-
-    val writeStorageAccessState = rememberMultiplePermissionsState(
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            emptyList()
-        } else {
-            listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-        }
-    )
 
     var showDeleteDialog by remember { mutableStateOf(false) }
 
@@ -512,6 +525,43 @@ private fun SavedImageScreen(
                             fontSize = 16.sp
                         )
                     }
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    var adLoadState by remember { mutableStateOf(false) }
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp) // match banner height
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            if (!adLoadState) {
+                                Text(
+                                    text = "Advertisement",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium,
+                                    color = colors.onSurfaceVariant,
+                                    modifier = Modifier
+                                        .padding(horizontal = 16.dp)
+                                        .fillMaxWidth()
+                                        .wrapContentSize(align = Alignment.Center)
+                                )
+                            }
+
+                            AdMobBanner(
+                                adUnit = AdIdsFactory.getBannerAdId(),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .align(Alignment.Center),
+                                adSize = AdSize.BANNER, // or adaptive size if needed
+                                onAdLoaded = { isLoaded ->
+                                    adLoadState = isLoaded
+                                    Logger.d(TAG, "OnboardingScreen: Ad Loaded: $isLoaded")
+                                }
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     // Add SnackbarHost to display permission rationale
                     SnackbarHost(

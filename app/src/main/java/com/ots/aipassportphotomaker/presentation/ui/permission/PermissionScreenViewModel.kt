@@ -1,9 +1,12 @@
 package com.ots.aipassportphotomaker.presentation.ui.permission
 
+import android.app.Activity
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.mutableStateListOf
+import com.ots.aipassportphotomaker.adsmanager.admob.MyAdsManager
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
+import com.ots.aipassportphotomaker.common.managers.AnalyticsManager
 import com.ots.aipassportphotomaker.presentation.ui.base.BaseViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,6 +18,8 @@ import kotlinx.coroutines.flow.asSharedFlow
 @HiltViewModel
 class PermissionScreenViewModel @Inject constructor(
     permissionScreenBundle: PermissionScreenBundle,
+    private val adsManager: MyAdsManager,
+    private val analyticsManager: AnalyticsManager
 ) : BaseViewModel() {
 
     private val _uiState: MutableStateFlow<PermissionScreenUiState> = MutableStateFlow(
@@ -62,6 +67,16 @@ class PermissionScreenViewModel @Inject constructor(
 
     fun onOpenCameraClicked() {
 //        _navigationState.tryEmit(PhotoIDScreenNavigationState.TakePhotoScreen(documentId))
+    }
+
+    fun showInterstitialAd(activity: Activity, onAdClosed: (Boolean) -> Unit) {
+        adsManager.showInterstitial(activity, true) { isAdShown ->
+            if (isAdShown == true) {
+                onAdClosed.invoke(true)
+            } else {
+                onAdClosed.invoke(false)
+            }
+        }
     }
 
 }

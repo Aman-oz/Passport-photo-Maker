@@ -111,11 +111,12 @@ enum class CollapseDirection(val value: String) {
 @Composable
 fun AdMobCollapsableBanner(
     modifier: Modifier = Modifier,
-    @StringRes unitIdRes: Int,
+    adUnit: String,
     adSize: AdSize = AdSize.FULL_BANNER,
-    collapseDirection: CollapseDirection = CollapseDirection.TOP
+    collapseDirection: CollapseDirection = CollapseDirection.TOP,
+    onAdLoaded: (Boolean) -> Unit = {},
 ) {
-    val unitId = stringResource(unitIdRes)
+
     AndroidView(
         modifier = modifier
             .padding(5.dp)
@@ -123,9 +124,24 @@ fun AdMobCollapsableBanner(
         factory = { context ->
             AdView(context).apply {
                 setAdSize(adSize)
-                adUnitId = unitId
+                adUnitId = adUnit
                 val extras = Bundle()
                 extras.putString("collapsible", collapseDirection.value)
+                adListener = object : AdListener() {
+                    override fun onAdLoaded() {
+                        super.onAdLoaded()
+                        onAdLoaded(true)
+                        Logger.d("AdMobCollapsable", "Ad Loaded")
+                    }
+
+                    override fun onAdFailedToLoad(p0: LoadAdError) {
+                        super.onAdFailedToLoad(p0)
+                        onAdLoaded(false)
+                        Logger.e("AdMobCollapsable", "Ad Failed to load: ${p0.message}")
+                    }
+                }
+
+
                 loadAd(
                     AdRequest.Builder()
                         .addNetworkExtrasBundle(AdMobAdapter::class.java, extras)

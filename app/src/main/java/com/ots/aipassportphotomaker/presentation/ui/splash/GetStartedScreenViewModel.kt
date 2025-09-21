@@ -7,7 +7,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import com.ots.aipassportphotomaker.adsmanager.admob.AdsManager
+import com.ots.aipassportphotomaker.adsmanager.admob.MyAdsManager
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
 import com.ots.aipassportphotomaker.common.managers.AnalyticsManager
 import com.ots.aipassportphotomaker.common.utils.Logger
@@ -35,7 +35,7 @@ import kotlinx.coroutines.flow.update
 @HiltViewModel
 class GetStartedScreenViewModel @Inject constructor(
     getStartedScreenBundle: GetStartedScreenBundle,
-    private val adsManager: AdsManager,
+    private val adsManager: MyAdsManager,
     private val analyticsManager: AnalyticsManager
 ) : BaseViewModel() {
 

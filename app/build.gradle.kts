@@ -51,7 +51,7 @@ android {
                 "proguard-rules.pro"
             )
 
-            resValue("string","app_id","ca-app-pub-3940256099942544~3347511713")
+            resValue("string","app_id","ca-app-pub-6412217023250030~2393763735")
         }
     }
     compileOptions {
@@ -67,6 +67,10 @@ android {
     buildFeatures {
         buildConfig = true
         compose = true
+    }
+
+    lint {
+        disable += "NullSafeMutableLiveData"
     }
 }
 
