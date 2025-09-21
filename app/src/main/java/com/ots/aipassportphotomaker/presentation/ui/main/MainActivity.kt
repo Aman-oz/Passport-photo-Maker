@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -31,7 +32,12 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
+import com.android.billingclient.BuildConfig
+import com.ots.aipassportphotomaker.App
 import com.ots.aipassportphotomaker.adsmanager.admob.MyAdsManager
+import com.ots.aipassportphotomaker.common.managers.AdsConsentManager
+import com.ots.aipassportphotomaker.common.managers.PreferencesHelper
+import com.ots.aipassportphotomaker.common.utils.AdsConstants
 import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.common.utils.SharedPrefUtils
 import com.ots.aipassportphotomaker.common.utils.UrlFactory
@@ -72,6 +78,12 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var adsManager: MyAdsManager
+
+    @Inject
+    lateinit var adsConsentManager: AdsConsentManager
+
+    @Inject
+    lateinit var preferencesHelper: PreferencesHelper
 
     private var isHomeScreen = false
     val isOnHomeTab = mutableStateOf(true)
@@ -446,6 +458,8 @@ class MainActivity : ComponentActivity() {
                 }
             )
         }
+
+        initConsent()
     }
 
     private fun isSystemInDarkMode(): Boolean {
@@ -475,6 +489,44 @@ class MainActivity : ComponentActivity() {
             super.onBackPressed()
         }
     }*/
+
+
+    private fun initConsent() {
+        val canRequestAds: Boolean = adsConsentManager.canRequestAds
+
+        if (canRequestAds != null && !canRequestAds && preferencesHelper.getBoolean(
+                AdsConstants.IS_NO_ADS_ENABLED,
+                false
+            ) == false
+        ) {
+
+            adsConsentManager.canRequestAds.apply {
+                if (this == false) {
+                    adsConsentManager.showGDPRConsent(
+                        this@MainActivity,
+                        com.ots.aipassportphotomaker.BuildConfig.DEBUG
+                    ) { consentError ->
+
+                        if (consentError != null) {
+                            Logger.e(
+                                TAG,
+                                "Error during consent gathering: ${consentError.message}"
+                            )
+                        }
+                        Logger.d(TAG, "Consent gathering complete")
+                        //Can request ads
+
+                    }
+                } else {
+                    Logger.d(TAG, "Consent already gathered")
+                    //can request ads
+                }
+            }
+        } else {
+            Log.d(TAG, "Ads can be requested or user is premium")
+            //can request ads
+        }
+    }
 }
 
 fun Activity.openAppSettings() {

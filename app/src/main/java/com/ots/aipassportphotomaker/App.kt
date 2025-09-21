@@ -11,12 +11,17 @@ import coil.util.DebugLogger
 import com.aman.downloader.DownloaderConfig
 import com.aman.downloader.OziDownloader
 import com.aman.downloader.OziDownloader.Companion.create
+import com.android.billingclient.BuildConfig
 import com.las.collage.maker.iab.ProductItem
 import com.ots.aipassportphotomaker.adsmanager.admob.MyAdsManager
 import com.ots.aipassportphotomaker.common.iab.AppBillingClient
 import com.ots.aipassportphotomaker.common.iab.interfaces.ConnectResponse
 import com.ots.aipassportphotomaker.common.iab.interfaces.PurchaseResponse
 import com.ots.aipassportphotomaker.common.iab.subscription.SubscriptionItem
+import com.ots.aipassportphotomaker.common.managers.AdsConsentManager
+import com.ots.aipassportphotomaker.common.managers.PreferencesHelper
+import com.ots.aipassportphotomaker.common.utils.AdsConstants
+import com.ots.aipassportphotomaker.common.utils.SharedPrefUtils
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 
@@ -33,6 +38,12 @@ class App: Application(), ImageLoaderFactory {
 
     @Inject
     lateinit var adsManager: MyAdsManager
+
+    @Inject
+    lateinit var adsConsentManager: AdsConsentManager
+
+    @Inject
+    lateinit var preferencesHelper: PreferencesHelper
 
     override fun onCreate() {
         super.onCreate()

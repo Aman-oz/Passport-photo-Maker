@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import androidx.work.WorkManager
 import com.ots.aipassportphotomaker.adsmanager.admob.MyAdsManager
 import com.ots.aipassportphotomaker.common.iab.AppBillingClient
+import com.ots.aipassportphotomaker.common.managers.AdsConsentManager
 import com.ots.aipassportphotomaker.common.managers.AnalyticsManager
 import com.ots.aipassportphotomaker.common.managers.PreferencesHelper
 import com.ots.aipassportphotomaker.common.utils.SharedPrefUtils
@@ -60,6 +61,12 @@ class AppModule {
     @Singleton
     fun provideAdsManager(@ApplicationContext context: Context, analyticsManager: AnalyticsManager, preferencesHelper: PreferencesHelper): MyAdsManager {
         return MyAdsManager(context, analyticsManager, preferencesHelper)
+    }
+
+    @Provides
+    @Singleton
+    fun provideConsentManager(@ApplicationContext context: Context): AdsConsentManager {
+        return AdsConsentManager(context)
     }
 
     @Provides
