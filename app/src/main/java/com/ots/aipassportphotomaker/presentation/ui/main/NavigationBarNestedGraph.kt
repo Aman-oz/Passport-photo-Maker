@@ -22,7 +22,7 @@ fun NavigationBarNestedGraph(
     navController: NavHostController,
     mainNavController: NavHostController,
     parentRoute: KClass<*>?,
-    onBottomNavTabChanged: (Boolean) -> Unit = {},
+    onBottomNavTabChanged: (Int) -> Unit = {},
 ) {
     NavHost(
         navController = navController,
@@ -30,7 +30,7 @@ fun NavigationBarNestedGraph(
         route = parentRoute
     ) {
         composableHorizontalSlide<Page.Home> { backStack ->
-            onBottomNavTabChanged(true)
+            onBottomNavTabChanged(1)
             val viewModel = hiltViewModel<HomeScreenViewModel>()
             HomePage(
                 mainRouter = MainRouter(mainNavController),
@@ -39,7 +39,7 @@ fun NavigationBarNestedGraph(
             )
         }
         composableHorizontalSlide<Page.PhotoID> { backStack ->
-            onBottomNavTabChanged(false)
+            onBottomNavTabChanged(2)
             val viewModel = hiltViewModel<PhotoIDScreenViewModel>()
             PhotoIDPage(
                 mainRouter = MainRouter(mainNavController),
@@ -49,7 +49,7 @@ fun NavigationBarNestedGraph(
         }
 
         composableHorizontalSlide<Page.History> { backStack ->
-            onBottomNavTabChanged(false)
+            onBottomNavTabChanged(3)
             val viewModel = hiltViewModel<HistoryScreenViewModel>()
             HistoryPage(
                 mainRouter = MainRouter(mainNavController),

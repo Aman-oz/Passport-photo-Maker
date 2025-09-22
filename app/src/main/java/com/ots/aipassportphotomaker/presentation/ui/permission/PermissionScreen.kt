@@ -16,11 +16,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -28,7 +31,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -142,7 +144,7 @@ fun PermissionPage(
 
     PermissionScreen(
         uiState = uiState,
-
+        isPremium = viewModel.isPremiumUser(),
         onCloseClick = {
 
             viewModel.showInterstitialAd(activityContext) { isAdShown ->
@@ -196,15 +198,20 @@ private fun PermissionScreen(
     uiState: PermissionScreenUiState,
     onCloseClick: () -> Unit,
     onAllowPermissionClick: () -> Unit,
+    isPremium: Boolean = false,
 ) {
 
     val TAG = "PermissionScreen"
+
+    val systemBarsPadding = WindowInsets.systemBars.asPaddingValues()
 
     val context = LocalContext.current
     val uiScope = rememberCoroutineScope()
 
     Surface(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .padding(bottom = systemBarsPadding.calculateBottomPadding())
+            .fillMaxSize(),
         color = colors.background
     ) {
 
@@ -331,42 +338,41 @@ private fun PermissionScreen(
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
+                    if (!isPremium) {
+                        var adLoadState by remember { mutableStateOf(false) }
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp) // match banner height
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                if (!adLoadState) {
+                                    Text(
+                                        text = "Advertisement",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium,
+                                        color = colors.onSurfaceVariant,
+                                        modifier = Modifier
+                                            .padding(horizontal = 16.dp)
+                                            .fillMaxWidth()
+                                            .wrapContentSize(align = Alignment.Center)
+                                    )
+                                }
 
-                    var adLoadState by remember { mutableStateOf(false) }
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp) // match banner height
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            if (!adLoadState) {
-                                Text(
-                                    text = "Advertisement",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Medium,
-                                    color = colors.onSurfaceVariant,
+                                AdMobBanner(
+                                    adUnit = AdIdsFactory.getOnboardingBannerAdId(),
                                     modifier = Modifier
-                                        .padding(horizontal = 16.dp)
                                         .fillMaxWidth()
-                                        .wrapContentSize(align = Alignment.Center)
+                                        .align(Alignment.Center),
+                                    adSize = AdSize.BANNER, // or adaptive size if needed
+                                    onAdLoaded = { isLoaded ->
+                                        adLoadState = isLoaded
+                                        Logger.d(TAG, "OnboardingScreen: Ad Loaded: $isLoaded")
+                                    }
                                 )
                             }
-
-                            AdMobBanner(
-                                adUnit = AdIdsFactory.getOnboardingBannerAdId(),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .align(Alignment.Center),
-                                adSize = AdSize.BANNER, // or adaptive size if needed
-                                onAdLoaded = { isLoaded ->
-                                    adLoadState = isLoaded
-                                    Logger.d(TAG, "OnboardingScreen: Ad Loaded: $isLoaded")
-                                }
-                            )
                         }
                     }
-
-                    Spacer(modifier = Modifier.height(12.dp))
 
                 }
 

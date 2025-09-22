@@ -6,9 +6,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.Surface
@@ -105,6 +108,7 @@ fun PhotoIDDetailPage(
     PhotoIDDetailScreen(
         documents = documentsToShow,
         uiState = uiState,
+        isPremium = viewModel.isPremiumUser(),
         lazyGridState = lazyGridState,
         onQueryChange = viewModel::onSearch,
         onDocumentClick = viewModel::onDocumentClicked,
@@ -118,6 +122,7 @@ private fun PhotoIDDetailScreen(
     documents: LazyPagingItems<DocumentListItem>,
     uiState: PhotoIDDetailScreenUiState,
     lazyGridState: LazyGridState,
+    isPremium: Boolean,
     onDocumentClick: (documentId: Int) -> Unit,
     onQueryChange: (query: String) -> Unit,
     onBackClick: () -> Unit = {},
@@ -127,7 +132,12 @@ private fun PhotoIDDetailScreen(
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    Surface {
+    val systemBarsPadding = WindowInsets.systemBars.asPaddingValues()
+
+    Surface(
+        modifier = Modifier
+            .padding(bottom = systemBarsPadding.calculateBottomPadding())
+    ) {
 
         val context = LocalContext.current
         val isLoading = uiState.showLoading
@@ -151,6 +161,7 @@ private fun PhotoIDDetailScreen(
         ) {
             CommonTopBar(
                 title = uiState.type.ifEmpty { uiState.type },
+                showGetProButton = !isPremium,
                 onBackClick = {
                     onBackClick.invoke()
 
@@ -316,6 +327,7 @@ fun PhotoIDDetailScreenPreview() {
     PreviewContainer {
         PhotoIDDetailScreen(
             documents = documents,
+            isPremium = false,
             uiState = PhotoIDDetailScreenUiState(
                 showLoading = false,
                 errorMessage = null,

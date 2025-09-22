@@ -14,6 +14,7 @@ import com.ots.aipassportphotomaker.data.util.source.DocumentDataSource
 import com.ots.aipassportphotomaker.domain.model.DocumentEntity
 import com.ots.aipassportphotomaker.domain.model.dbmodels.CreatedImageEntity
 import com.ots.aipassportphotomaker.domain.util.Result
+import kotlinx.coroutines.flow.Flow
 
 // Created by amanullah on 19/08/2025.
 // Copyright (c) 2025 Ozi Publishing. All rights reserved.
@@ -81,4 +82,24 @@ class DocumentLocalDataSource(
             Result.Error(DataNotAvailableException())
         }
     }
+
+    override suspend fun deleteCreatedImage(id: Int): Result<Boolean> {
+        return try {
+            documentDao.deleteCreatedImage(id)
+            Result.Success(true)
+        } catch (e: Exception) {
+            Result.Error(e)
+        }
+    }
+
+    override suspend fun deleteAllCreatedImages(): Result<Boolean> {
+        return try {
+            documentDao.deleteAllCreatedImages()
+            Result.Success(true)
+        } catch (e: Exception) {
+            Result.Error(e)
+        }
+    }
+
+    override fun observeCreatedImagesCount(): Flow<Int> = documentDao.observeCreatedImagesCount()
 }

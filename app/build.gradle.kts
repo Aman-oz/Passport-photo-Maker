@@ -13,7 +13,7 @@ plugins {
 val applicationName = "AI Passport Photo Maker"
 val versionMajor = 1
 val versionMinor = 0
-val versionPatch = 0
+val versionPatch = 1
 
 android {
     namespace = "com.ots.aipassportphotomaker"

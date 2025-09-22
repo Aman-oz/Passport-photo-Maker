@@ -8,6 +8,7 @@ import com.ots.aipassportphotomaker.data.model.mapper.CreatedImageData
 import com.ots.aipassportphotomaker.domain.model.DocumentEntity
 import com.ots.aipassportphotomaker.domain.model.dbmodels.CreatedImageEntity
 import com.ots.aipassportphotomaker.domain.util.Result
+import kotlinx.coroutines.flow.Flow
 
 // Created by amanullah on 13/08/2025.
 // Copyright (c) 2025 Ozi Publishing. All rights reserved.
@@ -29,8 +30,11 @@ interface DocumentDataSource {
         suspend fun saveCreatedImage(createdImage: CreatedImageData)
         suspend fun getCreatedImagesByType(type: String): Result<List<CreatedImageEntity>>
         suspend fun getAllCreatedImages(): Result<List<CreatedImageEntity>>
+        suspend fun deleteCreatedImage(id: Int): Result<Boolean>
+        suspend fun deleteAllCreatedImages(): Result<Boolean>
+        fun observeCreatedImagesCount(): Flow<Int> // observing changes in db
 
-        suspend fun saveDocuments(movies: List<DocumentData>)
+        suspend fun saveDocuments(documentId: List<DocumentData>)
         suspend fun getLastRemoteKey(): DocumentRemoteKeyDbData?
         suspend fun saveRemoteKey(key: DocumentRemoteKeyDbData)
         suspend fun clearDocuments()

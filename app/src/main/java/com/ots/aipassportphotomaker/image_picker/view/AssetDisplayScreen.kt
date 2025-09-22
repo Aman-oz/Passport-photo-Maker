@@ -30,6 +30,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
@@ -56,6 +58,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -89,6 +92,7 @@ import com.ots.aipassportphotomaker.presentation.ui.theme.colors
 import com.ots.aipassportphotomaker.presentation.ui.theme.custom300
 import com.ots.aipassportphotomaker.presentation.ui.theme.onCustom300
 import com.ots.aipassportphotomaker.presentation.ui.theme.onCustom400
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 
 @Composable
@@ -104,11 +108,10 @@ internal fun AssetDisplayScreen(
 
     LaunchedEffect(Unit) {
         isLoading = true
-        try {
-            viewModel.initDirectories()
-        } finally {
-            isLoading = false
-        }
+        viewModel.initDirectories()
+        isLoading = false
+        Logger.d("AssetDisplayScreen", "Initial load complete, assets count: ${viewModel.assets.size}")
+
     }
 
     BackHandler {
@@ -466,14 +469,15 @@ fun AssetTabPreview() {
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun AssetContent(viewModel: AssetViewModel, requestType: RequestType) {
-    val assets = viewModel.getGroupedAssets(requestType).values.flatten()
+//    val assets = viewModel.getGroupedAssets(requestType).values.flatten()
     val context = LocalContext.current
     val gridCount = LocalAssetConfig.current.gridCount
     val maxAssets = LocalAssetConfig.current.maxAssets
     val errorMessage = stringResource(R.string.message_selected_exceed, maxAssets)
     val itemSize: Dp = (LocalConfiguration.current.screenWidthDp.dp / gridCount)
 
-    val sharedPreferences = context.getSharedPreferences(SharedPrefUtils.PREF_KEY, Context.MODE_PRIVATE)
+    val sharedPreferences =
+        context.getSharedPreferences(SharedPrefUtils.PREF_KEY, Context.MODE_PRIVATE)
     val isPhotoGuideShown = remember {
         mutableStateOf(
             sharedPreferences.getBoolean(
@@ -499,8 +503,18 @@ private fun AssetContent(viewModel: AssetViewModel, requestType: RequestType) {
             viewModel.deleteImage(cameraUri)
         }
     }
+    val listState = rememberLazyGridState()
+    val assets = viewModel.assets
+
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
+            .filter { it != null && it >= viewModel.assets.size - 10 && !viewModel.isLoading }
+            .collect { viewModel.loadMoreAssets() }
+    }
+
 
     Logger.i("AssetContent", "All assets count: ${assets.size}, assets: $assets")
+
 
     // Define sample images
     val sampleImages = listOf(
@@ -530,112 +544,12 @@ private fun AssetContent(viewModel: AssetViewModel, requestType: RequestType) {
         )
     )
 
-    // Select the first sample image by default
-    /*if (viewModel.selectedList.isEmpty()) {
-        viewModel.toggleSelect(true, sampleImages[0])
-    }*/
-
-    /*if (allAssets.isEmpty()) {
-        return Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "The corresponding resource is empty",
-                textAlign = TextAlign.Center
-            )
-        }
-    }*/
-
-    /*LazyColumn {
-        item {
-            FlowRow(maxItemsInEachRow = gridCount) {
-                // Add Camera item
-                Box(
-                    modifier = Modifier
-                        .size(itemSize)
-                        .padding(horizontal = 4.dp, vertical = 4.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(colors.custom300)
-                        .clickable {
-
-                            if (!isPhotoGuideShown.value) {
-                                scope.launch {
-                                    bottomSheetState.expand()
-                                }
-
-                                showBottomSheet = true
-                                sharedPreferences.edit()
-                                    .putBoolean(SharedPrefUtils.SHOW_PHOTO_GUIDE_DIALOG, true)
-                                    .apply()
-                                isPhotoGuideShown.value = true
-
-                            } else {
-                                cameraUri = viewModel.getUri()
-                                cameraLauncher.launch(cameraUri!!)
-                            }
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column {
-                        Icon(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .align(Alignment.CenterHorizontally),
-                            painter = painterResource(R.drawable.camera_icon),
-                            contentDescription = stringResource(R.string.label_camera),
-                            tint = Color.Black
-                        )
-                        Text(
-                            text = stringResource(R.string.label_camera),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = colors.onCustom300,
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center
-                        )
-
-                    }
-
-                }
-
-                // Add sample images
-                sampleImages.forEach { sampleImage ->
-                    AssetImage(
-                        modifier = Modifier
-                            .size(itemSize)
-                            .padding(horizontal = 1.dp, vertical = 1.dp),
-                        assetInfo = sampleImage,
-                        navigateToPreview = { selected ->
-                            viewModel.toggleSelect(selected, sampleImage)
-//                            viewModel.navigateToPreview(0, "", requestType)
-                        },
-                        selectedList = viewModel.selectedList,
-                        onLongClick = { selected -> viewModel.toggleSelect(selected, sampleImage) }
-                    )
-                }
-
-                allAssets.forEachIndexed { index, assetInfo ->
-                    AssetImage(
-                        modifier = Modifier
-                            .size(itemSize)
-                            .padding(horizontal = 1.dp, vertical = 1.dp),
-                        assetInfo = assetInfo,
-                        navigateToPreview = { selected ->
-                            viewModel.toggleSelect(selected, assetInfo)
-//                            viewModel.navigateToPreview(index, "", requestType)
-                        },
-                        selectedList = viewModel.selectedList,
-                        onLongClick = { selected -> viewModel.toggleSelect(selected, assetInfo) }
-                    )
-                }
-            }
-        }
-    }*/
     LazyVerticalGrid(
         columns = GridCells.Fixed(gridCount),
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(4.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        state = listState
     ) {
         item {
             Box(
@@ -661,7 +575,9 @@ private fun AssetContent(viewModel: AssetViewModel, requestType: RequestType) {
             ) {
                 Column {
                     Icon(
-                        modifier = Modifier.size(40.dp).align(Alignment.CenterHorizontally),
+                        modifier = Modifier
+                            .size(40.dp)
+                            .align(Alignment.CenterHorizontally),
                         painter = painterResource(R.drawable.camera_icon),
                         contentDescription = stringResource(R.string.label_camera),
                         tint = colors.onCustom300
@@ -681,7 +597,12 @@ private fun AssetContent(viewModel: AssetViewModel, requestType: RequestType) {
             AssetImage(
                 modifier = Modifier.size(itemSize),
                 assetInfo = sampleImages[index],
-                navigateToPreview = { selected -> viewModel.toggleSelect(selected, sampleImages[index]) },
+                navigateToPreview = { selected ->
+                    viewModel.toggleSelect(
+                        selected,
+                        sampleImages[index]
+                    )
+                },
                 selectedList = viewModel.selectedList,
                 onLongClick = { selected -> viewModel.toggleSelect(selected, sampleImages[index]) }
             )

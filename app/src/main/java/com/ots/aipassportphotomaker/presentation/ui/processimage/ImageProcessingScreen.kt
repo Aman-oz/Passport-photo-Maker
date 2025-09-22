@@ -8,44 +8,38 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.android.gms.ads.AdSize
-import com.google.android.gms.ads.nativead.NativeAd
-import com.ots.aipassportphotomaker.adsmanager.admob.AdMobBanner
 import com.ots.aipassportphotomaker.adsmanager.admob.AdMobCollapsableBanner
-import com.ots.aipassportphotomaker.adsmanager.admob.CallNativeAd
 import com.ots.aipassportphotomaker.adsmanager.admob.CollapseDirection
-import com.ots.aipassportphotomaker.adsmanager.admob.NativeAdComposable
-import com.ots.aipassportphotomaker.adsmanager.admob.NativeAdPreview
 import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
-import com.ots.aipassportphotomaker.adsmanager.admob.loadNativeAd
 import com.ots.aipassportphotomaker.common.ext.animatedBorder
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
@@ -101,6 +95,7 @@ fun ImageProcessingPage(
     ImageProcessingScreen(
         uiState = uiState,
         processingStage = processingStage,
+        isPremium = viewModel.isPremiumUser(),
         isPortrait = isPortrait,
         selectedColor = selectedColor,
         imagePath = imagePath,
@@ -113,6 +108,7 @@ fun ImageProcessingPage(
 private fun ImageProcessingScreen(
     uiState: ImageProcessingScreenUiState,
     processingStage: ProcessingStage = ProcessingStage.NONE,
+    isPremium: Boolean = false,
     isPortrait: Boolean = true,
     selectedColor: String? = null,
     imagePath: String? = null,
@@ -121,7 +117,12 @@ private fun ImageProcessingScreen(
 ) {
     val TAG = "ImageProcessingScreen"
 
-    Surface {
+    val systemBarsPadding = WindowInsets.systemBars.asPaddingValues()
+
+    Surface(
+        modifier = Modifier
+            .padding(bottom = systemBarsPadding.calculateBottomPadding())
+    ) {
 
         val context = LocalContext.current
         val isLoading = uiState.showLoading
@@ -149,11 +150,13 @@ private fun ImageProcessingScreen(
                 }
                 processingMessages[messageIndex]
             }
+
             ProcessingStage.CROPPING_IMAGE -> "💫 Cropping image..."
             ProcessingStage.COMPLETED -> {
                 "✅ Process completed successfully"
 
             }
+
             ProcessingStage.NONE -> ""
             ProcessingStage.NO_NETWORK_AVAILABLE -> "❌ No network connection"
             ProcessingStage.ERROR -> "❌ Something went wrong"
@@ -170,12 +173,12 @@ private fun ImageProcessingScreen(
                     detectTapGestures(
                         onTap = {
 
-                    })
+                        })
                 }
         ) {
             CommonTopBar(
                 title = "Processing",
-                showGetProButton = false,
+                showGetProButton = !isPremium,
                 onBackClick = {
                     onBackClick.invoke()
 
@@ -197,7 +200,7 @@ private fun ImageProcessingScreen(
                             detectTapGestures(
                                 onTap = {
 
-                            })
+                                })
                         }
                 ) {
 
@@ -247,45 +250,43 @@ private fun ImageProcessingScreen(
 
                 Spacer(modifier = Modifier.weight(1f))
 
-                var adLoadState by remember { mutableStateOf(false) }
+                if (!isPremium) {
+                    var adLoadState by remember { mutableStateOf(false) }
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp) // match banner height
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            if (!adLoadState) {
+                                Text(
+                                    text = "Advertisement",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium,
+                                    color = colors.onSurfaceVariant,
+                                    modifier = Modifier
+                                        .padding(horizontal = 16.dp)
+                                        .fillMaxWidth()
+                                        .wrapContentSize(align = Alignment.Center)
+                                )
+                            }
 
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp) // match banner height
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        if (!adLoadState) {
-                            Text(
-                                text = "Advertisement",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Medium,
-                                color = colors.onSurfaceVariant,
+                            AdMobCollapsableBanner(
+                                adUnit = AdIdsFactory.getSplashBannerAdId(),
                                 modifier = Modifier
-                                    .padding(horizontal = 16.dp)
                                     .fillMaxWidth()
-                                    .wrapContentSize(align = Alignment.Center)
+                                    .align(Alignment.Center),
+                                adSize = AdSize.LARGE_BANNER, // or adaptive size if needed
+                                collapseDirection = CollapseDirection.TOP,
+                                onAdLoaded = { isLoaded ->
+                                    adLoadState = isLoaded
+                                    Logger.d(TAG, "AdMobBanner: onAdLoaded: $isLoaded")
+                                }
                             )
                         }
-
-                        AdMobCollapsableBanner(
-                            adUnit = AdIdsFactory.getSplashBannerAdId(),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .align(Alignment.Center),
-                            adSize = AdSize.FULL_BANNER, // or adaptive size if needed
-                            collapseDirection = CollapseDirection.TOP
-                            ,
-                            onAdLoaded = { isLoaded ->
-                                adLoadState = isLoaded
-                                Logger.d(TAG, "AdMobBanner: onAdLoaded: $isLoaded")
-                            }
-                        )
                     }
                 }
 
-
-                Spacer(modifier = Modifier.height(12.dp))
 
                 /*var nativeAd by remember { mutableStateOf<NativeAd?>(null) }
 
@@ -306,7 +307,6 @@ private fun ImageProcessingScreen(
                     adUnitId = AdIdsFactory.getNativeAdId() // Sample AdMob native ad unit ID
                 )*/
 
-                Spacer(modifier = Modifier.height(12.dp))
             }
         }
     }

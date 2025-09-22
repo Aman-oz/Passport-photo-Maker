@@ -1,6 +1,8 @@
 package com.ots.aipassportphotomaker.presentation.ui.onboarding
 
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
+import com.ots.aipassportphotomaker.common.managers.PreferencesHelper
+import com.ots.aipassportphotomaker.common.utils.AdsConstants
 import com.ots.aipassportphotomaker.presentation.ui.base.BaseViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -12,6 +14,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 @HiltViewModel
 class OnboardingScreenViewModel @Inject constructor(
     getStartedScreenBundle: OnboardingScreenBundle,
+    private val preferencesHelper: PreferencesHelper
 ) : BaseViewModel() {
 
     private val _uiState: MutableStateFlow<OnboardingScreenUiState> = MutableStateFlow(
@@ -40,6 +43,10 @@ class OnboardingScreenViewModel @Inject constructor(
 
     fun onOpenCameraClicked() {
 //        _navigationState.tryEmit(PhotoIDScreenNavigationState.TakePhotoScreen(documentId))
+    }
+
+    fun isPremiumUser(): Boolean {
+        return preferencesHelper.getBoolean(AdsConstants.IS_NO_ADS_ENABLED, false)
     }
 
 }

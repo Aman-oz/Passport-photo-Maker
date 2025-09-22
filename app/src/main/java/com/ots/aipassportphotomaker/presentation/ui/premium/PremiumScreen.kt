@@ -20,14 +20,16 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -116,10 +118,10 @@ fun PremiumPage(
             mainRouter.goBack()
         },
         onSubscribeWeekly = {
-            viewModel.purchaseSubscription(activityContext,AppBillingClient.SKU_ITEM_ONE_WEEK)
+            viewModel.purchaseSubscription(activityContext, AppBillingClient.SKU_ITEM_ONE_WEEK)
         },
         onSubscribeMonthly = {
-            viewModel.purchaseSubscription(activityContext,AppBillingClient.SKU_ITEM_ONE_MONTH)
+            viewModel.purchaseSubscription(activityContext, AppBillingClient.SKU_ITEM_ONE_MONTH)
         },
         onTermsClick = {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(UrlFactory.TERMS_AND_CONDITIONS_URL))
@@ -143,13 +145,14 @@ private fun PremiumScreen(
     onTermsClick: () -> Unit = {},
     onPrivacyClick: () -> Unit = {},
 ) {
-
+    val systemBarsPadding = WindowInsets.systemBars.asPaddingValues()
     val TAG = "PremiumScreen"
 
     val context = LocalContext.current
     val uiScope = rememberCoroutineScope()
 
-    val sharedPreferences = context.getSharedPreferences(SharedPrefUtils.PREF_KEY, Context.MODE_PRIVATE)
+    val sharedPreferences =
+        context.getSharedPreferences(SharedPrefUtils.PREF_KEY, Context.MODE_PRIVATE)
     val isDarkMode = remember {
         mutableStateOf(
             sharedPreferences.getBoolean(
@@ -160,7 +163,9 @@ private fun PremiumScreen(
     }
 
     Surface(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .padding(bottom = systemBarsPadding.calculateBottomPadding())
+            .fillMaxSize(),
         color = Color.Transparent
     ) {
 
@@ -474,7 +479,8 @@ private fun PremiumScreen(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         // Weekly Subscription Button
-                        val weeklyItem = uiState.subscriptionItems.find { it.sku == AppBillingClient.SKU_ITEM_ONE_WEEK }
+                        val weeklyItem =
+                            uiState.subscriptionItems.find { it.sku == AppBillingClient.SKU_ITEM_ONE_WEEK }
 
                         Box(
                             modifier = Modifier
@@ -515,7 +521,8 @@ private fun PremiumScreen(
                                     )
                                     Text(
                                         modifier = Modifier,
-                                        text = weeklyItem?.pricingPhase?.formattedPrice ?: "Rs. 850.00",
+                                        text = weeklyItem?.pricingPhase?.formattedPrice
+                                            ?: "Rs. 850.00",
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.Bold,
                                         color = colors.onBackground
@@ -528,10 +535,12 @@ private fun PremiumScreen(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         // Monthly Subscription Button
-                        val monthlyItem = uiState.subscriptionItems.find { it.sku == AppBillingClient.SKU_ITEM_ONE_MONTH }
+                        val monthlyItem =
+                            uiState.subscriptionItems.find { it.sku == AppBillingClient.SKU_ITEM_ONE_MONTH }
                         PremiumMonthlyButton(
                             buttonText = "Subscribe Monthly",
-                            buttonPrice = monthlyItem?.pricingPhase?.formattedPrice ?: "Rs. 1,499.00",
+                            buttonPrice = monthlyItem?.pricingPhase?.formattedPrice
+                                ?: "Rs. 1,499.00",
                             onSubscribeMonthly = {
                                 onSubscribeMonthly()
                             },
@@ -569,7 +578,7 @@ private fun PremiumScreen(
                                 modifier = Modifier
                                     .clickable(
                                         onClick = {
-                                             onTermsClick()
+                                            onTermsClick()
                                         }
                                     )
                             )
@@ -593,13 +602,13 @@ private fun PremiumScreen(
                                 modifier = Modifier
                                     .clickable(
                                         onClick = {
-                                             onPrivacyClick()
+                                            onPrivacyClick()
                                         }
                                     )
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
 
                     }
 

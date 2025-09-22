@@ -1,6 +1,7 @@
 package com.ots.aipassportphotomaker.presentation.ui.components
 
 import android.content.res.Configuration
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.ButtonDefaults

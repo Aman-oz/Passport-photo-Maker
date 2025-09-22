@@ -2,9 +2,12 @@ package com.ots.aipassportphotomaker.presentation.ui.history
 
 import android.content.res.Configuration
 import android.util.Log
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,6 +29,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -36,10 +40,12 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -95,6 +101,16 @@ fun HistoryPage(
     val coroutineScope = rememberCoroutineScope()
 
     val documents by viewModel.documents.collectAsState()
+    val showDeleteDialog by viewModel.showDeleteDialog.collectAsState()
+
+    // Single source of truth for selected tab
+    var selectedTabIndex by remember { mutableIntStateOf(pagerState.currentPage) }
+
+    // Update selectedTabIndex when pager scrolls
+    LaunchedEffect(pagerState.currentPage) {
+        selectedTabIndex = pagerState.currentPage
+        viewModel.getHistoryByType(types[pagerState.currentPage]) // Load data for current page
+    }
 
     viewModel.navigationState.collectAsEffect { navigationState ->
         Log.d(TAG, "HomePage: Navigation State: $navigationState")
@@ -117,36 +133,49 @@ fun HistoryPage(
         }
     }
 
-    // Debounced tab/pager change handling
-    LaunchedEffect(pagerState.currentPage) {
-        val job = coroutineScope.launch {
-            delay(250) // Debounce delay of 300ms
-            val type = types[pagerState.currentPage]
-            viewModel.getHistoryByType(type) // Fetch data based on current page type
-        }
-        awaitCancellation() // Keep the job alive until cancellation
-        job.cancel() // Cancel previous job on new launch
-    }
-
     HistoryScreen(
         uiState = uiState,
         pagerState = pagerState,
         documents = documents,
         lazyGridState = lazyGridState,
-        onTabSelected = { tab ->
-            val index = types.indexOf(tab)
-            if (index != -1) {
-                viewModel.getHistoryByType(tab) // Fetch data on tab click
-                coroutineScope.launch {
-                    pagerState.animateScrollToPage(index) // Sync pager
-                }
+        selectedTabIndex = selectedTabIndex,
+        onTabSelected = { index ->
+            selectedTabIndex = index
+            viewModel.getHistoryByType(types[index]) // Load data for selected tab
+            coroutineScope.launch {
+                pagerState.animateScrollToPage(index, animationSpec = tween(300)) // Smooth animation
             }
 
         },
         onItemClick = { name ->
             viewModel.onItemClick(name)
+        },
+        onItemLongClick = { id ->
+            viewModel.onLongClickItem(id)
         }
     )
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            modifier = Modifier
+                .background(color = colors.background, shape = RoundedCornerShape(12.dp)),
+            onDismissRequest = { viewModel.hideDeleteDialog() },
+            title = { Text("Delete Image") },
+            text = { Text("Are you sure you want to delete this image?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.deleteSelectedImage()
+                }) {
+                    Text("Yes")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.hideDeleteDialog() }) {
+                    Text("No")
+                }
+            }
+        )
+    }
 }
 
 @Composable
@@ -154,9 +183,11 @@ private fun HistoryScreen(
     uiState: HistoryScreenUiState,
     pagerState: PagerState,
     lazyGridState: LazyGridState,
+    selectedTabIndex: Int,
     documents: List<CreatedImageEntity>,
-    onTabSelected: (String) -> Unit = {},
-    onItemClick: (name: String) -> Unit
+    onTabSelected: (Int) -> Unit = {},
+    onItemClick: (name: String) -> Unit,
+    onItemLongClick: (id: Int) -> Unit = {}
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -172,7 +203,7 @@ private fun HistoryScreen(
                 val types = listOf("All", "Passport", "Visa", "Standard", "National ID", "Driver's License", "Resident Card", "Profile")
                 val coroutineScope = rememberCoroutineScope()
                 ScrollableTabRow(
-                    selectedTabIndex = pagerState.currentPage,
+                    selectedTabIndex = selectedTabIndex,
                     modifier = Modifier
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                         .fillMaxWidth()
@@ -193,17 +224,14 @@ private fun HistoryScreen(
                 ) {
                     types.forEachIndexed { index, type ->
                         Tab(
-                            selected = pagerState.currentPage == index,
+                            selected = selectedTabIndex == index,
                             onClick = {
-                                onTabSelected(type) // Trigger data fetch on tab click
-                                coroutineScope.launch {
-                                    pagerState.animateScrollToPage(index)
-                                }
+                                onTabSelected(index) // Trigger data fetch on tab click
                             },
                             modifier = Modifier
                                 .padding(horizontal = 6.dp, vertical = 4.dp)
                                 .background(
-                                    color = if (pagerState.currentPage == index) colors.primary else colors.custom400, // Custom background
+                                    color = if (selectedTabIndex == index) colors.primary else colors.custom400, // Custom background
                                     shape = RoundedCornerShape(8.dp) // 8dp rounded corners
                                 )
                         ) {
@@ -211,16 +239,17 @@ private fun HistoryScreen(
                                 modifier = Modifier
                                     .padding(vertical = 10.dp)
                                     .background(
-                                        color = if (pagerState.currentPage == index) colors.primary else colors.custom400,
+                                        color = if (selectedTabIndex == index) colors.primary else colors.custom400,
                                         shape = RoundedCornerShape(8.dp)
                                     ),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
+                                    modifier = Modifier.padding(horizontal = 12.dp),
                                     text = type,
-                                    color = if (pagerState.currentPage == index) colors.onPrimary else colors.onCustom400, // Contrast text color
+                                    color = if (selectedTabIndex == index) colors.onPrimary else colors.onCustom400, // Contrast text color
                                     style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = if (pagerState.currentPage == index) FontWeight.Medium else FontWeight.Medium
+                                    fontWeight = if (selectedTabIndex == index) FontWeight.Medium else FontWeight.Medium
                                 )
                             }
                         }
@@ -248,20 +277,25 @@ private fun HistoryScreen(
                             val item = documents[index]
                             DocumentItem(
                                 item = item,
-                                onClick = { onItemClick(item.name) }
+                                onClick = { onItemClick(item.name) },
+                                onLongClick = { onItemLongClick(item.id) }
                             )
                         }
 
                         if (documents.isEmpty()) {
                             item {
-                                Text(
-                                    text = stringResource(id = R.string.no_history_found_subtitle),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = colors.onSurfaceVariant,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(32.dp),
-                                    textAlign = TextAlign.Center
+                                EmptyStateView(
+                                    title = stringResource(id = R.string.no_history_found_title),
+                                    icon = EmptyStateIcon(
+                                        iconRes = R.drawable.history_empty,
+                                        size = 100.dp,
+                                        spacing = 12.dp
+                                    ),
+                                    subtitle = stringResource(id = R.string.no_history_found_subtitle, currentType),
+                                    titleTextSize = 20.sp,
+                                    subtitleTextSize = 16.sp,
+                                    verticalArrangement = Arrangement.Top,
+                                    modifier = Modifier.padding(top = 80.dp, start = 24.dp, end = 24.dp)
                                 )
                             }
                         }
@@ -272,17 +306,24 @@ private fun HistoryScreen(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DocumentItem(
     item: CreatedImageEntity, // Updated to use CreatedImageEntity
     onClick: (CreatedImageEntity) -> Unit,
+    onLongClick: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp, horizontal = 8.dp)
-            .clickable { onClick(item) },
+            .clickable { onClick(item) }
+            .combinedClickable(
+                onClick = { onClick(item) },
+                onLongClick = { onLongClick(item.id) }
+            ),
+
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = colors.custom400),
         border = BorderStroke(1.dp, colors.custom100 )
@@ -376,7 +417,8 @@ fun DocumentItemPreview() {
                 pixel = "600x600",
                 resolution = "300 DPI"
             ),
-            onClick = {}
+            onClick = {},
+            onLongClick = {}
         )
     }
 }
@@ -389,6 +431,7 @@ fun HomeScreenPreview() {
     PreviewContainer {
         HistoryScreen(
             uiState = uiState,
+            selectedTabIndex = 0,
             pagerState = rememberPagerState(initialPage = 0, pageCount = { 4 }),
             documents = emptyList(),
             lazyGridState = lazyGridState,

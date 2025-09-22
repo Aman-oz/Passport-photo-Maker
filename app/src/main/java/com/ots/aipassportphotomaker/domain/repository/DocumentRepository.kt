@@ -24,4 +24,12 @@ interface DocumentRepository {
     suspend fun saveCreatedImage(createdImage: CreatedImageEntity)
     suspend fun getCreatedImagesByType(type: String): Result<List<CreatedImageEntity>>
     suspend fun getAllCreatedImages(): Result<List<CreatedImageEntity>>
+
+    suspend fun deleteCreatedImage(id: Int): Result<Boolean>
+    suspend fun deleteAllCreatedImages(): Result<Boolean>
+    fun observeCreatedImagesCount(): Flow<Int>
+
+    //refreshing data in history when all items are deleted from main
+    fun getRefreshEvent(): Flow<Unit>
+    suspend fun triggerRefreshEvent()
 }

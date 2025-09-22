@@ -10,6 +10,8 @@ import androidx.compose.ui.platform.LocalContext
 import com.ots.aipassportphotomaker.adsmanager.admob.MyAdsManager
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
 import com.ots.aipassportphotomaker.common.managers.AnalyticsManager
+import com.ots.aipassportphotomaker.common.managers.PreferencesHelper
+import com.ots.aipassportphotomaker.common.utils.AdsConstants
 import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.domain.model.CustomDocumentData
 import com.ots.aipassportphotomaker.domain.model.DocumentEntity
@@ -36,7 +38,8 @@ import kotlinx.coroutines.flow.update
 class GetStartedScreenViewModel @Inject constructor(
     getStartedScreenBundle: GetStartedScreenBundle,
     private val adsManager: MyAdsManager,
-    private val analyticsManager: AnalyticsManager
+    private val analyticsManager: AnalyticsManager,
+    private val preferencesHelper: PreferencesHelper
 ) : BaseViewModel() {
 
     private val _uiState: MutableStateFlow<GetStartedScreenUiState> = MutableStateFlow(
@@ -64,6 +67,10 @@ class GetStartedScreenViewModel @Inject constructor(
 
     fun onOpenCameraClicked() {
 //        _navigationState.tryEmit(PhotoIDScreenNavigationState.TakePhotoScreen(documentId))
+    }
+
+    fun isPremiumUser(): Boolean {
+        return preferencesHelper.getBoolean(AdsConstants.IS_NO_ADS_ENABLED, false)
     }
 
 }

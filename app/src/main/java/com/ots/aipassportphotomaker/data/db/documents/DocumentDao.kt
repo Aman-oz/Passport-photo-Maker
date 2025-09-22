@@ -7,6 +7,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.ots.aipassportphotomaker.data.model.DocumentDbData
 import com.ots.aipassportphotomaker.domain.model.dbmodels.CreatedImageDbData
+import kotlinx.coroutines.flow.Flow
 
 // Created by amanullah on 19/08/2025.
 // Copyright (c) 2025 Ozi Publishing. All rights reserved.
@@ -58,4 +59,15 @@ interface DocumentDao {
     // Optional: Get by ID if needed
     @Query("SELECT * FROM created_images WHERE id = :id")
     suspend fun getCreatedImageById(id: Int): CreatedImageDbData?
+
+    // Delete a single created image by ID
+    @Query("DELETE FROM created_images WHERE id = :id")
+    suspend fun deleteCreatedImage(id: Int)
+
+    // Delete all created images
+    @Query("DELETE FROM created_images")
+    suspend fun deleteAllCreatedImages()
+
+    @Query("SELECT COUNT(*) FROM created_images")
+    fun observeCreatedImagesCount(): Flow<Int>
 }

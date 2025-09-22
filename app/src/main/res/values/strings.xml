@@ -4,7 +4,7 @@
     <string name="no_internet_connection">No Internet Connection</string>
     <string name="choose_image_to_create_id">Choose image to create ID</string>
     <string name="no_history_found_title">No history found!</string>
-    <string name="no_history_found_subtitle">You have not created any photo id\'s yet.</string>
+    <string name="no_history_found_subtitle">No history found for \"%s\".</string>
     <string name="create_id">Create ID</string>
     <string name="see_all">See all</string>
     <string name="no_search_results_title">No Results Found</string>

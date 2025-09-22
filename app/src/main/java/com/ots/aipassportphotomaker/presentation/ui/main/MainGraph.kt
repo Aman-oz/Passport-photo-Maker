@@ -2,6 +2,7 @@ package com.ots.aipassportphotomaker.presentation.ui.main
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -47,13 +48,17 @@ import com.ots.aipassportphotomaker.presentation.ui.splash.GetStartedScreenViewM
 @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
 @Composable
 fun MainGraph(
+    isPremium: Boolean,
+    systemBarsPadding: PaddingValues,
     mainNavController: NavHostController,
     darkMode: Boolean,
     isFirstLaunch: Boolean,
     onSettingClick: () -> Unit,
+    showDeleteIcon: Boolean = false,
+    onDeleteClick: () -> Unit = {},
     onThemeUpdated: () -> Unit,
     onGetStartedCompleted: (Page) -> Unit,
-    onBottomNavTabChanged: (Boolean) -> Unit = {},
+    onBottomNavTabChanged: (Int) -> Unit = {},
 ) {
     NavHost(
         navController = mainNavController,
@@ -120,11 +125,17 @@ fun MainGraph(
         composableHorizontalSlide<Page.NavigationBar> { backStack ->
             val nestedNavController = rememberNavController()
             NavigationBarScreen(
+                isPremium = isPremium,
+                systemBarsPadding = systemBarsPadding,
                 sharedViewModel = backStack.sharedViewModel(navController = mainNavController),
                 mainRouter = MainRouter(mainNavController),
                 darkMode = darkMode,
                 onSettingClick = {
                     onSettingClick()
+                },
+                showDeleteIcon = showDeleteIcon,
+                onDeleteClick = {
+                    onDeleteClick()
                 },
                 onThemeUpdated = onThemeUpdated,
                 nestedNavController = nestedNavController
@@ -133,7 +144,9 @@ fun MainGraph(
                     navController = nestedNavController,
                     mainNavController = mainNavController,
                     parentRoute = Graph.Main::class,
-                    onBottomNavTabChanged = onBottomNavTabChanged
+                    onBottomNavTabChanged = { tabIndex ->
+                        onBottomNavTabChanged(tabIndex)
+                    }
                 )
             }
         }

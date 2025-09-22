@@ -4,8 +4,11 @@ import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -15,6 +18,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -33,11 +37,15 @@ import com.ots.aipassportphotomaker.presentation.ui.theme.funnelFamily
 // Copyright (c) 2025 Ozi Publishing. All rights reserved.
 @Composable
 fun NavigationBarScreen(
+    isPremium: Boolean,
+    systemBarsPadding: PaddingValues,
     sharedViewModel: NavigationBarSharedViewModel,
     mainRouter: MainRouter,
     darkMode: Boolean,
     onSettingClick: () -> Unit,
     onThemeUpdated: () -> Unit,
+    showDeleteIcon: Boolean = false,
+    onDeleteClick: () -> Unit = {},
     nestedNavController: NavHostController,
     content: @Composable () -> Unit
 ) {
@@ -45,12 +53,17 @@ fun NavigationBarScreen(
     Scaffold(
         topBar = {
             TopBar(
+                isPremium = isPremium,
                 stringResource(id = R.string.photo_id),
                 darkMode,
                 fontFamily = funnelFamily,
                 onThemeUpdated = onThemeUpdated,
                 onSettingsClick = {
                     onSettingClick()
+                },
+                showDeleteIcon = showDeleteIcon,
+                onDeleteClick = {
+                    onDeleteClick()
                 },
                 onGetProClick = {
                     mainRouter.navigateToPremiumScreen()
@@ -60,6 +73,7 @@ fun NavigationBarScreen(
         },
         bottomBar = {
             BottomNavigationBar(
+                systemBarsPadding = systemBarsPadding,
                 items = uiState.bottomItems,
                 navController = nestedNavController,
                 onItemClick = { bottomItem ->
@@ -97,6 +111,8 @@ private fun NavigationBarScreenPreview() = PreviewContainer {
     val darkTheme = isSystemInDarkTheme()
 
     NavigationBarScreen(
+        isPremium = false,
+        systemBarsPadding = PaddingValues(0.dp),
         sharedViewModel = hiltViewModel<NavigationBarSharedViewModel>(),
         mainRouter = mainRouter,
         darkMode = darkTheme,

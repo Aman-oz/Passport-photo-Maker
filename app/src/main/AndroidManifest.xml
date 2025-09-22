@@ -41,6 +41,12 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name="com.google.android.gms.ads.AdActivity"
+            android:theme="@style/AdmobEdgeToEdgeTheme"
+            android:exported="false"
+            tools:replace="android:theme" />
+
         <provider
             android:name=".domain.provider.MyFileProvider"
             android:authorities="${applicationId}.provider"

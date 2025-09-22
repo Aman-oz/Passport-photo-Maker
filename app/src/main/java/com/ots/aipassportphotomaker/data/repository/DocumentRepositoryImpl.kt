@@ -21,6 +21,8 @@ import com.ots.aipassportphotomaker.domain.util.map
 import com.ots.aipassportphotomaker.domain.util.onError
 import com.ots.aipassportphotomaker.domain.util.onSuccess
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 
@@ -70,15 +72,7 @@ class DocumentRepositoryImpl(
                 .filter { it.name.contains(query, ignoreCase = true) }
             emit(PagingData.from(documents))
         }
-    } /*= Pager(
-        config = PagingConfig(
-            pageSize = pageSize,
-            enablePlaceholders = false
-        ),
-        pagingSourceFactory = { SearchDocumentPagingSource(query, remote) }
-    ).flow.map { pagingData ->
-        pagingData.map { it.toDomain() }
-    }*/
+    }
 
     override suspend fun getDocument(documentId: Int): Result<DocumentEntity> {
         val documentInJson = json.getDocumentById(documentId)
@@ -138,5 +132,32 @@ class DocumentRepositoryImpl(
     // Get all images
     override suspend fun getAllCreatedImages(): Result<List<CreatedImageEntity>> {
         return local.getAllCreatedImages()
+    }
+
+    override suspend fun deleteCreatedImage(id: Int): Result<Boolean> {
+        try {
+            return local.deleteCreatedImage(id)
+        } catch (e: Exception) {
+            Logger.e("DocumentRepositoryImpl", "Error deleting created image: ${e.message}", e)
+            return Error(e)
+        }
+    }
+
+    override suspend fun deleteAllCreatedImages(): Result<Boolean> {
+        try {
+            return local.deleteAllCreatedImages()
+        } catch (e: Exception) {
+            Logger.e("DocumentRepositoryImpl", "Error deleting all created images: ${e.message}", e)
+            return Error(e)
+        }
+    }
+
+    override fun observeCreatedImagesCount(): Flow<Int> = local.observeCreatedImagesCount()
+
+    private val _refreshEvent = MutableSharedFlow<Unit>()
+    override fun getRefreshEvent(): Flow<Unit> = _refreshEvent.asSharedFlow()
+
+    override suspend fun triggerRefreshEvent() {
+        _refreshEvent.emit(Unit)
     }
 }

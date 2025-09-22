@@ -20,6 +20,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,6 +29,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyRow
@@ -124,6 +127,7 @@ fun SavedImagePage(
     SavedImageScreen(
         uiState = uiState,
         sourceScreen = sourceScreen,
+        isPremium = viewModel.isPremiumUser(),
         onBackClick = {
             mainRouter.goBack()
 
@@ -177,6 +181,7 @@ fun SavedImagePage(
 private fun SavedImageScreen(
     uiState: SavedImageScreenUiState,
     sourceScreen: String = "",
+    isPremium: Boolean = false,
     onDeleteClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
     onGetProClick: () -> Unit = {},
@@ -186,6 +191,8 @@ private fun SavedImageScreen(
     onFacebookShare: (String) -> Unit = {},
     onShare: (String) -> Unit = {},
 ) {
+
+    val systemBarsPadding = WindowInsets.systemBars.asPaddingValues()
 
     val TAG = "SavedImageScreen"
     val context = LocalContext.current
@@ -202,7 +209,10 @@ private fun SavedImageScreen(
         R.drawable.share_icon to "Others",
     )
 
-    Surface {
+    Surface(
+        modifier = Modifier
+        .padding(bottom = systemBarsPadding.calculateBottomPadding())
+    ) {
 
         val isLoading = uiState.showLoading
         val errorMessage = uiState.errorMessage
@@ -249,7 +259,7 @@ private fun SavedImageScreen(
 
             FinalScreenTopBar(
                 title = "Image Saved",
-                showGetProButton = true,
+                showGetProButton = !isPremium,
                 onBackClick = {
                     onBackClick.invoke()
 
@@ -527,43 +537,43 @@ private fun SavedImageScreen(
                     }
                     Spacer(modifier = Modifier.weight(1f))
 
-                    var adLoadState by remember { mutableStateOf(false) }
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp) // match banner height
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            if (!adLoadState) {
-                                Text(
-                                    text = "Advertisement",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Medium,
-                                    color = colors.onSurfaceVariant,
+                    if (!isPremium) {
+                        var adLoadState by remember { mutableStateOf(false) }
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp) // match banner height
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                if (!adLoadState) {
+                                    Text(
+                                        text = "Advertisement",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium,
+                                        color = colors.onSurfaceVariant,
+                                        modifier = Modifier
+                                            .padding(horizontal = 16.dp)
+                                            .fillMaxWidth()
+                                            .wrapContentSize(align = Alignment.Center)
+                                    )
+                                }
+
+                                AdMobBanner(
+                                    adUnit = AdIdsFactory.getBannerAdId(),
                                     modifier = Modifier
-                                        .padding(horizontal = 16.dp)
                                         .fillMaxWidth()
-                                        .wrapContentSize(align = Alignment.Center)
+                                        .align(Alignment.Center),
+                                    adSize = AdSize.BANNER, // or adaptive size if needed
+                                    onAdLoaded = { isLoaded ->
+                                        adLoadState = isLoaded
+                                        Logger.d(TAG, "OnboardingScreen: Ad Loaded: $isLoaded")
+                                    }
                                 )
                             }
-
-                            AdMobBanner(
-                                adUnit = AdIdsFactory.getBannerAdId(),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .align(Alignment.Center),
-                                adSize = AdSize.BANNER, // or adaptive size if needed
-                                onAdLoaded = { isLoaded ->
-                                    adLoadState = isLoaded
-                                    Logger.d(TAG, "OnboardingScreen: Ad Loaded: $isLoaded")
-                                }
-                            )
                         }
+
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Add SnackbarHost to display permission rationale
                     SnackbarHost(
                         hostState = snackbarHostState,
                         modifier = Modifier.align(Alignment.CenterHorizontally)

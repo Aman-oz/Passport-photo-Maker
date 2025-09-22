@@ -17,12 +17,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -129,6 +132,7 @@ fun CutOutImagePage(
         uiState = uiState,
         processingStage = processingStage,
         selectedColor = selectedColor,
+        isPremium = viewModel.isPremiumUser(),
         onBackClick = {
             mainRouter.goBack()
 
@@ -215,14 +219,19 @@ private fun CutOutImageScreen(
     uiState: CutOutImageScreenUiState,
     processingStage: ProcessingStage = ProcessingStage.NONE,
     selectedColor: String? = null,
+    isPremium: Boolean,
     onSaveImage: (ImageBitmap) -> Unit = {},
     onRemoveBackgroundAi: (ImageBitmap) -> Unit = {},
     onBackClick: () -> Unit = {},
     onGetProClick: () -> Unit = {},
 ) {
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.ai_erase))
+    val systemBarsPadding = WindowInsets.systemBars.asPaddingValues()
 
-    Surface {
+    Surface(
+        modifier = Modifier
+            .padding(bottom = systemBarsPadding.calculateBottomPadding())
+    ) {
 
         val context = LocalContext.current
         val isLoading = uiState.showLoading
@@ -293,6 +302,7 @@ private fun CutOutImageScreen(
         ) {
             CommonTopBar(
                 title = "Cut Out",
+                showGetProButton = !isPremium,
                 onBackClick = {
                     onBackClick.invoke()
 
@@ -938,6 +948,7 @@ fun ImageProcessingScreenPreview() {
                 showLoading = false,
                 errorMessage = null,
             ),
+            isPremium = false,
             onBackClick = {},
             onGetProClick = {}
         )

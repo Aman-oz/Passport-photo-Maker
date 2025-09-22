@@ -2,6 +2,7 @@ package com.ots.aipassportphotomaker.presentation.ui.components
 
 import android.content.res.Configuration
 import android.graphics.Color
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -50,13 +51,16 @@ import com.ots.aipassportphotomaker.presentation.ui.theme.onCustom400
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopBar(
+    isPremium: Boolean,
     title: String,
     darkMode: Boolean,
+    showDeleteIcon: Boolean = false,
     fontFamily: FontFamily = FontFamily.Serif             ,
     fontSize: TextUnit = 25.sp,
     fontWeight: FontWeight = FontWeight.Bold,
     onSettingsClick: () -> Unit,
     onThemeUpdated: () -> Unit,
+    onDeleteClick: () -> Unit = {},
     onGetProClick: () -> Unit
 ) {
     Column {
@@ -88,9 +92,26 @@ fun TopBar(
                 }
             },
             actions = {
+                AnimatedVisibility(!isPremium) {
+                    GetProButton {
+                        onGetProClick()
+                    }
+                }
 
-                GetProButton {
-                    onGetProClick()
+
+                AnimatedVisibility(showDeleteIcon) {
+                    IconButton(
+                        onClick = {
+                            onDeleteClick()
+                        }
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.delete_icon),
+                            contentDescription = "Dark Mode",
+                            modifier = Modifier.size(24.dp),
+                            tint = colors.error
+                        )
+                    }
                 }
 
                 IconButton(
@@ -106,7 +127,8 @@ fun TopBar(
                     )
                 }
 
-                IconButton(
+
+                /*IconButton(
                     onClick = { onThemeUpdated() }
                 ) {
                     val icon = if (darkMode) {
@@ -120,7 +142,7 @@ fun TopBar(
                         modifier = Modifier.size(24.dp),
                         tint = colors.onBackground
                     )
-                }
+                }*/
             },
             colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = colors.background,
@@ -137,13 +159,17 @@ fun TopBar(
 private fun TopBarPreview() {
     PreviewContainer {
         Column {
-            TopBar("AppName", true,
+            TopBar(
+                isPremium = true,
+                "AppName", true,
                 onThemeUpdated = {},
                 onSettingsClick = {},
                 onGetProClick = {}
             )
             Spacer(modifier = Modifier.padding(10.dp))
-            TopBar(stringResource(id = R.string.photo_id), false,
+            TopBar(
+                isPremium = false,
+                stringResource(id = R.string.photo_id), false,
                 onThemeUpdated = {},
                 onSettingsClick = {},
                 onGetProClick = {}

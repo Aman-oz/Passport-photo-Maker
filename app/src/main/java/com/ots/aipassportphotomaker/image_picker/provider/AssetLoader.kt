@@ -14,18 +14,6 @@ import com.ots.aipassportphotomaker.image_picker.model.RequestType
 
 internal object AssetLoader {
 
-    /*private val projection = arrayOf(
-        MediaStore.Video.Media._ID,
-        MediaStore.Video.Media.DISPLAY_NAME,
-        MediaStore.Video.Media.DATE_TAKEN,
-        MediaStore.Files.FileColumns.MEDIA_TYPE,
-        MediaStore.Video.Media.MIME_TYPE,
-        MediaStore.Video.Media.SIZE,
-        MediaStore.Video.Media.DURATION,
-        MediaStore.Video.Media.BUCKET_DISPLAY_NAME,
-        MediaStore.Files.FileColumns.DATA,
-        )*/
-
     private val projection = arrayOf(
         MediaStore.Images.Media._ID,
         MediaStore.Images.Media.DISPLAY_NAME,
@@ -38,8 +26,8 @@ internal object AssetLoader {
 
     fun insertImage(context: Context): Uri? {
         val contentValues = ContentValues().apply {
-            put(MediaStore.Images.Media.DISPLAY_NAME, "camera-${System.currentTimeMillis()}.jpg")
-            put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+            put(MediaStore.Images.Media.DISPLAY_NAME, "camera-${System.currentTimeMillis()}.png")
+            put(MediaStore.Images.Media.MIME_TYPE, "image/png")
         }
         return context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
     }
@@ -54,38 +42,16 @@ internal object AssetLoader {
             val indexId = it.getColumnIndex(projection[0])
             val indexFilename = it.getColumnIndex(projection[1])
             val indexDate = it.getColumnIndex(projection[2])
-            val indexMediaType = it.getColumnIndex(projection[3])
-            val indexMimeType = it.getColumnIndex(projection[4])
-            val indexSize = it.getColumnIndex(projection[5])
-            val indexDuration = it.getColumnIndex(projection[6])
-            val indexDirectory = it.getColumnIndex(projection[7])
-            val indexFilepath = it.getColumnIndex(projection[8])
+            val indexMimeType = it.getColumnIndex(projection[3])
+            val indexSize = it.getColumnIndex(projection[4])
+            val indexDirectory = it.getColumnIndex(projection[5])
+            val indexFilepath = it.getColumnIndex(projection[6])
 
             if (it.moveToNext()) {
-                /*val id = it.getLong(indexId)
-                val mediaType = it.getInt(indexMediaType)
-                val filepathIndex = if (mediaType == MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE) {
-                    it.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
-                } else {
-                    it.getColumnIndexOrThrow(MediaStore.Video.Media.DATA)
-                }*/
 
                 val id = it.getLong(indexId)
                 val contentUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
 
-
-                /*return AssetInfo(
-                    id = id,
-                    uriString = it.getString(filepathIndex),
-                    filepath = it.getString(indexFilepath),
-                    filename = it.getString(indexFilename),
-                    date = it.getLong(indexDate),
-                    mediaType = mediaType,
-                    mimeType = it.getString(indexMimeType),
-                    size = it.getLong(indexSize),
-                    duration = it.getLong(indexDuration),
-                    directory = it.getString(indexDirectory),
-                )*/
 
                 return AssetInfo(
                     id = id,
@@ -118,21 +84,13 @@ internal object AssetLoader {
             Logger.e("AssetLoader", "Missing storage permission: READ_MEDIA_IMAGES or READ_EXTERNAL_STORAGE")
             return assets
         }
-        val cursor = createCursor(context, limit)
-        if (cursor == null) {
-            Logger.e("AssetLoader", "Cursor is null, no images found or query failed")
+        val cursor = createCursor(context) ?: run {
+            Logger.e("AssetLoader", "Cursor is null, query failed or no images available")
             return assets
         }
+
         cursor.use {
-            /*val indexId = it.getColumnIndex(projection[0])
-            val indexFilename = it.getColumnIndex(projection[1])
-            val indexDate = it.getColumnIndex(projection[2])
-            val indexMediaType = it.getColumnIndex(projection[3])
-            val indexMimeType = it.getColumnIndex(projection[4])
-            val indexSize = it.getColumnIndex(projection[5])
-            val indexDuration = it.getColumnIndex(projection[6])
-            val indexDirectory = it.getColumnIndex(projection[7])
-            val indexFilepath = it.getColumnIndex(projection[8])*/
+            val totalCount = it.count
 
             val indexId = it.getColumnIndex(projection[0])
             val indexFilename = it.getColumnIndex(projection[1])
@@ -142,24 +100,20 @@ internal object AssetLoader {
             val indexDirectory = it.getColumnIndex(projection[5])
             val indexFilepath = it.getColumnIndex(projection[6])
 
-            if (offset > 0) {
-                Logger.d("AssetLoader", "Skipping to offset $offset")
-                if (!it.moveToPosition(offset - 1)) {
-                    Logger.w("AssetLoader", "Offset $offset exceeds available data")
-                    return assets
-                }
+            if (offset >= totalCount) {
+                Logger.w("AssetLoader", "Offset $offset exceeds total count $totalCount")
+                return assets
             }
 
-            var count = 0
+            if (!it.moveToPosition(offset)) {
+                Logger.w("AssetLoader", "Failed to move to offset $offset")
+                return assets
+            }
 
-            while (it.moveToNext() && count < limit) {
-                /*val id = it.getLong(indexId)
-                val mediaType = it.getInt(indexMediaType)
-                val contentUri = if (mediaType == MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE) {
-                    ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
-                } else {
-                    ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, id)
-                }*/
+            Logger.d("AssetLoader", "Total images available: $totalCount, offset: $offset, limit: $limit")
+
+            var count = 0
+            while (it.moveToNext() && count < limit && !it.isAfterLast) {
 
                 val id = it.getLong(indexId)
                 val contentUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
@@ -169,26 +123,6 @@ internal object AssetLoader {
                 val filename = it.getString(indexFilename) ?: "Unknown_${id}" // Fallback to a default name
                 val mimeType = it.getString(indexMimeType) ?: "image/jpeg" /*"application/octet-stream"*/ // Fallback MIME type
                 val directory = it.getString(indexDirectory) ?: "" // Fallback to empty string
-
-                // Optionally, skip entries with critical null values
-                /*if (filepath.isEmpty() && mediaType == MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO) {
-                    continue // Skip videos with no filepath, if necessary
-                }*/
-
-                /*assets.add(
-                    AssetInfo(
-                        id = id,
-                        uriString = contentUri.toString(),
-                        filepath = filepath,
-                        filename = filename,
-                        date = it.getLong(indexDate),
-                        mediaType = mediaType,
-                        mimeType = mimeType,
-                        size = it.getLong(indexSize),
-                        duration = it.getLong(indexDuration),
-                        directory = directory,
-                    )
-                )*/
 
                 assets.add(
                     AssetInfo(
@@ -214,6 +148,20 @@ internal object AssetLoader {
         return assets
     }
 
+    fun getDirectoryCounts(context: Context): Map<String, Int> {
+        val counts = mutableMapOf<String, Int>()
+        val cursor = createCursor(context) ?: return counts
+        cursor.use {
+            val indexDirectory = it.getColumnIndexOrThrow(projection[5])
+            while (it.moveToNext()) {
+                val directory = it.getString(indexDirectory) ?: ""
+                counts[directory] = counts.getOrDefault(directory, 0) + 1
+            }
+            Logger.d("AssetLoader", "Directory counts: $counts")
+        }
+        return counts
+    }
+
     private fun createCursor(context: Context, limit: Int): Cursor? {
         // CHANGE: Added try-catch for error handling and removed OFFSET from sortOrder
         return try {
@@ -231,39 +179,21 @@ internal object AssetLoader {
         }
     }
 
-/*    private fun createCursor(context: Context, requestType: RequestType): Cursor? {
-        val mediaType = MediaStore.Files.FileColumns.MEDIA_TYPE
-        val image = MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE
-        val video = MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO
-
-        val selection = when (requestType) {
-            RequestType.COMMON -> Selection(
-                selection = "$mediaType=? OR $mediaType=?",
-                arguments = listOf(image.toString(), video.toString())
+    private fun createCursor(context: Context): Cursor? {
+        return try {
+            // Note: OFFSET is not supported in all Android versions; use a subquery or skip manually
+            val uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+            context.contentResolver.query(
+                uri,
+                projection,
+                null,
+                null,
+                "${MediaStore.Images.Media.DATE_TAKEN} DESC"
             )
-
-            RequestType.IMAGE -> Selection(
-                selection = "$mediaType=?",
-                arguments = listOf(image.toString())
-            )
-
-            RequestType.VIDEO -> Selection(
-                selection = "$mediaType=?",
-                arguments = listOf(video.toString())
-            )
-        }
-        return createMediaCursor(context, selection)
-    }*/
-
-    private fun createMediaCursor(context: Context, selection: Selection): Cursor? {
-        return context.contentResolver.query(
-            MediaStore.Files.getContentUri("external"),
-            projection,
-            selection.selection,
-            selection.arguments.toTypedArray(),
-            "${MediaStore.Files.FileColumns.DATE_ADDED} DESC",
+        } catch (e: Exception) {
+            Logger.e("AssetLoader", "Query error: ${e.message}", e)
             null
-        )
+        }
     }
 
     private data class Selection(val selection: String, val arguments: List<String>)

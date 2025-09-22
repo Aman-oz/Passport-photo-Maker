@@ -8,6 +8,8 @@ import com.aman.downloader.OziDownloader
 import com.ots.aipassportphotomaker.adsmanager.admob.MyAdsManager
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
 import com.ots.aipassportphotomaker.common.managers.AnalyticsManager
+import com.ots.aipassportphotomaker.common.managers.PreferencesHelper
+import com.ots.aipassportphotomaker.common.utils.AdsConstants
 import com.ots.aipassportphotomaker.common.utils.ColorUtils.parseColorFromString
 import com.ots.aipassportphotomaker.common.utils.FileUtils
 import com.ots.aipassportphotomaker.common.utils.Logger
@@ -50,7 +52,8 @@ class CutOutImageScreenViewModel @Inject constructor(
     private val oziDownloader: OziDownloader,
     @ApplicationContext private val context: Context,
     private val adsManager: MyAdsManager,
-    private val analyticsManager: AnalyticsManager
+    private val analyticsManager: AnalyticsManager,
+    private val preferencesHelper: PreferencesHelper
 ): BaseViewModel() {
 
     private val _uiState: MutableStateFlow<CutOutImageScreenUiState> =
@@ -361,5 +364,9 @@ class CutOutImageScreenViewModel @Inject constructor(
                 onAdClosed.invoke(false)
             }
         }
+    }
+
+    fun isPremiumUser(): Boolean {
+        return preferencesHelper.getBoolean(AdsConstants.IS_NO_ADS_ENABLED, false)
     }
 }

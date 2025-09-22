@@ -6,15 +6,19 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
+import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.image_picker.AssetRoute
 import com.ots.aipassportphotomaker.image_picker.model.AssetDirectory
 import com.ots.aipassportphotomaker.image_picker.model.AssetInfo
 import com.ots.aipassportphotomaker.image_picker.model.RequestType
+import com.ots.aipassportphotomaker.image_picker.provider.AssetLoader
 import com.ots.aipassportphotomaker.image_picker.provider.AssetPickerRepository
+import kotlinx.coroutines.launch
 
 //const val init_directory = "Photos/Videos"
-const val init_directory = "Camera/Download"
+const val init_directory = "Camera"
 
 internal class AssetViewModel(
     private val assetPickerRepository: AssetPickerRepository,
@@ -32,14 +36,96 @@ internal class AssetViewModel(
     var directory by mutableStateOf(init_directory)
 
     private var currentOffset = 0
-    private val batchSize = 100
+    private val batchSize = 50
+    var isLoading = false
+    private val _isInitialLoadComplete = mutableStateOf(false)
+    private val directoryCounts = mutableMapOf<String, Int>()
+
+    init {
+        viewModelScope.launch {
+            initDirectories()
+            _isInitialLoadComplete.value = true
+        }
+    }
 
     suspend fun initDirectories() {
         currentOffset = 0
         _assets.clear()
         _directoryGroup.clear()
-        loadNextBatch()
-//        initAssets(RequestType.IMAGE)
+        loadInitialData()
+        updateDirectoryGroupsWithCounts()
+    }
+
+    private suspend fun loadInitialData() {
+        if (isLoading) return
+        isLoading = true
+        try {
+            val newAssets = assetPickerRepository.getAssets(RequestType.IMAGE, batchSize, currentOffset)
+            if (newAssets.isNotEmpty()) {
+                _assets.addAll(newAssets)
+                currentOffset += newAssets.size
+                Logger.d("AssetViewModel", "Loaded initial ${newAssets.size} assets, total: ${_assets.size}")
+            } else {
+                Logger.d("AssetViewModel", "No assets loaded at offset $currentOffset")
+            }
+            // Load directory counts once during init
+            directoryCounts.putAll(assetPickerRepository.getDirectoryCounts())
+        } catch (e: Exception) {
+            Logger.e("AssetViewModel", "Error loading initial data: ${e.message}", e)
+        } finally {
+            isLoading = false
+        }
+    }
+
+    private suspend fun loadBatch() {
+        if (isLoading) return
+        isLoading = true
+        try {
+            val newAssets = assetPickerRepository.getAssets(RequestType.IMAGE, batchSize, currentOffset)
+            if (newAssets.isNotEmpty()) {
+                _assets.addAll(newAssets)
+                currentOffset += newAssets.size
+                Logger.d("AssetViewModel", "Loaded ${newAssets.size} assets, total: ${_assets.size}")
+            } else {
+                Logger.d("AssetViewModel", "No more assets to load at offset $currentOffset")
+            }
+        } catch (e: Exception) {
+            Logger.e("AssetViewModel", "Error loading batch: ${e.message}", e)
+        } finally {
+            isLoading = false
+        }
+    }
+
+    fun loadMoreAssets() {
+        if (!isLoading && _isInitialLoadComplete.value) {
+            viewModelScope.launch {
+                loadBatch()
+                if (_assets.isNotEmpty()) {
+                    updateDirectoryGroupsWithCounts()
+                }
+            }
+        }
+    }
+
+    private fun updateDirectoryGroupsWithCounts() {
+        val directoryList = _assets.groupBy { it.directory }.map { entry ->
+            AssetDirectory(
+                directory = entry.key,
+                assets = entry.value,
+                counts = directoryCounts[entry.key] ?: entry.value.size // Use total count if available, else current size
+            )
+        }
+        _directoryGroup.clear()
+        _directoryGroup.add(AssetDirectory(directory = init_directory, assets = _assets, counts = directoryCounts[init_directory] ?: _assets.size))
+        _directoryGroup.addAll(directoryList)
+        Logger.d("AssetViewModel", "Updated directory groups, total groups: ${_directoryGroup.size}")
+    }
+
+    suspend fun initDirectories1() {
+        currentOffset = 0
+        _assets.clear()
+        _directoryGroup.clear()
+        loadNextBatch1()
         val directoryList = assets.groupBy {
             it.directory
         }.map {
@@ -49,12 +135,12 @@ internal class AssetViewModel(
         _directoryGroup.addAll(directoryList)
     }
 
-    private suspend fun loadNextBatch() {
+    private suspend fun loadNextBatch1() {
         val newAssets = assetPickerRepository.getAssets(RequestType.IMAGE, batchSize, currentOffset)
         _assets.addAll(newAssets)
         currentOffset += newAssets.size
         if (newAssets.size == batchSize) {
-            loadNextBatch()
+            loadNextBatch1()
         }
     }
 
@@ -69,20 +155,6 @@ internal class AssetViewModel(
             selectedList -= assetInfo
         }
     }
-
-    /*fun getGroupedAssets(requestType: RequestType): Map<String, List<AssetInfo>> {
-        val assetList = _directoryGroup.first { it.directory == directory }.assets
-
-        return assetList.filter {
-            when (requestType) {
-                RequestType.COMMON -> true
-                RequestType.IMAGE -> it.isImage()
-                RequestType.VIDEO -> it.isVideo()
-            }
-        }
-            .sortedByDescending { it.date }
-            .groupBy { it.dateString }
-    }*/
 
     fun getGroupedAssets(requestType: RequestType): Map<String, List<AssetInfo>> {
         return _assets.sortedByDescending { it.date }
@@ -107,7 +179,10 @@ internal class AssetViewModel(
     }
 
     fun deleteImage(cameraUri: Uri?) {
-        assetPickerRepository.deleteByUri(cameraUri)
+        viewModelScope.launch {
+            assetPickerRepository.deleteByUri(cameraUri)
+            _assets.removeAll { it.uriString == cameraUri.toString() } // Update local list
+        }
     }
 
     fun getUri(): Uri? {

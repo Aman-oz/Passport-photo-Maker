@@ -17,6 +17,8 @@ import com.ots.aipassportphotomaker.common.ext.WhatsappPackage
 import com.ots.aipassportphotomaker.common.ext.shareMedia
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
 import com.ots.aipassportphotomaker.common.managers.AnalyticsManager
+import com.ots.aipassportphotomaker.common.managers.PreferencesHelper
+import com.ots.aipassportphotomaker.common.utils.AdsConstants
 import com.ots.aipassportphotomaker.common.utils.ImageUtils.getFileSizeInfo
 import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.domain.model.DocumentEntity
@@ -52,7 +54,8 @@ class SavedImageScreenViewModel @Inject constructor(
     private val dispatcher: DispatchersProvider,
     @ApplicationContext private val context: Context,
     private val adsManager: MyAdsManager,
-    private val analyticsManager: AnalyticsManager
+    private val analyticsManager: AnalyticsManager,
+    private val preferencesHelper: PreferencesHelper
 ): BaseViewModel() {
 
     private val _uiState: MutableStateFlow<SavedImageScreenUiState> =
@@ -251,6 +254,10 @@ class SavedImageScreenViewModel @Inject constructor(
                 onAdClosed.invoke(false)
             }
         }
+    }
+
+    fun isPremiumUser(): Boolean {
+        return preferencesHelper.getBoolean(AdsConstants.IS_NO_ADS_ENABLED, false)
     }
 
 }

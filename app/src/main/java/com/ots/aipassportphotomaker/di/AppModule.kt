@@ -15,11 +15,13 @@ import com.ots.aipassportphotomaker.data.repository.CropImageRepositoryImpl
 import com.ots.aipassportphotomaker.data.repository.RemoveBackgroundRepositoryImpl
 import com.ots.aipassportphotomaker.data.repository.SuitsDataSource
 import com.ots.aipassportphotomaker.data.repository.SuitsRepositoryImpl
+import com.ots.aipassportphotomaker.data.repository.shared.SharedRepositoryImpl
 import com.ots.aipassportphotomaker.data.util.DiskExecutor
 import com.ots.aipassportphotomaker.data.util.NetworkMonitorImpl
 import com.ots.aipassportphotomaker.domain.permission.PermissionsHelper
 import com.ots.aipassportphotomaker.domain.repository.CropImageRepository
 import com.ots.aipassportphotomaker.domain.repository.RemoveBackgroundRepository
+import com.ots.aipassportphotomaker.domain.repository.SharedRepository
 import com.ots.aipassportphotomaker.domain.repository.SuitsRepository
 import dagger.Module
 import dagger.Provides
@@ -79,6 +81,12 @@ class AppModule {
     fun provideNetworkMonitor(
         @ApplicationContext context: Context
     ): NetworkMonitorImpl = NetworkMonitorImpl(context)
+
+/*    @Provides
+    @Singleton
+    fun provideSharedRepository(
+        @ApplicationContext context: Context
+    ): SharedRepositoryImpl = SharedRepositoryImpl(context)*/
 
     @Provides
     @Singleton

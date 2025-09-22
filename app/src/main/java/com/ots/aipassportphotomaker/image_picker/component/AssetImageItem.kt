@@ -59,8 +59,6 @@ fun AssetImageItem(
         Pair(Color.Transparent, 1F)
     }
 
-
-
     val context = LocalContext.current
 
     Box(
@@ -106,7 +104,7 @@ fun AssetImageItem(
             }
         }
 
-        if (resourceType == AssetResourceType.VIDEO) {
+        /*if (resourceType == AssetResourceType.VIDEO) {
             Text(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
@@ -133,7 +131,7 @@ fun AssetImageItem(
                     fontSize = 10.sp
                 )
             }
-        }
+        }*/
     }
 }
 
@@ -175,7 +173,7 @@ fun SelectedAssetImageItem(
             contentDescription = null
         )
 
-        if (resourceType == AssetResourceType.VIDEO) {
+        /*if (resourceType == AssetResourceType.VIDEO) {
             Text(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
@@ -202,6 +200,6 @@ fun SelectedAssetImageItem(
                     fontSize = 10.sp
                 )
             }
-        }
+        }*/
     }
 }

@@ -25,6 +25,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -32,6 +34,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
@@ -202,6 +205,7 @@ fun EditImagePage(
         processingStage = processingStage,
         selectedColor = localSelectedColor,
         colorFactory = colorFactory,
+        isPremium = viewModel.isPremiumUser(),
         onImageSaved = { imagePath ->
             viewModel.onImageSaved(imagePath)
 
@@ -221,7 +225,7 @@ fun EditImagePage(
         onBackClick = {
             mainRouter.goBack()
 
-            viewModel.showInterstitialAd(activity) {  }
+            viewModel.showInterstitialAd(activity) { }
         },
         onEraseClick = {
             viewModel.onCutoutClicked()
@@ -231,7 +235,7 @@ fun EditImagePage(
 
     BackHandler {
         mainRouter.goBack()
-        viewModel.showInterstitialAd(activity) {  }
+        viewModel.showInterstitialAd(activity) { }
     }
 
 }
@@ -246,6 +250,7 @@ private fun EditImageScreen(
     suits: LazyPagingItems<SuitsEntity>,
     uiState: EditImageScreenUiState,
     shouldRemoveBg: Boolean = false,
+    isPremium: Boolean = false,
     processingStage: ProcessingStage = ProcessingStage.NONE,
     selectedColor: Color? = null,
     colorFactory: ColorFactory,
@@ -256,7 +261,7 @@ private fun EditImageScreen(
     onGetProClick: () -> Unit = {},
 ) {
     val TAG = "EditImageScreen"
-
+    val systemBarsPadding = WindowInsets.systemBars.asPaddingValues()
     val context = LocalContext.current
 
     val coroutineScope = rememberCoroutineScope()
@@ -272,7 +277,10 @@ private fun EditImageScreen(
         }
     )
 
-    Surface {
+    Surface(
+        modifier = Modifier
+            .padding(bottom = systemBarsPadding.calculateBottomPadding())
+    ) {
 
         val isLoading = uiState.showLoading
         val errorMessage = uiState.errorMessage
@@ -352,6 +360,7 @@ private fun EditImageScreen(
         ) {
             CommonTopBar(
                 title = "Edit image",
+                showGetProButton = !isPremium,
                 onBackClick = {
                     onBackClick.invoke()
 
@@ -975,50 +984,47 @@ private fun EditImageScreen(
                         }
 
                         Spacer(modifier = Modifier.weight(1f))
+                        if (!isPremium) {
+                            var adLoadState by remember { mutableStateOf(false) }
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(52.dp) // match banner height
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    if (!adLoadState) {
+                                        Text(
+                                            text = "Advertisement",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Medium,
+                                            color = colors.onSurfaceVariant,
+                                            modifier = Modifier
+                                                .padding(horizontal = 16.dp)
+                                                .fillMaxWidth()
+                                                .wrapContentSize(align = Alignment.Center)
+                                        )
+                                    }
 
-                        var adLoadState by remember { mutableStateOf(false) }
-
-                        Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(52.dp) // match banner height
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                if (!adLoadState) {
-                                    Text(
-                                        text = "Advertisement",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Medium,
-                                        color = colors.onSurfaceVariant,
+                                    AdMobBanner(
+                                        adUnit = AdIdsFactory.getBannerAdId(),
                                         modifier = Modifier
-                                            .padding(horizontal = 16.dp)
                                             .fillMaxWidth()
-                                            .wrapContentSize(align = Alignment.Center)
+                                            .align(Alignment.Center),
+                                        adSize = AdSize.BANNER, // or adaptive size if needed
+                                        onAdLoaded = { isLoaded ->
+                                            adLoadState = isLoaded
+                                            Logger.d(TAG, "AdMobBanner: onAdLoaded: $isLoaded")
+                                        }
                                     )
                                 }
-
-                                AdMobBanner(
-                                    adUnit = AdIdsFactory.getBannerAdId(),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .align(Alignment.Center),
-                                    adSize = AdSize.BANNER, // or adaptive size if needed
-                                    onAdLoaded = { isLoaded ->
-                                        adLoadState = isLoaded
-                                        Logger.d(TAG, "AdMobBanner: onAdLoaded: $isLoaded")
-                                    }
-                                )
                             }
+
+                            // Add SnackbarHost to display permission rationale
+                            SnackbarHost(
+                                hostState = snackbarHostState,
+                                modifier = Modifier.align(Alignment.CenterHorizontally)
+                            )
                         }
-
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        // Add SnackbarHost to display permission rationale
-                        SnackbarHost(
-                            hostState = snackbarHostState,
-                            modifier = Modifier.align(Alignment.CenterHorizontally)
-                        )
 
                     }
 

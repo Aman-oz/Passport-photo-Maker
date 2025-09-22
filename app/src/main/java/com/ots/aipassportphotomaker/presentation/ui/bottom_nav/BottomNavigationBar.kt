@@ -1,12 +1,17 @@
 package com.ots.aipassportphotomaker.presentation.ui.bottom_nav
 
 import android.content.res.Configuration
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
@@ -22,14 +27,18 @@ import com.ots.aipassportphotomaker.presentation.ui.theme.onCustom400
 
 @Composable
 fun BottomNavigationBar(
+    systemBarsPadding: PaddingValues,
     items: List<BottomNavigationBarItem>,
     navController: NavController,
     onItemClick: (BottomNavigationBarItem) -> Unit
 ) {
     val backStackEntry = navController.currentBackStackEntryAsState()
     NavigationBar (
+        modifier = Modifier
+            .padding(bottom = systemBarsPadding.calculateBottomPadding()),
         containerColor = colors.background,
-        contentColor = colors.onBackground
+        contentColor = colors.onBackground,
+        windowInsets = WindowInsets(0)
     ) {
         items.forEach { item ->
             val selected = item.page.route() == backStackEntry.value?.destination?.route
@@ -57,7 +66,9 @@ fun BottomNavigationBar(
 @Composable
 private fun BottomNavigationBarViewPreview() {
     PreviewContainer {
-        BottomNavigationBar(listOf(
+        BottomNavigationBar(
+            systemBarsPadding = PaddingValues(0.dp),
+            items = listOf(
             BottomNavigationBarItem.Home,
             BottomNavigationBarItem.CreateID,
             BottomNavigationBarItem.History

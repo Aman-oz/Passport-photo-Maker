@@ -7,6 +7,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.mutableStateListOf
 import com.las.collage.maker.iab.ProductItem
+import com.ots.aipassportphotomaker.adsmanager.admob.MyAdsManager
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
 import com.ots.aipassportphotomaker.common.iab.AppBillingClient
 import com.ots.aipassportphotomaker.common.iab.subscription.SubscriptionItem
@@ -27,6 +28,7 @@ import kotlinx.coroutines.flow.update
 class PremiumScreenViewModel @Inject constructor(
     premiumScreenBundle: PremiumScreenBundle,
     private val billingClient: AppBillingClient,
+    private val adsManager: MyAdsManager,
     @ApplicationContext private val context: Context,
 ) : BaseViewModel() {
 
@@ -123,6 +125,7 @@ class PremiumScreenViewModel @Inject constructor(
 
                 override fun ok(productItem: ProductItem) {
                     loadState(false)
+                    adsManager.setEnabledNoAds(true)
                     _uiState.update { it.copy(errorMessage = "Purchase successful") }
                     // Navigate to home or update UI as needed
                     _navigationState.tryEmit(PremiumScreenNavigationState.HomeScreen(0))

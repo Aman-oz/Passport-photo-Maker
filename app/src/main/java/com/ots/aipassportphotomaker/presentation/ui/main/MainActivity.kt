@@ -9,15 +9,25 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -29,6 +39,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
@@ -45,7 +56,11 @@ import com.ots.aipassportphotomaker.di.AppSettingsSharedPreference
 import com.ots.aipassportphotomaker.domain.bottom_nav.Page
 import com.ots.aipassportphotomaker.domain.bottom_nav.route
 import com.ots.aipassportphotomaker.domain.permission.PermissionsHelper
+import com.ots.aipassportphotomaker.domain.repository.DocumentRepository
+import com.ots.aipassportphotomaker.domain.repository.SharedRepository
 import com.ots.aipassportphotomaker.domain.util.NetworkMonitor
+import com.ots.aipassportphotomaker.domain.util.onError
+import com.ots.aipassportphotomaker.domain.util.onSuccess
 import com.ots.aipassportphotomaker.presentation.ui.components.CameraPermissionTextProvider
 import com.ots.aipassportphotomaker.presentation.ui.components.ChangeThemDialog
 import com.ots.aipassportphotomaker.presentation.ui.components.ExitDialog
@@ -84,6 +99,16 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var preferencesHelper: PreferencesHelper
+
+    @Inject
+    lateinit var documentRepository: DocumentRepository
+
+   /* @Inject
+    lateinit var sharedRepository: SharedRepository*/
+
+    private var isPremium: Boolean = false
+
+    private val viewModel: MainViewModel by viewModels()
 
     private var isHomeScreen = false
     val isOnHomeTab = mutableStateOf(true)
@@ -127,13 +152,28 @@ class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.auto(
+                android.graphics.Color.TRANSPARENT,
+                android.graphics.Color.TRANSPARENT
+            ),
+            navigationBarStyle = SystemBarStyle.auto(
+                lightScrim = android.graphics.Color.TRANSPARENT,
+                darkScrim = android.graphics.Color.TRANSPARENT
+            )
+        )
 
         setContent {
 
-            val viewModel = viewModel<MainViewModel>()
+            isPremium = preferencesHelper.getBoolean(AdsConstants.IS_NO_ADS_ENABLED, false)
+            val systemBarsPadding = WindowInsets.systemBars.asPaddingValues()
+
             val navController = rememberNavController()
             var darkMode by remember { mutableStateOf(isDarkModeEnabled()) }
+
+            var showDeleteIcon by remember { mutableStateOf(false) }
+            var showDeleteAllDialog by remember { mutableStateOf(false) }
+            var isHistoryItemsAvailable by remember { mutableStateOf(false) }
 
             val scope = rememberCoroutineScope()
 
@@ -190,7 +230,53 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                Column {
+                // Show delete all dialog
+                if (showDeleteAllDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showDeleteAllDialog = false },
+                        title = { Text("Delete All Images") },
+                        text = { Text("Are you sure you want to delete all images?") },
+                        confirmButton = {
+                            TextButton(onClick = {
+                                lifecycleScope.launch {
+                                    documentRepository.deleteAllCreatedImages()
+                                    documentRepository.triggerRefreshEvent()
+                                    showDeleteAllDialog = false
+                                }
+                            }) {
+                                Text("Yes")
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showDeleteAllDialog = false }) {
+                                Text("No")
+                            }
+                        }
+                    )
+                }
+
+                /*LaunchedEffect(Unit) {
+                    lifecycleScope.launch {
+                        val result = documentRepository.getAllCreatedImages()
+                        result.onSuccess {
+                            isHistoryItemsAvailable = it.isNotEmpty()
+                        }
+                        result.onError {
+                            isHistoryItemsAvailable = false
+                        }
+                    }
+                }*/
+
+                // Observe database changes
+                LaunchedEffect(Unit) {
+                    documentRepository.observeCreatedImagesCount().collect { count ->
+                        isHistoryItemsAvailable = count > 0
+                    }
+                }
+
+                Column(
+                    modifier = Modifier
+                ) {
                     val networkStatus by networkMonitor.networkState.collectAsState(null)
 
                     /*networkStatus?.let {
@@ -200,12 +286,22 @@ class MainActivity : ComponentActivity() {
                     }*/
 
                     MainGraph(
+                        isPremium = isPremium,
+                        systemBarsPadding = systemBarsPadding,
                         mainNavController = navController,
                         darkMode = darkMode,
                         isFirstLaunch = isFirstLaunch(),
                         onSettingClick = {
                             Logger.d("MainActivity", "Settings icon clicked")
                             showSettingsDialog = true
+                        },
+                        showDeleteIcon = showDeleteIcon && isHistoryItemsAvailable,
+                        onDeleteClick = {
+                            if (isHistoryItemsAvailable) {
+                                showDeleteAllDialog = true
+                            } else {
+                                Toast.makeText(this@MainActivity, "No history available", Toast.LENGTH_SHORT).show()
+                            }
                         },
                         onThemeUpdated = {
                             val updated = !darkMode
@@ -226,9 +322,10 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         },
-                        onBottomNavTabChanged = { isHomeScreen ->
+                        onBottomNavTabChanged = { tabIndex ->
                             Logger.d("MainActivity", "Bottom nav tab changed, isHomeScreen: $isHomeScreen")
-                            isOnHomeTab .value = isHomeScreen
+                            isOnHomeTab .value = tabIndex == 1
+                            showDeleteIcon = tabIndex == 3
                         }
                     )
 
@@ -424,6 +521,7 @@ class MainActivity : ComponentActivity() {
                         sheetState = exitBottomSheetState
                     ) {
                         ExitDialog(
+                            isPremium = isPremium,
                             onCancelClick = {
 
                                 scope.launch {

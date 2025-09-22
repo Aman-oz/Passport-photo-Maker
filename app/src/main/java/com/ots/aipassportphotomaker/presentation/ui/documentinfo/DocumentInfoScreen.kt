@@ -25,12 +25,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -231,6 +234,7 @@ fun DocumentInfoPage(
                 )))
 //            viewModel.onOpenCameraClicked()
         },
+        isPremium = viewModel.isPremiumUser(),
         onCreatePhotoClick = { type ->
             viewModel.onCreatePhotoClicked()
             viewModel.showInterstitialAd(activityContext) {  }
@@ -331,6 +335,7 @@ private fun DocumentInfoScreen(
     uiState: DocumentInfoScreenUiState,
     isImageSelected: Boolean = false,
     selectedColor: Color,
+    isPremium: Boolean,
     onSelectDpi: (dpi: String) -> Unit = {},
     colorFactory: ColorFactory,
     onOpenGalleryClick: () -> Unit,
@@ -347,6 +352,8 @@ private fun DocumentInfoScreen(
 ) {
 
     val TAG = "DocumentInfoScreen"
+
+    val systemBarsPadding = WindowInsets.systemBars.asPaddingValues()
 
     val context = LocalContext.current
 
@@ -430,7 +437,9 @@ private fun DocumentInfoScreen(
 
 
     Surface(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .padding(bottom = systemBarsPadding.calculateBottomPadding())
+            .fillMaxSize(),
         color = colors.background
     ) {
 
@@ -473,7 +482,7 @@ private fun DocumentInfoScreen(
 
                     CommonTopBar(
                         title = "Document Info",
-                        showGetProButton = false,
+                        showGetProButton = !isPremium,
                         onBackClick = onBackClick,
                         onGetProClick = {
                             onGetProClick()
@@ -823,37 +832,40 @@ private fun DocumentInfoScreen(
                             }
                         }
                     }
-                    var adLoadState by remember { mutableStateOf(false) }
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp) // match banner height
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            if (!adLoadState) {
-                                Text(
-                                    text = "Advertisement",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Medium,
-                                    color = colors.onSurfaceVariant,
+
+                    if (!isPremium) {
+                        var adLoadState by remember { mutableStateOf(false) }
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp) // match banner height
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                if (!adLoadState) {
+                                    Text(
+                                        text = "Advertisement",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium,
+                                        color = colors.onSurfaceVariant,
+                                        modifier = Modifier
+                                            .padding(horizontal = 16.dp)
+                                            .fillMaxWidth()
+                                            .wrapContentSize(align = Alignment.Center)
+                                    )
+                                }
+
+                                AdMobBanner(
+                                    adUnit = AdIdsFactory.getBannerAdId(),
                                     modifier = Modifier
-                                        .padding(horizontal = 16.dp)
                                         .fillMaxWidth()
-                                        .wrapContentSize(align = Alignment.Center)
+                                        .align(Alignment.Center),
+                                    adSize = AdSize.BANNER, // or adaptive size if needed
+                                    onAdLoaded = { isLoaded ->
+                                        adLoadState = isLoaded
+                                        Logger.d(TAG, "OnboardingScreen: Ad Loaded: $isLoaded")
+                                    }
                                 )
                             }
-
-                            AdMobBanner(
-                                adUnit = AdIdsFactory.getBannerAdId(),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .align(Alignment.Center),
-                                adSize = AdSize.BANNER, // or adaptive size if needed
-                                onAdLoaded = { isLoaded ->
-                                    adLoadState = isLoaded
-                                    Logger.d(TAG, "OnboardingScreen: Ad Loaded: $isLoaded")
-                                }
-                            )
                         }
                     }
                 }
@@ -1350,6 +1362,7 @@ fun DocumentInfoScreenPreview() {
                 documentResolution = "300 DPI",
                 backgroundOption = BackgroundOption.CHANGE_BACKGROUND
             ),
+            isPremium = false,
             selectedColor = Color.White,
             colorFactory = ColorFactory(),
             onOpenGalleryClick = {},

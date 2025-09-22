@@ -13,11 +13,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -128,6 +132,7 @@ fun GetStartedPage(
     GetStartedScreen(
         uiState = uiState,
         isAdLoading = isAdLoading,
+        isPremium = viewModel.isPremiumUser(),
         onBackClick = {
             mainRouter.goBack()
         },
@@ -150,15 +155,21 @@ private fun GetStartedScreen(
     uiState: GetStartedScreenUiState,
     isAdLoading: Boolean,
     onBackClick: () -> Unit,
-    onGetStartedClick: () -> Unit
+    onGetStartedClick: () -> Unit,
+    isPremium: Boolean = false,
 ) {
+
+    val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val systemBarsPadding = WindowInsets.systemBars.asPaddingValues()
 
     val TAG = "GetStartedScreen"
 
     val context = LocalContext.current
 
     Surface(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .padding(bottom = systemBarsPadding.calculateBottomPadding())
+            .fillMaxSize(),
         color = colors.background
     ) {
 
@@ -313,43 +324,41 @@ private fun GetStartedScreen(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    var adLoadState by remember { mutableStateOf(false) }
+                    if (!isPremium) {
+                        var adLoadState by remember { mutableStateOf(false) }
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp) // match banner height
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                if (!adLoadState) {
+                                    Text(
+                                        text = "Advertisement",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium,
+                                        color = colors.onSurfaceVariant,
+                                        modifier = Modifier
+                                            .padding(horizontal = 16.dp)
+                                            .fillMaxWidth()
+                                            .wrapContentSize(align = Alignment.Center)
+                                    )
+                                }
 
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp) // match banner height
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            if (!adLoadState) {
-                                Text(
-                                    text = "Advertisement",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Medium,
-                                    color = colors.onSurfaceVariant,
+                                AdMobBanner(
+                                    adUnit = AdIdsFactory.getSplashBannerAdId(),
                                     modifier = Modifier
-                                        .padding(horizontal = 16.dp)
                                         .fillMaxWidth()
-                                        .wrapContentSize(align = Alignment.Center)
+                                        .align(Alignment.Center),
+                                    adSize = AdSize.BANNER, // or adaptive size if needed
+                                    onAdLoaded = { isLoaded ->
+                                        adLoadState = isLoaded
+                                        Logger.d(TAG, "AdMobBanner: onAdLoaded: $isLoaded")
+                                    }
                                 )
                             }
-
-                            AdMobBanner(
-                                adUnit = AdIdsFactory.getSplashBannerAdId(),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .align(Alignment.Center),
-                                adSize = AdSize.BANNER, // or adaptive size if needed
-                                onAdLoaded = { isLoaded ->
-                                    adLoadState = isLoaded
-                                    Logger.d(TAG, "AdMobBanner: onAdLoaded: $isLoaded")
-                                }
-                            )
                         }
                     }
-
-
-                    Spacer(modifier = Modifier.height(12.dp))
 
                 }
 

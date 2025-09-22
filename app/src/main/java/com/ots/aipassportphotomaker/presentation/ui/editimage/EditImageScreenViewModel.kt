@@ -13,6 +13,8 @@ import com.aman.downloader.OziDownloader
 import com.ots.aipassportphotomaker.adsmanager.admob.MyAdsManager
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
 import com.ots.aipassportphotomaker.common.managers.AnalyticsManager
+import com.ots.aipassportphotomaker.common.managers.PreferencesHelper
+import com.ots.aipassportphotomaker.common.utils.AdsConstants
 import com.ots.aipassportphotomaker.common.utils.ColorUtils.parseColorFromString
 import com.ots.aipassportphotomaker.common.utils.FileUtils
 import com.ots.aipassportphotomaker.common.utils.Logger
@@ -64,7 +66,8 @@ class EditImageScreenViewModel @Inject constructor(
     private val getSuitsUseCase: GetSuitsUseCase,
     @ApplicationContext private val context: Context,
     private val adsManager: MyAdsManager,
-    private val analyticsManager: AnalyticsManager
+    private val analyticsManager: AnalyticsManager,
+    private val preferencesHelper: PreferencesHelper,
 ) : BaseViewModel() {
 
     val suits: Flow<PagingData<SuitsEntity>> = getSuitsUseCase.suits(
@@ -649,6 +652,10 @@ class EditImageScreenViewModel @Inject constructor(
                 onAdClosed.invoke(false)
             }
         }
+    }
+
+    fun isPremiumUser(): Boolean {
+        return preferencesHelper.getBoolean(AdsConstants.IS_NO_ADS_ENABLED, false)
     }
 
 }

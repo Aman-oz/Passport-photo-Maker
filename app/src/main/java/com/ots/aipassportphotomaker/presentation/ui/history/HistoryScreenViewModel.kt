@@ -44,10 +44,19 @@ class HistoryScreenViewModel @Inject constructor(
     private val _documents: MutableStateFlow<List<CreatedImageEntity>> = MutableStateFlow(emptyList()) // Updated to CreatedImageEntity
     val documents = _documents.asStateFlow()
 
+    private val _showDeleteDialog = MutableStateFlow(false)
+    val showDeleteDialog = _showDeleteDialog.asStateFlow()
+
+    private val _selectedImageId = MutableStateFlow<Int?>(null)
+    val selectedImageId = _selectedImageId.asStateFlow()
+
+    private var currentType: String = "All"
+
     init {
         observeNetworkStatus()
         loadData()
         getHistoryByType("All")
+        observeRefreshEvents()
     }
     private fun loadData() {
         launch {
@@ -83,6 +92,7 @@ class HistoryScreenViewModel @Inject constructor(
     }
 
     fun getHistoryByType(type: String) {
+        currentType = type
         viewModelScope.launch {
             _uiState.update { it.copy(showLoading = true) }
             val result = if (type == "All") {
@@ -100,6 +110,41 @@ class HistoryScreenViewModel @Inject constructor(
                 _uiState.update { it.copy(showLoading = false, errorMessage = error.message) }
                 _documents.value = emptyList()
                 Logger.e("HistoryScreenViewModel", "Error loading history: ${error.message}")
+            }
+        }
+    }
+
+    fun onLongClickItem(id: Int) {
+        _selectedImageId.value = id
+        _showDeleteDialog.value = true
+    }
+
+    fun hideDeleteDialog() {
+        _showDeleteDialog.value = false
+        _selectedImageId.value = null
+    }
+
+    fun deleteSelectedImage() {
+        viewModelScope.launch {
+            _selectedImageId.value?.let { id ->
+                documentRepository.deleteCreatedImage(id)
+                getHistoryByType(currentType) // Refresh data
+            }
+            hideDeleteDialog()
+        }
+    }
+
+    fun deleteAllImages() {
+        viewModelScope.launch {
+            documentRepository.deleteAllCreatedImages()
+            getHistoryByType(currentType) // Refresh data
+        }
+    }
+
+    private fun observeRefreshEvents() {
+        viewModelScope.launch {
+            documentRepository.getRefreshEvent().collect {
+                getHistoryByType(currentType) // Refresh with the current tab type
             }
         }
     }

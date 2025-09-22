@@ -19,10 +19,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
@@ -104,7 +107,7 @@ fun OnboardingPage(
 
     OnboardingScreen(
         uiState = uiState,
-
+        isPremium = viewModel.isPremiumUser(),
         onBackClick = {
             mainRouter.goBack()
         },
@@ -119,15 +122,20 @@ fun OnboardingPage(
 private fun OnboardingScreen(
     uiState: OnboardingScreenUiState,
     onBackClick: () -> Unit,
-    onFinishClick: () -> Unit
+    onFinishClick: () -> Unit,
+    isPremium: Boolean = false,
+    isCrossVisible: Boolean = false,
 ) {
 
     val TAG = "OnboardingScreen"
+    val systemBarsPadding = WindowInsets.systemBars.asPaddingValues()
 
     val context = LocalContext.current
 
     Surface(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .padding(bottom = systemBarsPadding.calculateBottomPadding())
+            .fillMaxSize(),
         color = colors.background
     ) {
 
@@ -247,6 +255,7 @@ private fun OnboardingScreen(
                         BottomSection(
                             size = items.size,
                             index = statePager.currentPage,
+                            isPremium = isPremium,
                             statePager
                         ) {
                             if (statePager.currentPage + 1 < items.size) {
@@ -261,18 +270,21 @@ private fun OnboardingScreen(
                     }
                 }
 
-                Icon(
-                    painter = painterResource(id = R.drawable.close_circled_icon),
-                    contentDescription = "Back",
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(top = 40.dp, end = 28.dp)
-                        .clickable(
-                            onClick = {
-                                onFinishClick()
-                            }
-                        )
-                )
+                AnimatedVisibility(isCrossVisible) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.close_circled_icon),
+                        contentDescription = "Back",
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(top = 40.dp, end = 28.dp)
+                            .clickable(
+                                onClick = {
+                                    onFinishClick()
+                                }
+                            )
+                    )
+                }
+
 
             }
         }
@@ -284,6 +296,7 @@ private fun OnboardingScreen(
 fun BottomSection(
     size: Int,
     index: Int,
+    isPremium: Boolean = false,
     statePager: PagerState,
     item: OnBoardingItem = OnBoardingItem.get()[index],
     onNextClicked: () -> Unit
@@ -346,42 +359,41 @@ fun BottomSection(
                     style = MaterialTheme.typography.titleMedium,
                     color = colors.onPrimary)
             }
+            if (!isPremium) {
+                var adLoadState by remember { mutableStateOf(false) }
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp) // match banner height
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        if (!adLoadState) {
+                            Text(
+                                text = "Advertisement",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                                color = colors.onSurfaceVariant,
+                                modifier = Modifier
+                                    .padding(horizontal = 16.dp)
+                                    .fillMaxWidth()
+                                    .wrapContentSize(align = Alignment.Center)
+                            )
+                        }
 
-            var adLoadState by remember { mutableStateOf(false) }
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp) // match banner height
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    if (!adLoadState) {
-                        Text(
-                            text = "Advertisement",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Medium,
-                            color = colors.onSurfaceVariant,
+                        AdMobBanner(
+                            adUnit = AdIdsFactory.getOnboardingBannerAdId(),
                             modifier = Modifier
-                                .padding(horizontal = 16.dp)
                                 .fillMaxWidth()
-                                .wrapContentSize(align = Alignment.Center)
+                                .align(Alignment.Center),
+                            adSize = AdSize.BANNER, // or adaptive size if needed
+                            onAdLoaded = { isLoaded ->
+                                adLoadState = isLoaded
+                                Logger.d(TAG, "OnboardingScreen: Ad Loaded: $isLoaded")
+                            }
                         )
                     }
-
-                    AdMobBanner(
-                        adUnit = AdIdsFactory.getOnboardingBannerAdId(),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .align(Alignment.Center),
-                        adSize = AdSize.BANNER, // or adaptive size if needed
-                        onAdLoaded = { isLoaded ->
-                            adLoadState = isLoaded
-                            Logger.d(TAG, "OnboardingScreen: Ad Loaded: $isLoaded")
-                        }
-                    )
                 }
             }
-
-            Spacer(modifier = Modifier.height(10.dp))
 
         }
         

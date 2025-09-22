@@ -8,6 +8,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.aman.downloader.OziDownloader
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
+import com.ots.aipassportphotomaker.common.managers.PreferencesHelper
+import com.ots.aipassportphotomaker.common.utils.AdsConstants
 import com.ots.aipassportphotomaker.common.utils.ColorUtils.parseColorFromString
 import com.ots.aipassportphotomaker.common.utils.FileUtils
 import com.ots.aipassportphotomaker.common.utils.Logger
@@ -51,6 +53,7 @@ class ImageProcessingScreenViewModel @Inject constructor(
     private val dispatcher: DispatchersProvider,
     private val networkMonitor: NetworkMonitor,
     private val oziDownloader: OziDownloader,
+    private val preferencesHelper: PreferencesHelper,
     @ApplicationContext private val context: Context
 ) : BaseViewModel() {
 
@@ -647,6 +650,8 @@ class ImageProcessingScreenViewModel @Inject constructor(
         }
     }
 
-
     private suspend fun getDocumentById(documentId: Int): Result<DocumentEntity> = getDocumentDetails(documentId)
-}
+
+    fun isPremiumUser(): Boolean {
+        return preferencesHelper.getBoolean(AdsConstants.IS_NO_ADS_ENABLED, false)
+    }}
