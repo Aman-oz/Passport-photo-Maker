@@ -109,9 +109,16 @@ fun PhotoIDPage(
         documents = documentsToShow,
         uiState = uiState,
         lazyGridState = lazyGridState,
-        onDocumentClick = viewModel::onDocumentClicked,
-        onQueryChange = viewModel::onSearch,
-        onSeeAllClick = viewModel::onSeeAllClicked
+        onDocumentClick = { documentId ->
+            viewModel.onDocumentClicked(documentId)
+        },
+        onQueryChange = { query ->
+            viewModel.onSearch(query)
+        } ,
+        onSeeAllClick = { type ->
+            Log.d(TAG, "PhotoIDPage: See All clicked for type: $type")
+            viewModel.onSeeAllClicked(type)
+        }
     )
 }
 

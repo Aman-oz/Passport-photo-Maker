@@ -21,7 +21,7 @@ class MainViewModel: BaseViewModel() {
 
     @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
     fun dismissDialog() {
-        visiblePermissionDialogQueue.removeFirst()
+        visiblePermissionDialogQueue.removeAt(0)
     }
 
     fun onPermissionResult(

@@ -114,3 +114,10 @@
 -dontwarn org.openjsse.javax.net.ssl.SSLParameters
 -dontwarn org.openjsse.javax.net.ssl.SSLSocket
 -dontwarn org.openjsse.net.ssl.OpenJSSE
+
+# Keep all @Serializable classes and their serializers
+-keep class ** implements kotlinx.serialization.KSerializer { *; }
+-keep @kotlinx.serialization.Serializable class * { *; }
+-keepclassmembers class * {
+    kotlinx.serialization.KSerializer serializer(...);
+}

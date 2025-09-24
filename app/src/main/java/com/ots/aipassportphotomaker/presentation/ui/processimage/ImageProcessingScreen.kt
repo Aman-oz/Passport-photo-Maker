@@ -3,6 +3,14 @@ package com.ots.aipassportphotomaker.presentation.ui.processimage
 import android.annotation.SuppressLint
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.animation.animateColor
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
@@ -225,11 +233,36 @@ private fun ImageProcessingScreen(
                             .padding(horizontal = 16.dp, vertical = 8.dp)
                             .align(Alignment.CenterHorizontally)
                     ) {
+
+                        val colorList = listOf(
+                            Color(0xFF60DDAD), // Teal
+                            Color(0xFF4285F4), // Blue
+                            Color(0xFFDB4437), // Red
+                            Color(0xFFF4B400), // Yellow
+                            Color(0xFF0F9D58)  // Green
+                        )
+
+                        val infiniteTransition = rememberInfiniteTransition(label = "infinite transition")
+
+                        // Animate the progress (0f to 1f) to cycle through colors
+                        val colorProgress by infiniteTransition.animateFloat(
+                            initialValue = 0f,
+                            targetValue = colorList.size.toFloat(),
+                            animationSpec = infiniteRepeatable(
+                                animation = tween(durationMillis = 2000, easing = LinearEasing),
+                                repeatMode = RepeatMode.Restart
+                            ),
+                            label = "color progress"
+                        )
+
+                        // Calculate the current color based on progress
+                        val animatedColor = deriveColorFromProgress(colorList, colorProgress)
+
                         Text(
                             modifier = Modifier
                                 .align(Alignment.CenterHorizontally),
                             text = "Processing Image",
-                            color = colors.onBackground,
+                            color = animatedColor,
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold
                         )
@@ -238,7 +271,8 @@ private fun ImageProcessingScreen(
 
                         Text(
                             modifier = Modifier
-                                .align(Alignment.CenterHorizontally),
+                                .align(Alignment.CenterHorizontally)
+                                .animateContentSize(),
                             text = currentMessage,
                             color = colors.onBackground,
                             style = MaterialTheme.typography.bodyMedium,
@@ -310,6 +344,33 @@ private fun ImageProcessingScreen(
             }
         }
     }
+}
+
+// Helper function to interpolate between colors based on progress
+@Composable
+fun deriveColorFromProgress(colors: List<Color>, progress: Float): Color {
+    val size = colors.size
+    val index = progress % size
+    val lowerIndex = index.toInt() % size
+    val upperIndex = (lowerIndex + 1) % size
+    val fraction = index - index.toInt()
+
+    return lerp(colors[lowerIndex], colors[upperIndex], fraction)
+}
+
+// Extension function to lerp between two colors
+fun lerp(start: Color, stop: Color, fraction: Float): Color {
+    return Color(
+        red = lerp(start.red, stop.red, fraction),
+        green = lerp(start.green, stop.green, fraction),
+        blue = lerp(start.blue, stop.blue, fraction),
+        alpha = lerp(start.alpha, stop.alpha, fraction)
+    )
+}
+
+// Helper function to lerp a single component
+private fun lerp(start: Float, stop: Float, fraction: Float): Float {
+    return (1 - fraction) * start + fraction * stop
 }
 
 @Preview(showSystemUi = true, device = "id:pixel_5")

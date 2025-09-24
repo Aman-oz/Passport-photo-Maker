@@ -108,6 +108,7 @@ fun PhotoIDDetailPage(
     PhotoIDDetailScreen(
         documents = documentsToShow,
         uiState = uiState,
+        selectedType = viewModel.type,
         isPremium = viewModel.isPremiumUser(),
         lazyGridState = lazyGridState,
         onQueryChange = viewModel::onSearch,
@@ -122,6 +123,7 @@ private fun PhotoIDDetailScreen(
     documents: LazyPagingItems<DocumentListItem>,
     uiState: PhotoIDDetailScreenUiState,
     lazyGridState: LazyGridState,
+    selectedType: String = uiState.type ?: "Photo ID",
     isPremium: Boolean,
     onDocumentClick: (documentId: Int) -> Unit,
     onQueryChange: (query: String) -> Unit,
@@ -160,7 +162,7 @@ private fun PhotoIDDetailScreen(
                 }
         ) {
             CommonTopBar(
-                title = uiState.type.ifEmpty { uiState.type },
+                title = selectedType,
                 showGetProButton = !isPremium,
                 onBackClick = {
                     onBackClick.invoke()

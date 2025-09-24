@@ -170,6 +170,7 @@ class MainActivity : ComponentActivity() {
 
             val navController = rememberNavController()
             var darkMode by remember { mutableStateOf(isDarkModeEnabled()) }
+            enableDarkMode(darkMode)
 
             var showDeleteIcon by remember { mutableStateOf(false) }
             var showDeleteAllDialog by remember { mutableStateOf(false) }

@@ -51,7 +51,7 @@ class PhotoIDDetailScreenViewModel @Inject constructor(
     private val preferencesHelper: PreferencesHelper
 ) : BaseViewModel() {
 
-    private val type = photoIDDetailBundle.type
+    val type = photoIDDetailBundle.type
     private val imagePath = photoIDDetailBundle.imagePath
     var cachedImagePath: String? = imagePath
 
@@ -128,8 +128,8 @@ class PhotoIDDetailScreenViewModel @Inject constructor(
         }
 
         _uiState.value = _uiState.value.copy(
-            type = type, //should get by the selected type
-            showLoading = true // Start with loading until data is available
+            type = type,
+            showLoading = true
         )
 
         documents.firstOrNull()?.let { firstPage ->

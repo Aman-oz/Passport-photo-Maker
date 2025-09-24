@@ -122,9 +122,15 @@ fun PhotoIDPage2(
         uiState = uiState,
         isPremium = viewModel.isPremiumUser(),
         lazyGridState = lazyGridState,
-        onDocumentClick = viewModel::onDocumentClicked,
-        onQueryChange = viewModel::onSearch,
-        onSeeAllClick = viewModel::onSeeAllClicked,
+        onDocumentClick = { documentId ->
+            viewModel.onDocumentClicked(documentId)
+        },
+        onQueryChange = { query ->
+            viewModel.onSearch(query)
+        },
+        onSeeAllClick = { type ->
+            viewModel.onSeeAllClicked(type)
+        },
         onBackClick = { mainRouter.goBack() },
         onGetProClick = {
             mainRouter.navigateToPremiumScreen()

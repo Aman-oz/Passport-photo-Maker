@@ -13,7 +13,7 @@ plugins {
 val applicationName = "AI Passport Photo Maker"
 val versionMajor = 1
 val versionMinor = 0
-val versionPatch = 1
+val versionPatch = 2
 
 android {
     namespace = "com.ots.aipassportphotomaker"
@@ -44,8 +44,8 @@ android {
             resValue("string","app_id","ca-app-pub-3940256099942544~3347511713")
         }
         release {
-            isMinifyEnabled = false
-            isShrinkResources = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

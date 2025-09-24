@@ -140,7 +140,7 @@ class PremiumScreenViewModel @Inject constructor(
     }
 
     fun purchaseSubscription(activity: Activity,sku: String) {
-        loadState(true)
+
         val subscriptionItem = _subscriptionItems.value.find { it.sku == sku }
         if (subscriptionItem != null) {
             billingClient.purchaseSkuItem(
