@@ -38,6 +38,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
+import com.ots.aipassportphotomaker.common.utils.AnalyticsConstants
 import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.domain.bottom_nav.Page
 import com.ots.aipassportphotomaker.domain.model.DocumentListItem
@@ -69,7 +70,10 @@ fun PhotoIDDetailPage(
     Logger.d(TAG, "PhotoIDDetailPage: UI State: $uiState")
     Logger.d(TAG, "PhotoIDDetailPage: UI State type: ${uiState.type}")
     Logger.d(TAG, "PhotoIDDetailPage: Documents Paging: ${documentsPaging.itemCount} items loaded")
-    Logger.d(TAG, "PhotoIDDetailPage: Searched Documents Paging: ${documentsSearchedPaging.itemCount} items loaded")
+    Logger.d(
+        TAG,
+        "PhotoIDDetailPage: Searched Documents Paging: ${documentsSearchedPaging.itemCount} items loaded"
+    )
     // val pullToRefreshState = rememberPullRefreshState(uiState.showLoading, { viewModel.onRefresh() })
     val lazyGridState = rememberLazyGridState()
 
@@ -82,7 +86,10 @@ fun PhotoIDDetailPage(
                 documentId = navigationState.documentId,
                 imagePath = navigationState.imagePath
             )
-            is PhotoIDDetailScreenNavigationState.SelectPhotoScreen -> mainRouter.navigateToSelectPhotoScreen(navigationState.documentId)
+
+            is PhotoIDDetailScreenNavigationState.SelectPhotoScreen -> mainRouter.navigateToSelectPhotoScreen(
+                navigationState.documentId
+            )
         }
     }
 
@@ -112,9 +119,18 @@ fun PhotoIDDetailPage(
         isPremium = viewModel.isPremiumUser(),
         lazyGridState = lazyGridState,
         onQueryChange = viewModel::onSearch,
-        onDocumentClick = viewModel::onDocumentClicked,
-        onBackClick = { mainRouter.goBack() },
-        onGetProClick = { mainRouter.navigateToPremiumScreen() }
+        onDocumentClick = {
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "documentItem_DocumentDetailScreen")
+            viewModel.onDocumentClicked(it)
+        },
+        onBackClick = {
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnBack_DocumentDetailScreen")
+            mainRouter.goBack()
+        },
+        onGetProClick = {
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnGetPro_DocumentDetailScreen")
+            mainRouter.navigateToPremiumScreen()
+        }
     )
 }
 
@@ -192,7 +208,7 @@ private fun PhotoIDDetailScreen(
                             })
                         }
                 ) {
-                    SearchView (
+                    SearchView(
                         onQueryChange = {
                             query = it
                             onQueryChange(it)

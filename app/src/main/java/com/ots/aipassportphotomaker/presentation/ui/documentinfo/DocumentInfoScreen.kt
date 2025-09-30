@@ -79,6 +79,7 @@ import com.ots.aipassportphotomaker.adsmanager.admob.AdMobBanner
 import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
+import com.ots.aipassportphotomaker.common.utils.AnalyticsConstants
 import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.domain.repository.ColorFactory
 import com.ots.aipassportphotomaker.domain.util.determineOrientation
@@ -210,12 +211,15 @@ fun DocumentInfoPage(
         selectedColor = selectedColor,
         colorFactory = colorFactory,
         onSelectDpi = { dpi ->
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "SelectedDpi_${dpi}")
             viewModel.onUpdateDpi(dpi)
         },
         onOpenGalleryClick = {
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnGallery_DocumentInfo")
             showAssetPicker.value = true
         },
         onTakePhotoClick = { uri ->
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnCamera_DocumentInfo")
             isImageSelected = uri.toString().isNotEmpty()
             Logger.i(TAG, "DocumentInfoPage: Camera image URI: $uri")
 
@@ -236,23 +240,28 @@ fun DocumentInfoPage(
         },
         isPremium = viewModel.isPremiumUser(),
         onCreatePhotoClick = { type ->
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnCreatePhoto_DocumentInfo")
             viewModel.onCreatePhotoClicked()
             viewModel.showInterstitialAd(activityContext) {  }
         },
         onReselectDocument = {
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnReselectDocument_DocumentInfo")
             mainRouter.goBack()
 
             viewModel.showInterstitialAd(activityContext) {  }
         },
         onBackClick = {
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnBack_DocumentInfo")
             mainRouter.goBack()
 
             viewModel.showInterstitialAd(activityContext) {  }
         },
         onGetProClick = {
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnGetPro_DocumentInfo")
             mainRouter.navigateToPremiumScreen()
         },
         onSetCustomColor = { color ->
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnSetCustomColor_DocumentInfo")
             viewModel.setCustomColor(color)
         },
         selectPredefinedColor = { colorType ->
@@ -262,6 +271,7 @@ fun DocumentInfoPage(
             viewModel.onBackgroundOptionChanged(option)
         },
         onApplySelectedColor = {
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnApplySelectedColor_DocumentInfo")
             viewModel.applySelectedColor()
         },
         onPermissionResult = { permission, isGranted ->
@@ -274,6 +284,7 @@ fun DocumentInfoPage(
     )
 
     if (showAssetPicker.value) {
+        viewModel.sendEvent(AnalyticsConstants.OPENED, "AssetPicker_DocumentInfo")
         AssetPicker(
             assetPickerConfig = AssetPickerConfig(gridCount = 3),
             onPicked = {
@@ -323,6 +334,7 @@ fun DocumentInfoPage(
         }
 
     BackHandler {
+        viewModel.sendEvent(AnalyticsConstants.CLICKED, "backPress_DocumentInfo")
         mainRouter.goBack()
         viewModel.showInterstitialAd(activityContext) {  }
     }

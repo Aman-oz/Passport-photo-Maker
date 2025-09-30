@@ -9,6 +9,7 @@ import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
 import com.ots.aipassportphotomaker.common.managers.AnalyticsManager
 import com.ots.aipassportphotomaker.common.managers.PreferencesHelper
 import com.ots.aipassportphotomaker.common.utils.AdsConstants
+import com.ots.aipassportphotomaker.common.utils.AnalyticsConstants
 import com.ots.aipassportphotomaker.presentation.ui.base.BaseViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -59,7 +60,7 @@ class PermissionScreenViewModel @Inject constructor(
     }
 
     private fun onInitialState() = launch {
-
+        analyticsManager.sendAnalytics(AnalyticsConstants.OPENED, "PermissionScreen")
     }
 
     private fun loadState(isLoading: Boolean) {
@@ -84,6 +85,10 @@ class PermissionScreenViewModel @Inject constructor(
 
     fun isPremiumUser(): Boolean {
         return preferencesHelper.getBoolean(AdsConstants.IS_NO_ADS_ENABLED, false)
+    }
+
+    fun sendEvent(eventName: String, eventValue: String) {
+        analyticsManager.sendAnalytics(eventName, eventValue)
     }
 
 }

@@ -102,6 +102,7 @@ import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
 import com.ots.aipassportphotomaker.common.ext.animatedBorder
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
+import com.ots.aipassportphotomaker.common.utils.AnalyticsConstants
 import com.ots.aipassportphotomaker.common.utils.ImageUtils.saveBitmapToGallery
 import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.domain.model.ProcessingStage
@@ -207,12 +208,14 @@ fun EditImagePage(
         colorFactory = colorFactory,
         isPremium = viewModel.isPremiumUser(),
         onImageSaved = { imagePath ->
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnSaveImage_EditImageScreen")
             viewModel.onImageSaved(imagePath)
 
             //Rewarded ad
             viewModel.showInterstitialAd(activity) { }
         },
         onColorChange = { color, colorType ->
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "color_${colorType}_EditImageScreen")
             if (uiState.sourceScreen == "HomeScreen" && !uiState.isBgRemoved && shouldRemoveBackground) {
                 uiState.imageUrl?.let {
                     viewModel.removeBackground(File(it))
@@ -223,17 +226,23 @@ fun EditImagePage(
             }
         },
         onBackClick = {
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnBack_EditImageScreen")
             mainRouter.goBack()
 
             viewModel.showInterstitialAd(activity) { }
         },
         onEraseClick = {
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnEraser_EditImageScreen")
             viewModel.onCutoutClicked()
         },
-        onGetProClick = { mainRouter.navigateToPremiumScreen() }
+        onGetProClick = {
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnGetPro_EditImageScreen")
+            mainRouter.navigateToPremiumScreen()
+        }
     )
 
     BackHandler {
+        viewModel.sendEvent(AnalyticsConstants.CLICKED, "backPress_EditImageScreen")
         mainRouter.goBack()
         viewModel.showInterstitialAd(activity) { }
     }

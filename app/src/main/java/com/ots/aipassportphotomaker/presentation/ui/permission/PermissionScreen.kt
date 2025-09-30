@@ -57,12 +57,14 @@ import com.ots.aipassportphotomaker.adsmanager.admob.AdMobBanner
 import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
+import com.ots.aipassportphotomaker.common.utils.AnalyticsConstants
 import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.presentation.ui.bottom_nav.NavigationBarSharedViewModel
 import com.ots.aipassportphotomaker.presentation.ui.components.CameraPermissionTextProvider
 import com.ots.aipassportphotomaker.presentation.ui.components.LoaderFullScreen
 import com.ots.aipassportphotomaker.presentation.ui.components.PermissionDialog
 import com.ots.aipassportphotomaker.presentation.ui.components.StoragePermissionTextProvider
+import com.ots.aipassportphotomaker.presentation.ui.components.NotificationPermissionTextProvider
 import com.ots.aipassportphotomaker.presentation.ui.main.MainRouter
 import com.ots.aipassportphotomaker.presentation.ui.main.openAppSettings
 import com.ots.aipassportphotomaker.presentation.ui.theme.colors
@@ -103,12 +105,13 @@ fun PermissionPage(
     val permissionsForAndroid13AndBelow = listOf(
         Manifest.permission.CAMERA,
         Manifest.permission.READ_EXTERNAL_STORAGE,
-        Manifest.permission.WRITE_EXTERNAL_STORAGE
+        Manifest.permission.WRITE_EXTERNAL_STORAGE,
     )
     //Camera and Read Media Images for android 14 and above
     val permissionsForAndroid14AndAbove = listOf(
         Manifest.permission.CAMERA,
-        Manifest.permission.READ_MEDIA_IMAGES
+        Manifest.permission.READ_MEDIA_IMAGES,
+        Manifest.permission.POST_NOTIFICATIONS,
     )
 
     val permissionsToRequest: List<String> =
@@ -146,7 +149,7 @@ fun PermissionPage(
         uiState = uiState,
         isPremium = viewModel.isPremiumUser(),
         onCloseClick = {
-
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnClose_PermissionScreen")
             viewModel.showInterstitialAd(activityContext) { isAdShown ->
 
                 onGetStartedClick()
@@ -154,6 +157,7 @@ fun PermissionPage(
         },
 
         onAllowPermissionClick = {
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnAllowPermission_PermissionScreen")
             multiplePermissionResultLauncher.launch(permissionsToRequest.toTypedArray())
         }
     )
@@ -163,6 +167,9 @@ fun PermissionPage(
         .forEach { permission ->
             PermissionDialog(
                 permissionTextProvider = when (permission) {
+                    Manifest.permission.POST_NOTIFICATIONS -> {
+                        NotificationPermissionTextProvider()
+                    }
                     Manifest.permission.CAMERA -> {
                         CameraPermissionTextProvider()
                     }
@@ -186,7 +193,14 @@ fun PermissionPage(
                         arrayOf(permission)
                     )
                 },
-                onGoToAppSettingsClick = { activityContext.openAppSettings() }
+                onGoToAppSettingsClick = {
+                    viewModel.sendEvent(
+                        AnalyticsConstants.CLICKED,
+                        "btnGoToAppSettings_PermissionDialog"
+                    )
+                    viewModel.dismissDialog()
+                    activityContext.openAppSettings()
+                }
             )
         }
 

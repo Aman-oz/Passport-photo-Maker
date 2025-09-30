@@ -21,6 +21,8 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import com.ots.aipassportphotomaker.common.iab.interfaces.ConnectResponse
 import com.ots.aipassportphotomaker.common.iab.interfaces.PurchaseResponse
+import com.ots.aipassportphotomaker.common.managers.AnalyticsManager
+import com.ots.aipassportphotomaker.common.utils.AnalyticsConstants
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.update
 
@@ -29,6 +31,7 @@ class PremiumScreenViewModel @Inject constructor(
     premiumScreenBundle: PremiumScreenBundle,
     private val billingClient: AppBillingClient,
     private val adsManager: MyAdsManager,
+    private val analyticsManager: AnalyticsManager,
     @ApplicationContext private val context: Context,
 ) : BaseViewModel() {
 
@@ -52,7 +55,7 @@ class PremiumScreenViewModel @Inject constructor(
     }
 
     private fun onInitialState() = launch {
-
+        analyticsManager.sendAnalytics(AnalyticsConstants.OPENED, "PremiumScreen")
     }
 
     private fun loadState(isLoading: Boolean) {
@@ -153,5 +156,7 @@ class PremiumScreenViewModel @Inject constructor(
         }
     }
 
-
+    fun sendEvent(eventName: String, eventValue: String) {
+        analyticsManager.sendAnalytics(eventName, eventValue)
+    }
 }

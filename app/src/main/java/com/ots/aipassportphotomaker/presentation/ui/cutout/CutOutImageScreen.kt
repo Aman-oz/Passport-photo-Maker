@@ -74,6 +74,7 @@ import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.common.ext.animatedBorder
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
+import com.ots.aipassportphotomaker.common.utils.AnalyticsConstants
 import com.ots.aipassportphotomaker.common.utils.DrawViewAction
 import com.ots.aipassportphotomaker.common.utils.FileUtils.saveBitmapToInternalStorage
 import com.ots.aipassportphotomaker.common.utils.GraphicOverlay
@@ -134,12 +135,17 @@ fun CutOutImagePage(
         selectedColor = selectedColor,
         isPremium = viewModel.isPremiumUser(),
         onBackClick = {
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnBack_CutOutImageScreen")
             mainRouter.goBack()
 
             viewModel.showInterstitialAd(activity) { }
         },
-        onGetProClick = { mainRouter.navigateToPremiumScreen() },
+        onGetProClick = {
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnGetPro_CutOutImageScreen")
+            mainRouter.navigateToPremiumScreen()
+        },
         onSaveImage = { bitmap ->
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnSave_CutOutImageScreen")
             uiScope.launch {
                 when (viewModel.sourceScreen) {
                     "EditImageScreen" -> {
@@ -207,8 +213,9 @@ fun CutOutImagePage(
     )
 
     BackHandler {
+        viewModel.sendEvent(AnalyticsConstants.CLICKED, "backPress_CutOutImageScreen")
         mainRouter.goBack()
-        viewModel.showInterstitialAd(activity) {  }
+        viewModel.showInterstitialAd(activity) { }
     }
 }
 

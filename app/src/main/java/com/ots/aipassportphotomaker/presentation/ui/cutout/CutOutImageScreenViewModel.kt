@@ -10,6 +10,7 @@ import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
 import com.ots.aipassportphotomaker.common.managers.AnalyticsManager
 import com.ots.aipassportphotomaker.common.managers.PreferencesHelper
 import com.ots.aipassportphotomaker.common.utils.AdsConstants
+import com.ots.aipassportphotomaker.common.utils.AnalyticsConstants
 import com.ots.aipassportphotomaker.common.utils.ColorUtils.parseColorFromString
 import com.ots.aipassportphotomaker.common.utils.FileUtils
 import com.ots.aipassportphotomaker.common.utils.Logger
@@ -96,6 +97,8 @@ class CutOutImageScreenViewModel @Inject constructor(
     }
 
     private fun onInitialState() = launch {
+        analyticsManager.sendAnalytics(AnalyticsConstants.OPENED, "CutOutImageScreen")
+
         Logger.i("CutOutImageScreenViewModel", "onInitialState called with documentId: $documentId, imageUrl: $imageUrl, selectedColor: $selectedColor, sourceScreen: $sourceScreen")
         if (sourceScreen == "HomeScreen" || documentId == 0) {
             if (imageUrl.isNullOrEmpty()) {
@@ -368,5 +371,9 @@ class CutOutImageScreenViewModel @Inject constructor(
 
     fun isPremiumUser(): Boolean {
         return preferencesHelper.getBoolean(AdsConstants.IS_NO_ADS_ENABLED, false)
+    }
+
+    fun sendEvent(eventName: String, eventValue: String) {
+        analyticsManager.sendAnalytics(eventName, eventValue)
     }
 }

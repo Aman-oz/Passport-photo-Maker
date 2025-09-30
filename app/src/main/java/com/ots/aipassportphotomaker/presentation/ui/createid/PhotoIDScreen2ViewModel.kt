@@ -8,6 +8,7 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.map
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
+import com.ots.aipassportphotomaker.common.managers.AnalyticsManager
 import com.ots.aipassportphotomaker.common.managers.PreferencesHelper
 import com.ots.aipassportphotomaker.common.utils.AdsConstants
 import com.ots.aipassportphotomaker.common.utils.Logger
@@ -44,7 +45,8 @@ class PhotoIDScreen2ViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     photoIDScreen2Bundle: PhotoIDScreen2Bundle,
     getDocumentsWithSeparators: GetDocumentsWithSeparators,
-    private val preferencesHelper: PreferencesHelper
+    private val preferencesHelper: PreferencesHelper,
+    private val analyticsManager: AnalyticsManager
 ) : BaseViewModel() {
 
     val documents: Flow<PagingData<DocumentListItem>> = getDocumentsWithSeparators.documents(
@@ -181,5 +183,7 @@ class PhotoIDScreen2ViewModel @Inject constructor(
         return preferencesHelper.getBoolean(AdsConstants.IS_NO_ADS_ENABLED, false)
     }
 
-
+    fun sendEvent(eventName: String, eventValue: String) {
+        analyticsManager.sendAnalytics(eventName, eventValue)
+    }
 }

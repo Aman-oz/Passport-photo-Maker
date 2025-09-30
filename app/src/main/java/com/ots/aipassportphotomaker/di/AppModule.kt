@@ -82,11 +82,11 @@ class AppModule {
         @ApplicationContext context: Context
     ): NetworkMonitorImpl = NetworkMonitorImpl(context)
 
-/*    @Provides
+    @Provides
     @Singleton
     fun provideSharedRepository(
         @ApplicationContext context: Context
-    ): SharedRepositoryImpl = SharedRepositoryImpl(context)*/
+    ): SharedRepository = SharedRepositoryImpl(context)
 
     @Provides
     @Singleton

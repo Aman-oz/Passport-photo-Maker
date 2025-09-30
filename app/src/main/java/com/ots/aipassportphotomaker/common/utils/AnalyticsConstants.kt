@@ -9,6 +9,7 @@ object AnalyticsConstants {
     const val OPENED = "opened"
     const val CLOSED = "closed"
     const val CLICKED = "clicked"
+    const val LONG_CLICKED = "long_clicked"
     const val ADDED = "added"
     const val REMOVED = "removed"
     const val PRESSED = "pressed"

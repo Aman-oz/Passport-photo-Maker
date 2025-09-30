@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.CombinedLoadStates
 import androidx.paging.LoadState
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
+import com.ots.aipassportphotomaker.common.managers.AnalyticsManager
+import com.ots.aipassportphotomaker.common.utils.AnalyticsConstants
 import com.ots.aipassportphotomaker.domain.model.CustomDocumentData
 import com.ots.aipassportphotomaker.domain.util.NetworkMonitor
 import com.ots.aipassportphotomaker.image_picker.model.AssetInfo
@@ -24,6 +26,7 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeScreenViewModel  @Inject constructor(
     val networkMonitor: NetworkMonitor,
+    private val analyticsManager: AnalyticsManager,
 ) : BaseViewModel() {
 
     private val _uiState: MutableStateFlow<HomeScreenUiState> = MutableStateFlow(HomeScreenUiState())
@@ -39,8 +42,13 @@ class HomeScreenViewModel  @Inject constructor(
     val selectedImage: String? = null
 
     init {
+        initialState()
         observeNetworkStatus()
         loadData()
+    }
+
+    private fun initialState() {
+        analyticsManager.sendAnalytics(AnalyticsConstants.OPENED, "HomeScreen")
     }
 
     fun updateImagePath(imagePath: String) {
@@ -67,8 +75,12 @@ class HomeScreenViewModel  @Inject constructor(
     fun onItemClick(name: String) {
 
         when(name) {
-            "PhotoID" -> _navigationState.tryEmit(HomeScreenNavigationState.PhotoID(name))
+            "PhotoID" -> {
+                sendEvent(AnalyticsConstants.CLICKED, "PhotoID_HomeItem")
+                _navigationState.tryEmit(HomeScreenNavigationState.PhotoID(name))
+            }
             "Cutout" -> {
+                sendEvent(AnalyticsConstants.CLICKED, "CutOut_HomeItem")
                 _navigationState.tryEmit(
                     HomeScreenNavigationState.CutOutScreen(
                         imagePath = selectedImage,
@@ -77,6 +89,7 @@ class HomeScreenViewModel  @Inject constructor(
                 )
             }
             "ChangeBG" -> {
+                sendEvent(AnalyticsConstants.CLICKED, "ChangeBG_HomeItem")
                 _uiState.value = _uiState.value.copy(editPosition = 0)
                 _navigationState.tryEmit(
                     HomeScreenNavigationState.EditImageScreen(
@@ -89,6 +102,7 @@ class HomeScreenViewModel  @Inject constructor(
                 )
             }
             "AddSuits" -> {
+                sendEvent(AnalyticsConstants.CLICKED, "AddSuits_HomeItem")
                 _uiState.value = _uiState.value.copy(editPosition = 1)
                 _navigationState.tryEmit(
                     HomeScreenNavigationState.EditImageScreen(
@@ -102,12 +116,14 @@ class HomeScreenViewModel  @Inject constructor(
             }
 
             "SocialProfile" -> {
+                sendEvent(AnalyticsConstants.CLICKED, "SocialProfile_HomeItem")
                 _navigationState.tryEmit(HomeScreenNavigationState.PhotoIDDetails("Profile"))
             }
         }
     }
 
     fun onCustomSizeClick(customData: CustomDocumentData) {
+        sendEvent(AnalyticsConstants.CLICKED, "CustomSize_HomeItem")
         _navigationState.tryEmit(HomeScreenNavigationState.DocumentInfoScreen(
             documentId = 0,
             documentName = customData.documentName,
@@ -123,6 +139,7 @@ class HomeScreenViewModel  @Inject constructor(
     }
 
     fun onGalleryClick(path: String) {
+        sendEvent(AnalyticsConstants.CLICKED, "GalleryImage_HomeItem")
         _navigationState.tryEmit(HomeScreenNavigationState.PhotoID(
             item = "PhotoID",
             imagePath = path
@@ -130,6 +147,7 @@ class HomeScreenViewModel  @Inject constructor(
     }
 
     fun onCameraImage(path: String) {
+        sendEvent(AnalyticsConstants.CLICKED, "CameraImage_HomeItem")
         _navigationState.tryEmit(HomeScreenNavigationState.PhotoID(
             item = "PhotoID",
             imagePath = path
@@ -143,6 +161,10 @@ class HomeScreenViewModel  @Inject constructor(
     }
     fun onRefresh() = launch {
         _refreshListState.emit(Unit)
+    }
+
+    fun sendEvent(eventName: String, eventValue: String) {
+        analyticsManager.sendAnalytics(eventName, eventValue)
     }
 
 }

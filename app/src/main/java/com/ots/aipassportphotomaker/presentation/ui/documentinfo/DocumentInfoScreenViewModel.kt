@@ -13,6 +13,7 @@ import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
 import com.ots.aipassportphotomaker.common.managers.AnalyticsManager
 import com.ots.aipassportphotomaker.common.managers.PreferencesHelper
 import com.ots.aipassportphotomaker.common.utils.AdsConstants
+import com.ots.aipassportphotomaker.common.utils.AnalyticsConstants
 import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.domain.model.CustomDocumentData
 import com.ots.aipassportphotomaker.domain.model.DocumentEntity
@@ -95,6 +96,8 @@ class DocumentInfoScreenViewModel @Inject constructor(
                 selectedImagesList.add(AssetInfo(id = 0,uriString = it, filepath = it, filename = "", directory = "", size = 0L, mediaType = 0, mimeType = "", duration = 0L, date = 0L))
             }
         }
+
+        analyticsManager.sendAnalytics(AnalyticsConstants.OPENED, "DocumentInfoScreen")
 
         if (documentDetailsBundle.documentId == 0 && documentDetailsBundle.documentName != null) {
             handleCustomDocumentData(documentDetailsBundle)
@@ -226,6 +229,10 @@ class DocumentInfoScreenViewModel @Inject constructor(
 
     fun isPremiumUser(): Boolean {
         return preferencesHelper.getBoolean(AdsConstants.IS_NO_ADS_ENABLED, false)
+    }
+
+    fun sendEvent(eventName: String, eventValue: String) {
+        analyticsManager.sendAnalytics(eventName, eventValue)
     }
 
 }

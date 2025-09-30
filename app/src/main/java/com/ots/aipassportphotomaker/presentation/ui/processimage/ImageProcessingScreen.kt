@@ -51,6 +51,7 @@ import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
 import com.ots.aipassportphotomaker.common.ext.animatedBorder
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
+import com.ots.aipassportphotomaker.common.utils.AnalyticsConstants
 import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.domain.model.ProcessingStage
 import com.ots.aipassportphotomaker.presentation.ui.bottom_nav.NavigationBarSharedViewModel
@@ -107,8 +108,14 @@ fun ImageProcessingPage(
         isPortrait = isPortrait,
         selectedColor = selectedColor,
         imagePath = imagePath,
-        onBackClick = { mainRouter.goBack() },
-        onGetProClick = { mainRouter.navigateToPremiumScreen() }
+        onBackClick = {
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "backPress_ImageProcessingScreen")
+            mainRouter.goBack()
+                      },
+        onGetProClick = {
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "getPro_ImageProcessingScreen")
+            mainRouter.navigateToPremiumScreen()
+        }
     )
 }
 
@@ -311,7 +318,7 @@ private fun ImageProcessingScreen(
                                     .fillMaxWidth()
                                     .align(Alignment.Center),
                                 adSize = AdSize.LARGE_BANNER, // or adaptive size if needed
-                                collapseDirection = CollapseDirection.TOP,
+                                collapseDirection = CollapseDirection.BOTTOM,
                                 onAdLoaded = { isLoaded ->
                                     adLoadState = isLoaded
                                     Logger.d(TAG, "AdMobBanner: onAdLoaded: $isLoaded")

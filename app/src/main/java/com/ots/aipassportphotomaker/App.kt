@@ -49,7 +49,7 @@ class App: Application(), ImageLoaderFactory {
         super.onCreate()
 
         oziDownloader = create(applicationContext, DownloaderConfig())
-        adsManager.initialize {  }
+
         getSubscriptionDetails()
     }
 

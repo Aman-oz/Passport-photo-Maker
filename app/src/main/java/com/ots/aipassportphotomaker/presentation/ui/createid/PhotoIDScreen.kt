@@ -48,6 +48,7 @@ import com.ots.aipassportphotomaker.presentation.ui.main.MainRouter
 import com.ots.aipassportphotomaker.presentation.ui.theme.colors
 import kotlinx.coroutines.flow.flowOf
 import com.ots.aipassportphotomaker.R
+import com.ots.aipassportphotomaker.common.utils.AnalyticsConstants
 import com.ots.aipassportphotomaker.presentation.ui.components.EmptyStateIcon
 
 @Composable
@@ -110,12 +111,15 @@ fun PhotoIDPage(
         uiState = uiState,
         lazyGridState = lazyGridState,
         onDocumentClick = { documentId ->
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "documentItem_PhotoIDTab")
             viewModel.onDocumentClicked(documentId)
         },
         onQueryChange = { query ->
+
             viewModel.onSearch(query)
         } ,
         onSeeAllClick = { type ->
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "seeAll_${type}_PhotoIDTab")
             Log.d(TAG, "PhotoIDPage: See All clicked for type: $type")
             viewModel.onSeeAllClicked(type)
         }

@@ -70,6 +70,7 @@ import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.iab.AppBillingClient
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
+import com.ots.aipassportphotomaker.common.utils.AnalyticsConstants
 import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.common.utils.SharedPrefUtils
 import com.ots.aipassportphotomaker.common.utils.UrlFactory
@@ -115,19 +116,24 @@ fun PremiumPage(
     PremiumScreen(
         uiState = uiState,
         onCloseClick = {
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnClose_PremiumScreen")
             mainRouter.goBack()
         },
         onSubscribeWeekly = {
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnSubscribeWeekly_PremiumScreen")
             viewModel.purchaseSubscription(activityContext, AppBillingClient.SKU_ITEM_ONE_WEEK)
         },
         onSubscribeMonthly = {
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnSubscribeMonthly_PremiumScreen")
             viewModel.purchaseSubscription(activityContext, AppBillingClient.SKU_ITEM_ONE_MONTH)
         },
         onTermsClick = {
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "linkTerms_PremiumScreen")
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(UrlFactory.TERMS_AND_CONDITIONS_URL))
             activityContext.startActivity(intent)
         },
         onPrivacyClick = {
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "linkPrivacy_PremiumScreen")
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(UrlFactory.PRIVACY_POLICY_URL))
             activityContext.startActivity(intent)
         }

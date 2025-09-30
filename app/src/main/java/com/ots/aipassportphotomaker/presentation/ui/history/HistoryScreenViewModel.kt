@@ -4,6 +4,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.CombinedLoadStates
 import androidx.paging.LoadState
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
+import com.ots.aipassportphotomaker.common.managers.AnalyticsManager
+import com.ots.aipassportphotomaker.common.utils.AnalyticsConstants
 import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.domain.model.dbmodels.CreatedImageEntity
 import com.ots.aipassportphotomaker.domain.repository.DocumentRepository
@@ -27,7 +29,8 @@ import javax.inject.Inject
 @HiltViewModel
 class HistoryScreenViewModel @Inject constructor(
     val networkMonitor: NetworkMonitor,
-    private val documentRepository: DocumentRepository
+    private val documentRepository: DocumentRepository,
+    private val analyticsManager: AnalyticsManager,
 ) : BaseViewModel() {
 
     private val _uiState: MutableStateFlow<HistoryScreenUiState> = MutableStateFlow(
@@ -53,11 +56,17 @@ class HistoryScreenViewModel @Inject constructor(
     private var currentType: String = "All"
 
     init {
+        initialState()
         observeNetworkStatus()
         loadData()
         getHistoryByType("All")
         observeRefreshEvents()
     }
+
+    private fun initialState() {
+        analyticsManager.sendAnalytics(AnalyticsConstants.OPENED, "HistoryScreen")
+    }
+
     private fun loadData() {
         launch {
             _uiState.value = _uiState.value.copy(showLoading = false, errorMessage = null)
@@ -147,6 +156,10 @@ class HistoryScreenViewModel @Inject constructor(
                 getHistoryByType(currentType) // Refresh with the current tab type
             }
         }
+    }
+
+    fun sendEvent(eventName: String, eventValue: String) {
+        analyticsManager.sendAnalytics(eventName, eventValue)
     }
 
 }

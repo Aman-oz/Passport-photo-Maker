@@ -19,6 +19,7 @@ import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
 import com.ots.aipassportphotomaker.common.managers.AnalyticsManager
 import com.ots.aipassportphotomaker.common.managers.PreferencesHelper
 import com.ots.aipassportphotomaker.common.utils.AdsConstants
+import com.ots.aipassportphotomaker.common.utils.AnalyticsConstants
 import com.ots.aipassportphotomaker.common.utils.ImageUtils.getFileSizeInfo
 import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.domain.model.DocumentEntity
@@ -101,6 +102,7 @@ class SavedImageScreenViewModel @Inject constructor(
     }
 
     private fun onInitialState() = launch {
+        analyticsManager.sendAnalytics(AnalyticsConstants.OPENED, "SavedImageScreen")
 
         if (sourceScreen == "CutOutImageScreen" || documentId == 0) {
             if (imagePath.isNullOrEmpty()) {
@@ -258,6 +260,10 @@ class SavedImageScreenViewModel @Inject constructor(
 
     fun isPremiumUser(): Boolean {
         return preferencesHelper.getBoolean(AdsConstants.IS_NO_ADS_ENABLED, false)
+    }
+
+    fun sendEvent(eventName: String, eventValue: String) {
+        analyticsManager.sendAnalytics(eventName, eventValue)
     }
 
 }

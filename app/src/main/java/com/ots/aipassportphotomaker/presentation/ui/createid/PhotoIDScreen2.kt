@@ -38,6 +38,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
+import com.ots.aipassportphotomaker.common.utils.AnalyticsConstants
 import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.domain.bottom_nav.Page
 import com.ots.aipassportphotomaker.domain.model.DocumentListItem
@@ -47,11 +48,9 @@ import com.ots.aipassportphotomaker.presentation.ui.components.EmptyStateIcon
 import com.ots.aipassportphotomaker.presentation.ui.components.EmptyStateView
 import com.ots.aipassportphotomaker.presentation.ui.components.LoaderFullScreen
 import com.ots.aipassportphotomaker.presentation.ui.components.SearchView
-import com.ots.aipassportphotomaker.presentation.ui.createid.PhotoIDScreenNavigationState.PhotoIDDetails
 import com.ots.aipassportphotomaker.presentation.ui.main.MainRouter
 import com.ots.aipassportphotomaker.presentation.ui.theme.colors
 import kotlinx.coroutines.flow.flowOf
-import kotlin.text.ifEmpty
 
 @Composable
 fun PhotoIDPage2(
@@ -69,7 +68,10 @@ fun PhotoIDPage2(
 
     Logger.d(TAG, "PhotoIDPage: UI State: $uiState")
     Logger.d(TAG, "PhotoIDPage: Documents Paging: ${documentsPaging.itemCount} items loaded")
-    Logger.d(TAG, "PhotoIDPage: Searched Documents Paging: ${documentsSearchedPaging.itemCount} items loaded")
+    Logger.d(
+        TAG,
+        "PhotoIDPage: Searched Documents Paging: ${documentsSearchedPaging.itemCount} items loaded"
+    )
     // val pullToRefreshState = rememberPullRefreshState(uiState.showLoading, { viewModel.onRefresh() })
     val lazyGridState = rememberLazyGridState()
 
@@ -82,6 +84,7 @@ fun PhotoIDPage2(
                 type = navigationState.type,
                 imagePath = navigationState.imagePath
             )
+
             is PhotoIDScreen2NavigationState.DocumentInfoScreen -> {
                 mainRouter.navigateToDocumentInfoScreen(
                     navigationState.documentId,
@@ -123,21 +126,28 @@ fun PhotoIDPage2(
         isPremium = viewModel.isPremiumUser(),
         lazyGridState = lazyGridState,
         onDocumentClick = { documentId ->
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "documentItem_PhotoID")
             viewModel.onDocumentClicked(documentId)
         },
         onQueryChange = { query ->
             viewModel.onSearch(query)
         },
         onSeeAllClick = { type ->
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "seeAll_$type")
             viewModel.onSeeAllClicked(type)
         },
-        onBackClick = { mainRouter.goBack() },
+        onBackClick = {
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnBack_PhotoID")
+            mainRouter.goBack()
+        },
         onGetProClick = {
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnGetPro_PhotoID")
             mainRouter.navigateToPremiumScreen()
         }
     )
 
     BackHandler {
+        viewModel.sendEvent(AnalyticsConstants.CLICKED, "backPress_PhotoID")
         viewModel.resetAllData()
         mainRouter.goBack()
     }

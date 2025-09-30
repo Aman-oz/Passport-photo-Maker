@@ -47,8 +47,10 @@ import com.android.billingclient.BuildConfig
 import com.ots.aipassportphotomaker.App
 import com.ots.aipassportphotomaker.adsmanager.admob.MyAdsManager
 import com.ots.aipassportphotomaker.common.managers.AdsConsentManager
+import com.ots.aipassportphotomaker.common.managers.AnalyticsManager
 import com.ots.aipassportphotomaker.common.managers.PreferencesHelper
 import com.ots.aipassportphotomaker.common.utils.AdsConstants
+import com.ots.aipassportphotomaker.common.utils.AnalyticsConstants
 import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.common.utils.SharedPrefUtils
 import com.ots.aipassportphotomaker.common.utils.UrlFactory
@@ -103,10 +105,13 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var documentRepository: DocumentRepository
 
-   /* @Inject
-    lateinit var sharedRepository: SharedRepository*/
+    @Inject
+    lateinit var sharedRepository: SharedRepository
 
     private var isPremium: Boolean = false
+
+    @Inject
+    lateinit var analyticsManager: AnalyticsManager
 
     private val viewModel: MainViewModel by viewModels()
 
@@ -227,17 +232,20 @@ class MainActivity : ComponentActivity() {
                 LaunchedEffect(navController) {
                     navController.addOnDestinationChangedListener { _, destination, _ ->
                         Logger.d(TAG, "Destination changed to: ${destination.route} = ${Page.NavigationBar.route()}")
+                        analyticsManager.sendAnalytics(AnalyticsConstants.OPENED, "homeScreen")
                         isHomeScreen = destination.route == Page.NavigationBar.route()
                     }
                 }
 
                 // Show delete all dialog
                 if (showDeleteAllDialog) {
+                    analyticsManager.sendAnalytics(AnalyticsConstants.ACTION_VIEW, "deleteAllDialog")
                     AlertDialog(
                         onDismissRequest = { showDeleteAllDialog = false },
                         title = { Text("Delete All Images") },
                         text = { Text("Are you sure you want to delete all images?") },
                         confirmButton = {
+                            analyticsManager.sendAnalytics(AnalyticsConstants.CLICKED, "btnYes_DeleteAllDialog")
                             TextButton(onClick = {
                                 lifecycleScope.launch {
                                     documentRepository.deleteAllCreatedImages()
@@ -249,6 +257,7 @@ class MainActivity : ComponentActivity() {
                             }
                         },
                         dismissButton = {
+                            analyticsManager.sendAnalytics(AnalyticsConstants.CLICKED, "btnNo_DeleteAllDialog")
                             TextButton(onClick = { showDeleteAllDialog = false }) {
                                 Text("No")
                             }
@@ -294,10 +303,12 @@ class MainActivity : ComponentActivity() {
                         isFirstLaunch = isFirstLaunch(),
                         onSettingClick = {
                             Logger.d("MainActivity", "Settings icon clicked")
+                            analyticsManager.sendAnalytics(AnalyticsConstants.CLICKED, "btnSettings_HomeScreen")
                             showSettingsDialog = true
                         },
                         showDeleteIcon = showDeleteIcon && isHistoryItemsAvailable,
                         onDeleteClick = {
+                            analyticsManager.sendAnalytics(AnalyticsConstants.CLICKED, "btnDeleteAllIcon_HomeScreen")
                             if (isHistoryItemsAvailable) {
                                 showDeleteAllDialog = true
                             } else {
@@ -311,7 +322,6 @@ class MainActivity : ComponentActivity() {
                             selectedTheme = if (updated) 2 else 1
                         },
                         onGetStartedCompleted = { destination ->
-
                             if (isFirstLaunch()) {
                                 setFirstLaunch(false)
                                 navController.navigate(destination) {
@@ -366,6 +376,7 @@ class MainActivity : ComponentActivity() {
 
                 if (showSettingsDialog) {
 
+                    analyticsManager.sendAnalytics(AnalyticsConstants.OPENED, "settingsScreen")
                     val appVersion = try {
                         packageManager.getPackageInfo(packageName, 0).versionName
                     } catch (e: Exception) {
@@ -387,12 +398,14 @@ class MainActivity : ComponentActivity() {
                         SettingsScreen(
                             themeSelectedIndex = selectedTheme,
                             onCloseClick = {
+                                analyticsManager.sendAnalytics(AnalyticsConstants.CLICKED, "btnClose_SettingsScreen")
                                 scope.launch {
                                     customBottomSheetState.hide()
                                 }
                                 showSettingsDialog = false
                             },
                             onChangeThemeClick = {
+                                analyticsManager.sendAnalytics(AnalyticsConstants.CLICKED, "btnChangeTheme_SettingsScreen")
                                 Logger.i("MainActivity", "Change Theme Clicked")
                                 scope.launch {
                                     customBottomSheetState.hide()
@@ -402,10 +415,12 @@ class MainActivity : ComponentActivity() {
                                 showChangeThemeDialog = true
                             },
                             onLanguageClick = {
+                                analyticsManager.sendAnalytics(AnalyticsConstants.CLICKED, "btnLanguage_SettingsScreen")
                                 Logger.i("MainActivity", "Language Clicked")
 
                             },
                             onPremiumClick = {
+                                analyticsManager.sendAnalytics(AnalyticsConstants.CLICKED, "btnGoPremium_SettingsScreen")
                                 Logger.i("MainActivity", "Go Premium Clicked")
                                 scope.launch {
                                     customBottomSheetState.hide()
@@ -417,6 +432,7 @@ class MainActivity : ComponentActivity() {
 
                             },
                             onShareApp = {
+                                analyticsManager.sendAnalytics(AnalyticsConstants.CLICKED, "btnShareApp_SettingsScreen")
                                 val shareIntent = Intent().apply {
                                     action = Intent.ACTION_SEND
                                     putExtra(
@@ -434,6 +450,7 @@ class MainActivity : ComponentActivity() {
 
                             },
                             onRateUs = {
+                                analyticsManager.sendAnalytics(AnalyticsConstants.CLICKED, "btnRateUs_SettingsScreen")
                                 val uri = Uri.parse("market://details?id=$packageName")
                                 val goToMarket = Intent(Intent.ACTION_VIEW, uri)
                                 goToMarket.addFlags(
@@ -453,6 +470,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             },
                             onPrivacyPolicy = {
+                                analyticsManager.sendAnalytics(AnalyticsConstants.CLICKED, "btnPrivacyPolicy_SettingsScreen")
                                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(UrlFactory.PRIVACY_POLICY_URL))
                                 startActivity(intent)
                             },
@@ -462,6 +480,7 @@ class MainActivity : ComponentActivity() {
                 }
 
                 if (showChangeThemeDialog) {
+                    analyticsManager.sendAnalytics(AnalyticsConstants.OPENED, "changeThemeDialog")
                     ModalBottomSheet(
                         onDismissRequest = {
                             scope.launch {
@@ -479,6 +498,7 @@ class MainActivity : ComponentActivity() {
                             adsManager.showInterstitial(this@MainActivity, true) { isAdShown -> }
                             when (themeIndex) {
                                 0 -> {
+                                    analyticsManager.sendAnalytics(AnalyticsConstants.SELECTED, "themeSystem")
                                     val systemDarkMode = isSystemInDarkMode()
                                     enableDarkMode(systemDarkMode)
                                     darkMode = systemDarkMode
@@ -487,12 +507,14 @@ class MainActivity : ComponentActivity() {
                                 }
 
                                 1 -> {
+                                    analyticsManager.sendAnalytics(AnalyticsConstants.SELECTED, "themeLight")
                                     enableDarkMode(false)
                                     darkMode = false
                                     selectedTheme = 1
                                 }
 
                                 2 -> {
+                                    analyticsManager.sendAnalytics(AnalyticsConstants.SELECTED, "themeDark")
                                     enableDarkMode(true)
                                     darkMode = true
                                     selectedTheme = 2
@@ -510,7 +532,7 @@ class MainActivity : ComponentActivity() {
                 }
 
                 if (showExitDialog) {
-
+                    analyticsManager.sendAnalytics(AnalyticsConstants.OPENED, "exitDialog")
                     ModalBottomSheet(
                         onDismissRequest = {
                             scope.launch {
@@ -524,13 +546,14 @@ class MainActivity : ComponentActivity() {
                         ExitDialog(
                             isPremium = isPremium,
                             onCancelClick = {
-
+                                analyticsManager.sendAnalytics(AnalyticsConstants.CLICKED, "btnNo_ExitDialog")
                                 scope.launch {
                                     exitBottomSheetState.hide()
                                 }
                                 viewModel.hideExitDialog()
                             },
                             onExitClick = {
+                                analyticsManager.sendAnalytics(AnalyticsConstants.CLICKED, "btnYes_ExitDialog")
                                 scope.launch {
                                     exitBottomSheetState.hide()
                                 }
@@ -547,6 +570,7 @@ class MainActivity : ComponentActivity() {
                 object : androidx.activity.OnBackPressedCallback(true) {
                     override fun handleOnBackPressed() {
                         Logger.d(TAG, "Back pressed, isHomeScreen: $isHomeScreen")
+                        analyticsManager.sendAnalytics(AnalyticsConstants.CLICKED, "btnBackPress")
                         if (isHomeScreen && isOnHomeTab.value) {
                             viewModel.showExitDialog()
                         } else {
@@ -558,7 +582,7 @@ class MainActivity : ComponentActivity() {
             )
         }
 
-        initConsent()
+//        initConsent()
     }
 
     private fun isSystemInDarkMode(): Boolean {
@@ -603,7 +627,7 @@ class MainActivity : ComponentActivity() {
                 if (this == false) {
                     adsConsentManager.showGDPRConsent(
                         this@MainActivity,
-                        com.ots.aipassportphotomaker.BuildConfig.DEBUG
+                        true
                     ) { consentError ->
 
                         if (consentError != null) {

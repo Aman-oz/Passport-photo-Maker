@@ -64,6 +64,7 @@ import com.ots.aipassportphotomaker.adsmanager.admob.adids.TestAdIds
 import com.ots.aipassportphotomaker.adsmanager.admob.loadFullScreenAd
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
+import com.ots.aipassportphotomaker.common.utils.AnalyticsConstants
 import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.presentation.ui.bottom_nav.NavigationBarSharedViewModel
 import com.ots.aipassportphotomaker.presentation.ui.components.LoaderFullScreen
@@ -81,32 +82,17 @@ fun GetStartedPage(
     val TAG = "GetStartedPage"
 
     val uiState by viewModel.uiState.collectAsState()
+    val consentState by viewModel.consentState.collectAsState()
+
     val context = LocalContext.current
     val activityContext = context as Activity
 
+    LaunchedEffect(Unit) {
+        viewModel.initConsent(activityContext)
+    }
+
     var interstitialAd by remember { mutableStateOf<InterstitialAd?>(null) }
     var isAdLoading by remember { mutableStateOf(true) }
-
-    // Load an interstitial ad
-    LaunchedEffect(Unit) {
-        context.loadFullScreenAd(
-            adUnitId = AdIdsFactory.getWelcomeInterstitialAdId(),
-            onAdLoaded = { ad ->
-                isAdLoading = false
-                Logger.i(TAG, "$TAG: Interstitial ad loaded.")
-                interstitialAd = ad
-            },
-            onAdFailedToLoad = {
-                isAdLoading = false
-                Logger.e(TAG, "$TAG: Interstitial ad failed to load: $it")
-            },
-            onAdDismissed = {
-                Logger.i(TAG, "$TAG: Interstitial ad dismissed.")
-//                onGetStartedClick()
-                interstitialAd = null
-            }
-        )
-    }
 
     Logger.d(TAG, "GetStartedPage: UI State: $uiState")
 
@@ -128,15 +114,44 @@ fun GetStartedPage(
         }
     }
 
+    viewModel.consentState.collectAsEffect { isConsentGiven ->
+        if (isConsentGiven) {
+            Logger.d(TAG, "$TAG: User has given consent: $isConsentGiven")
+            // Load an interstitial ad
+//            LaunchedEffect(Unit) {
+                context.loadFullScreenAd(
+                    adUnitId = AdIdsFactory.getWelcomeInterstitialAdId(),
+                    onAdLoaded = { ad ->
+                        isAdLoading = false
+                        Logger.i(TAG, "$TAG: Interstitial ad loaded.")
+                        interstitialAd = ad
+                    },
+                    onAdFailedToLoad = {
+                        isAdLoading = false
+                        Logger.e(TAG, "$TAG: Interstitial ad failed to load: $it")
+                    },
+                    onAdDismissed = {
+                        Logger.i(TAG, "$TAG: Interstitial ad dismissed.")
+//                onGetStartedClick()
+                        interstitialAd = null
+                    }
+                )
+//            }
+        }
+
+    }
+
 
     GetStartedScreen(
         uiState = uiState,
+        consentState = consentState,
         isAdLoading = isAdLoading,
         isPremium = viewModel.isPremiumUser(),
         onBackClick = {
             mainRouter.goBack()
         },
         onGetStartedClick = {
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "get_started_splash")
             onGetStartedClick()
 
             interstitialAd?.show(context) ?: run {
@@ -153,6 +168,7 @@ fun GetStartedPage(
 @Composable
 private fun GetStartedScreen(
     uiState: GetStartedScreenUiState,
+    consentState: Boolean,
     isAdLoading: Boolean,
     onBackClick: () -> Unit,
     onGetStartedClick: () -> Unit,
@@ -292,7 +308,7 @@ private fun GetStartedScreen(
 
                     Button(
                         onClick = {
-                            if (isAdLoading) return@Button
+                            if (isAdLoading && !consentState) return@Button
 
                             onGetStartedClick()
                         },
@@ -301,7 +317,7 @@ private fun GetStartedScreen(
                             .padding(horizontal = 16.dp, vertical = 4.dp)
                             .scale(buttonAnimatedScale),
                     ) {
-                        if (isAdLoading) {
+                        if (isAdLoading && !consentState) {
                             LottieAnimation(
                                 composition = composition,
                                 iterations = LottieConstants.IterateForever,
@@ -324,7 +340,7 @@ private fun GetStartedScreen(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    if (!isPremium) {
+                    if (!isPremium  && consentState) {
                         var adLoadState by remember { mutableStateOf(false) }
                         Surface(
                             modifier = Modifier
@@ -380,6 +396,7 @@ fun DocumentInfoScreenPreview() {
                 showLoading = false,
                 errorMessage = null
             ),
+            consentState = true,
             isAdLoading = false,
             onBackClick = {},
             onGetStartedClick = {}

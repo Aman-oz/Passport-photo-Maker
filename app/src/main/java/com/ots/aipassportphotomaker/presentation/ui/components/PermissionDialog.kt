@@ -77,6 +77,18 @@ interface PermissionTextProvider {
     fun getDescription(isPermanentlyDeclined: Boolean): String
 }
 
+class NotificationPermissionTextProvider : PermissionTextProvider {
+    override fun getDescription(isPermanentlyDeclined: Boolean): String {
+        return if (isPermanentlyDeclined) {
+            "It seems you permanently declined notification permission. " +
+                    "You can go to the app settings to grant it."
+        } else {
+            "This app needs access to send you notifications so that you can stay " +
+                    "updated with the latest news and updates."
+        }
+    }
+}
+
 class CameraPermissionTextProvider : PermissionTextProvider {
     override fun getDescription(isPermanentlyDeclined: Boolean): String {
         return if (isPermanentlyDeclined) {

@@ -8,6 +8,7 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.map
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
+import com.ots.aipassportphotomaker.common.managers.AnalyticsManager
 import com.ots.aipassportphotomaker.common.managers.PreferencesHelper
 import com.ots.aipassportphotomaker.common.utils.AdsConstants
 import com.ots.aipassportphotomaker.common.utils.Logger
@@ -48,7 +49,8 @@ class PhotoIDDetailScreenViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     getDocumentsByType: GetDocumentsByType,
     photoIDDetailBundle: PhotoIDDetailBundle,
-    private val preferencesHelper: PreferencesHelper
+    private val preferencesHelper: PreferencesHelper,
+    private val analyticsManager: AnalyticsManager
 ) : BaseViewModel() {
 
     val type = photoIDDetailBundle.type
@@ -182,5 +184,9 @@ class PhotoIDDetailScreenViewModel @Inject constructor(
 
     companion object {
         const val KEY_SEARCH_QUERY = "search_query"
+    }
+
+    fun sendEvent(eventName: String, eventValue: String) {
+        analyticsManager.sendAnalytics(eventName, eventValue)
     }
 }

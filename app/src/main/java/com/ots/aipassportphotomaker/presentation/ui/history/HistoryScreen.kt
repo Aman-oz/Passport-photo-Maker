@@ -68,6 +68,7 @@ import coil.request.ImageRequest
 import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
+import com.ots.aipassportphotomaker.common.utils.AnalyticsConstants
 import com.ots.aipassportphotomaker.domain.bottom_nav.Page
 import com.ots.aipassportphotomaker.domain.model.dbmodels.CreatedImageEntity
 import com.ots.aipassportphotomaker.presentation.ui.bottom_nav.NavigationBarSharedViewModel
@@ -141,6 +142,7 @@ fun HistoryPage(
         selectedTabIndex = selectedTabIndex,
         onTabSelected = { index ->
             selectedTabIndex = index
+            viewModel.sendEvent(AnalyticsConstants.OPENED, "${types[index]}_History")
             viewModel.getHistoryByType(types[index]) // Load data for selected tab
             coroutineScope.launch {
                 pagerState.animateScrollToPage(index, animationSpec = tween(300)) // Smooth animation
@@ -148,14 +150,17 @@ fun HistoryPage(
 
         },
         onItemClick = { name ->
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "History_Item")
             viewModel.onItemClick(name)
         },
         onItemLongClick = { id ->
+            viewModel.sendEvent(AnalyticsConstants.LONG_CLICKED, "History_Item")
             viewModel.onLongClickItem(id)
         }
     )
 
     if (showDeleteDialog) {
+        viewModel.sendEvent(AnalyticsConstants.OPENED, "DeleteDialog_History")
         AlertDialog(
             modifier = Modifier
                 .background(color = colors.background, shape = RoundedCornerShape(12.dp)),
@@ -163,6 +168,7 @@ fun HistoryPage(
             title = { Text("Delete Image") },
             text = { Text("Are you sure you want to delete this image?") },
             confirmButton = {
+                viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnYes_DeleteHistoryItem")
                 TextButton(onClick = {
                     viewModel.deleteSelectedImage()
                 }) {
@@ -170,6 +176,7 @@ fun HistoryPage(
                 }
             },
             dismissButton = {
+                viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnNo_DeleteHistoryItem")
                 TextButton(onClick = { viewModel.hideDeleteDialog() }) {
                     Text("No")
                 }

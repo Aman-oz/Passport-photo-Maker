@@ -5,6 +5,7 @@ import android.os.Build
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -70,6 +71,7 @@ import com.ots.aipassportphotomaker.adsmanager.admob.AdMobBanner
 import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
+import com.ots.aipassportphotomaker.common.utils.AnalyticsConstants
 import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.domain.model.OnBoardingItem
 import com.ots.aipassportphotomaker.presentation.ui.bottom_nav.NavigationBarSharedViewModel
@@ -109,10 +111,19 @@ fun OnboardingPage(
         uiState = uiState,
         isPremium = viewModel.isPremiumUser(),
         onBackClick = {
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "backPress_OnboardingScreen")
             mainRouter.goBack()
         },
-        onFinishClick = onFinishClick
+        onFinishClick = {
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "finish_OnboardingScreen")
+            onFinishClick()
+        }
     )
+
+    BackHandler {
+        viewModel.sendEvent(AnalyticsConstants.CLICKED, "backPress_OnboardingScreen")
+        mainRouter.goBack()
+    }
 
 }
 

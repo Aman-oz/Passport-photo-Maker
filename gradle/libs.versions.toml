@@ -52,6 +52,7 @@ billingClient = "8.0.0"
 firebaseBom = "34.3.0"
 crashlytics = "3.0.6"
 messaging = "23.1.2"
+messagingPlatform = "3.2.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -123,7 +124,8 @@ android-billingclient = { module = "com.android.billingclient:billing", version.
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics-ndk" }
-firebase-messaging = { module = "com.google.firebase:firebase-messaging-ktx" }
+firebase-messaging = { module = "com.google.firebase:firebase-messaging" }
+firebase-messaging-platform = { module = "com.google.android.ump:user-messaging-platform", version.ref = "messagingPlatform" }
 firebase-config = { module = "com.google.firebase:firebase-config" }
 
 # Gms

@@ -83,6 +83,7 @@ import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.ext.segmentedShadow
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
+import com.ots.aipassportphotomaker.common.utils.AnalyticsConstants
 import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.presentation.ui.bottom_nav.NavigationBarSharedViewModel
 import com.ots.aipassportphotomaker.presentation.ui.components.FinalScreenTopBar
@@ -129,17 +130,23 @@ fun SavedImagePage(
         sourceScreen = sourceScreen,
         isPremium = viewModel.isPremiumUser(),
         onBackClick = {
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "backPress_SavedImageScreen")
             mainRouter.goBack()
 
             viewModel.showInterstitialAd(activityContext) {  }
                       },
-        onGetProClick = { mainRouter.navigateToPremiumScreen() },
+        onGetProClick = {
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "getPro_SavedImageScreen")
+            mainRouter.navigateToPremiumScreen()
+                        },
         onGoToHomeClick = {
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "goToHome_SavedImageScreen")
             mainRouter.navigateToHomeScreen()
 
             viewModel.showInterstitialAd(activityContext) {  }
         },
         onDeleteClick = {
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "deleteImage_SavedImageScreen")
 
             viewModel.showInterstitialAd(activityContext) {
             viewModel.deleteImage(
@@ -155,21 +162,26 @@ fun SavedImagePage(
         }
         },
         onWhatsAppShare = {
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "shareWhatsApp_SavedImageScreen")
             viewModel.shareToWhatsApp(context,it)
         },
         onInstagramShare = {
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "shareInstagram_SavedImageScreen")
             viewModel.shareToInstagram(context,it)
         },
         onFacebookShare = {
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "shareFacebook_SavedImageScreen")
             viewModel.shareToFacebook(context,it)
         },
         onShare = {
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "shareOther_SavedImageScreen")
             viewModel.shareToOthers(context,it)
         },
 
         )
 
     BackHandler {
+        viewModel.sendEvent(AnalyticsConstants.CLICKED, "backPress_SavedImageScreen")
         mainRouter.goBack()
         viewModel.showInterstitialAd(activityContext) {  }
     }

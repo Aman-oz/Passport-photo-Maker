@@ -15,6 +15,7 @@ import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
 import com.ots.aipassportphotomaker.common.managers.AnalyticsManager
 import com.ots.aipassportphotomaker.common.managers.PreferencesHelper
 import com.ots.aipassportphotomaker.common.utils.AdsConstants
+import com.ots.aipassportphotomaker.common.utils.AnalyticsConstants
 import com.ots.aipassportphotomaker.common.utils.ColorUtils.parseColorFromString
 import com.ots.aipassportphotomaker.common.utils.FileUtils
 import com.ots.aipassportphotomaker.common.utils.Logger
@@ -159,7 +160,7 @@ class EditImageScreenViewModel @Inject constructor(
     }
 
     private fun onInitialState() = launch {
-
+        analyticsManager.sendAnalytics(AnalyticsConstants.OPENED, "EditImageScreen")
         // custom size
         if (sourceScreen == "ImageProcessingScreen" && documentId == 0) {
             _shouldRemoveBackground.value = false
@@ -656,6 +657,10 @@ class EditImageScreenViewModel @Inject constructor(
 
     fun isPremiumUser(): Boolean {
         return preferencesHelper.getBoolean(AdsConstants.IS_NO_ADS_ENABLED, false)
+    }
+
+    fun sendEvent(eventName: String, eventValue: String) {
+        analyticsManager.sendAnalytics(eventName, eventValue)
     }
 
 }

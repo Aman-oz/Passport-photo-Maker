@@ -13,7 +13,7 @@ plugins {
 val applicationName = "AI Passport Photo Maker"
 val versionMajor = 1
 val versionMinor = 0
-val versionPatch = 2
+val versionPatch = 3
 
 android {
     namespace = "com.ots.aipassportphotomaker"
@@ -104,7 +104,8 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.crashlytics)
-//    implementation(libs.firebase.messaging)
+    implementation(libs.firebase.messaging)
+    implementation(libs.firebase.messaging.platform)
     implementation(libs.firebase.config)
 
     implementation(libs.android.gms)

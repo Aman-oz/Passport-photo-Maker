@@ -1,54 +1,45 @@
 package com.ots.aipassportphotomaker.presentation.ui.splash
 
-import android.os.Build
-import android.widget.Toast
-import androidx.annotation.RequiresApi
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import android.app.Activity
+import android.util.Log
+import com.ots.aipassportphotomaker.BuildConfig
 import com.ots.aipassportphotomaker.adsmanager.admob.MyAdsManager
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
+import com.ots.aipassportphotomaker.common.managers.AdsConsentManager
 import com.ots.aipassportphotomaker.common.managers.AnalyticsManager
 import com.ots.aipassportphotomaker.common.managers.PreferencesHelper
 import com.ots.aipassportphotomaker.common.utils.AdsConstants
 import com.ots.aipassportphotomaker.common.utils.Logger
-import com.ots.aipassportphotomaker.domain.model.CustomDocumentData
-import com.ots.aipassportphotomaker.domain.model.DocumentEntity
-import com.ots.aipassportphotomaker.domain.repository.ColorFactory
-import com.ots.aipassportphotomaker.domain.usecase.photoid.GetDocumentDetails
 import com.ots.aipassportphotomaker.presentation.ui.base.BaseViewModel
-import kotlinx.coroutines.async
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import javax.inject.Inject
-import com.ots.aipassportphotomaker.domain.util.Result
-import com.ots.aipassportphotomaker.domain.util.onSuccess
-import com.ots.aipassportphotomaker.image_picker.model.AssetInfo
-import com.ots.aipassportphotomaker.presentation.ui.documentinfo.BackgroundOption
-import com.ots.aipassportphotomaker.presentation.ui.documentinfo.DocumentDetailsBundle
-import com.ots.aipassportphotomaker.presentation.ui.documentinfo.DocumentInfoScreenNavigationState
-import com.ots.aipassportphotomaker.presentation.ui.documentinfo.DocumentInfoScreenUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.asStateFlow
+import javax.inject.Inject
 
 @HiltViewModel
 class GetStartedScreenViewModel @Inject constructor(
     getStartedScreenBundle: GetStartedScreenBundle,
     private val adsManager: MyAdsManager,
     private val analyticsManager: AnalyticsManager,
-    private val preferencesHelper: PreferencesHelper
+    private val preferencesHelper: PreferencesHelper,
+    private val adsConsentManager: AdsConsentManager
 ) : BaseViewModel() {
+
+    private val TAG = GetStartedScreenViewModel::class.java.simpleName
 
     private val _uiState: MutableStateFlow<GetStartedScreenUiState> = MutableStateFlow(
         GetStartedScreenUiState()
     )
     val uiState = _uiState.asStateFlow()
 
-    private val _navigationState: MutableSharedFlow<GetStartedScreenNavigationState> = singleSharedFlow()
+    private val _navigationState: MutableSharedFlow<GetStartedScreenNavigationState> =
+        singleSharedFlow()
     val navigationState = _navigationState.asSharedFlow()
+
+    private val _consentState: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    val consentState = _consentState.asStateFlow()
 
     init {
         onInitialState()
@@ -56,7 +47,7 @@ class GetStartedScreenViewModel @Inject constructor(
     }
 
     private fun onInitialState() = launch {
-
+        analyticsManager.sendAnalytics("screen", "get_started")
     }
 
     private fun loadState(isLoading: Boolean) {
@@ -71,6 +62,52 @@ class GetStartedScreenViewModel @Inject constructor(
 
     fun isPremiumUser(): Boolean {
         return preferencesHelper.getBoolean(AdsConstants.IS_NO_ADS_ENABLED, false)
+    }
+
+
+    fun initConsent(activity: Activity) {
+        val canRequestAds: Boolean = adsConsentManager.canRequestAds
+
+        if (!isPremiumUser()) {
+
+            adsConsentManager.canRequestAds.apply {
+                if (this == false) {
+                    adsConsentManager.showGDPRConsent(
+                        activity,
+                        BuildConfig.DEBUG
+                    ) { consentError ->
+
+                        if (consentError != null) {
+                            Logger.e(
+                                TAG,
+                                "Error during consent gathering: ${consentError.message}"
+                            )
+                        }
+                        Logger.d(TAG, "Consent gathering complete")
+                        //Can request ads
+                        _consentState.value = true
+                        adsManager.initialize {  }
+                        analyticsManager.sendAnalytics("consent", "gdpr_consent_given")
+
+                    }
+                } else {
+                    Logger.d(TAG, "Consent already gathered")
+                    //can request ads
+                    _consentState.value = true
+                    adsManager.initialize {  }
+                    analyticsManager.sendAnalytics("consent", "gdpr_consent_already_given")
+                }
+            }
+        } else {
+            Log.d(TAG, "Ads can be requested or user is premium")
+            //can request ads
+            _consentState.value = true
+            adsManager.initialize {  }
+        }
+    }
+
+    fun sendEvent(eventName: String, eventValue: String) {
+        analyticsManager.sendAnalytics(eventName, eventValue)
     }
 
 }
