@@ -9,6 +9,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -150,9 +151,9 @@ fun PermissionPage(
         isPremium = viewModel.isPremiumUser(),
         onCloseClick = {
             viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnClose_PermissionScreen")
-            viewModel.showInterstitialAd(activityContext) { isAdShown ->
+            onGetStartedClick()
 
-                onGetStartedClick()
+            viewModel.showInterstitialAd(activityContext) { isAdShown ->
             }
         },
 
@@ -357,7 +358,8 @@ private fun PermissionScreen(
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(52.dp) // match banner height
+                                .animateContentSize()
+                                .height(54.dp) // match banner height
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 if (!adLoadState) {
@@ -367,16 +369,16 @@ private fun PermissionScreen(
                                         fontWeight = FontWeight.Medium,
                                         color = colors.onSurfaceVariant,
                                         modifier = Modifier
-                                            .padding(horizontal = 16.dp)
                                             .fillMaxWidth()
                                             .wrapContentSize(align = Alignment.Center)
                                     )
                                 }
 
                                 AdMobBanner(
-                                    adUnit = AdIdsFactory.getOnboardingBannerAdId(),
+                                    adUnit = AdIdsFactory.getBannerAdId(),
                                     modifier = Modifier
                                         .fillMaxWidth()
+                                        .animateContentSize()
                                         .align(Alignment.Center),
                                     adSize = AdSize.BANNER, // or adaptive size if needed
                                     onAdLoaded = { isLoaded ->

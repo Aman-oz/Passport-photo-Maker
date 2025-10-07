@@ -46,6 +46,8 @@ fun ExitDialog(
     onExitClick: () -> Unit,
 ) {
 
+    var adLoadState by remember { mutableStateOf(false) }
+
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -63,7 +65,6 @@ fun ExitDialog(
         )
 
         if (!isPremium) {
-            var adLoadState by remember { mutableStateOf(false) }
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -80,21 +81,20 @@ fun ExitDialog(
                             fontWeight = FontWeight.Medium,
                             color = colors.onSurfaceVariant,
                             modifier = Modifier
-                                .padding(horizontal = 16.dp)
                                 .fillMaxWidth()
                                 .wrapContentSize(align = Alignment.Center)
                         )
                     }
 
                     AdMobBanner(
-                        adUnit = AdIdsFactory.getOnboardingBannerAdId(),
+                        adUnit = AdIdsFactory.getExitBannerAdId(),
                         modifier = Modifier
                             .fillMaxWidth()
                             .animateContentSize()
                             .align(Alignment.Center),
                         adSize = AdSize.MEDIUM_RECTANGLE, // or adaptive size if needed
                         onAdLoaded = { isLoaded ->
-                            adLoadState = isLoaded
+                            adLoadState = true
                             Logger.d("ExitDialog", "OnboardingScreen: Ad Loaded: $isLoaded")
                         }
                     )
@@ -108,6 +108,8 @@ fun ExitDialog(
         ) {
             Button(
                 onClick = {
+                    if (!adLoadState && !isPremium) return@Button
+
                     onCancelClick()
                 },
                 modifier = Modifier
@@ -127,17 +129,19 @@ fun ExitDialog(
 
             Button(
                 onClick = {
+                    if (!adLoadState && !isPremium) return@Button
+
                     onExitClick()
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f),
                 shape = RoundedCornerShape(24.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = colors.primary)
+                colors = ButtonDefaults.buttonColors(containerColor = if (!adLoadState && !isPremium) colors.primaryContainer else colors.primary)
             ) {
                 Text(
                     text = "Exit",
-                    color = colors.onPrimary,
+                    color = if (!adLoadState && !isPremium) colors.onPrimaryContainer else colors.onPrimary,
                     fontSize = 16.sp
                 )
             }

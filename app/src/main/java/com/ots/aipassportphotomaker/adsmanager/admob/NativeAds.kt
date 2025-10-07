@@ -3,24 +3,21 @@ package com.ots.aipassportphotomaker.adsmanager.admob
 // Created by amanullah on 20/09/2025.
 // Copyright (c) 2025 Ozi Publishing. All rights reserved.
 
-import android.R.attr.orientation
 import android.content.Context
-import android.graphics.Typeface
+import android.content.res.Configuration
 import android.graphics.drawable.Drawable
 import android.util.Log
 import android.view.Gravity
 import android.view.View
-import android.view.ViewGroup
 import android.widget.Button
-import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -32,9 +29,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -49,9 +49,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdLoader
@@ -63,9 +67,11 @@ import com.google.android.gms.ads.nativead.NativeAdOptions
 import com.google.android.gms.ads.nativead.NativeAdView
 import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
+import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.presentation.ui.theme.colors
-import com.ots.aipassportphotomaker.presentation.ui.theme.custom300
+import com.ots.aipassportphotomaker.presentation.ui.theme.custom100
 import com.ots.aipassportphotomaker.presentation.ui.theme.custom400
+import com.ots.aipassportphotomaker.presentation.ui.theme.onCustom100
 import com.ots.aipassportphotomaker.presentation.ui.theme.onCustom400
 
 @Composable
@@ -522,7 +528,7 @@ fun loadNativeAd(context: Context, adUnitId: String, callback: (NativeAd?) -> Un
 
 
 @Composable
-fun AdPreview() {
+fun AdPreviewLarge() {
     Card(
         modifier = Modifier
             .padding(horizontal = 16.dp, vertical = 4.dp)
@@ -616,18 +622,114 @@ fun AdPreview() {
     }
 }
 
+
+@Composable
+fun AdPreviewSmall() {
+
+        Row {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(1.dp)
+                    .weight(1f)
+                    .height(130.dp) // Adjust height as needed
+            ) {
+                Box(
+                    modifier = Modifier
+                        .background(Color.LightGray)
+                        .fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("No media available", color = Color.Gray)
+                }
+            }
+
+            Spacer(
+                modifier = Modifier
+                    .width(4.dp)
+            )
+
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 2.dp)
+            ) {
+
+                Row(
+                    modifier = Modifier
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .background(color = colors.custom100, shape = RoundedCornerShape(8.dp))
+                            .padding(horizontal = 6.dp, vertical = 1.dp)
+                            .align(Alignment.CenterVertically),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = "Ad",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = colors.onPrimary,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(4.dp))
+
+                    Text(
+                        text = "Headline",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = colors.onCustom100,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .align(Alignment.CenterVertically)
+                    )
+
+                }
+
+                Text(
+                    text = "Body fadfadf adafasdfa sasdf dafadf dafdfa afdasd",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = colors.onCustom400,
+                    fontWeight = FontWeight.Normal,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier
+                        .align(Alignment.Start)
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                )
+
+                androidx.compose.material3.Button(
+                    modifier = Modifier
+                        .padding(horizontal = 4.dp)
+                        .fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(colors.primary),
+                    onClick = {
+
+                    },
+                    content = {
+                        Text(
+                            text = "Install",
+                            color = colors.onSecondary,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+                )
+            }
+        }
+}
+
 @Preview("Light")
 @Preview("Dark", uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun NativeAdPreview() {
     PreviewContainer {
-        AdPreview()
-        /*NativeAdComposable(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            adUnitId = "ca-app-pub-3940256099942544/2247696110" // Sample AdMob native ad unit ID
-        )*/
+//        AdPreviewLarge()
+        AdPreviewSmall()
     }
 }
 
@@ -935,3 +1037,290 @@ fun NativeAdComposable(
     }
 }
 * */
+
+
+
+@Composable
+fun AdCard(nativeAd: NativeAd?) {
+    Card(
+        modifier = Modifier
+            .padding(16.dp)
+            .animateContentSize()
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            AsyncImage(
+                model = nativeAd?.icon?.uri,
+                contentDescription = "Ad Icon",
+                placeholder = painterResource(id = R.drawable.gallery_icon),
+                error = painterResource(id = R.drawable.gallery_icon),
+                modifier = Modifier
+                    .size(50.dp)
+                    .padding(end = 16.dp),
+                contentScale = ContentScale.Fit
+            )
+
+            Column(modifier = Modifier.weight(1f)) {
+                nativeAd?.headline?.let {
+                    Text(
+                        text = it, fontWeight = FontWeight.Bold, fontSize = 16.sp
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                Color(0xFFDCE775), shape = RoundedCornerShape(4.dp)
+                            )
+                            .padding(horizontal = 4.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = "Ad",
+                            color = Color(0xFF33691E),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Row {
+                        nativeAd?.starRating?.let {
+                            repeat(it.toInt()) {
+                                Icon(
+                                    imageVector = Icons.Default.Star,
+                                    contentDescription = "Rating",
+                                    tint = Color(0xFFFFC107),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            androidx.compose.material3.Button(
+                onClick = { /* Handle install click */ },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4285F4)),
+                modifier = Modifier.height(40.dp)
+            ) {
+                nativeAd?.callToAction?.let {
+                    Text(
+                        text = it, color = Color.White, fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun NativeAdViewCompose(context: Context, nativeID: String, onAdLoaded: (Boolean) -> Unit = {}) {
+
+    var nativeAd by remember { mutableStateOf<NativeAd?>(null) }
+
+    DisposableEffect(Unit) {
+
+        val adLoader = AdLoader.Builder(context, nativeID)
+            .forNativeAd { ad: NativeAd ->
+                // Show the ad.
+                nativeAd = ad
+            }
+            .withAdListener(object : AdListener() {
+                override fun onAdClicked() {
+                    Logger.d("MyAdsManager", "Ad clicked")
+                }
+                override fun onAdFailedToLoad(loadAdError: LoadAdError) {
+                    Logger.d("MyAdsManager", "Ad failed to load: ${loadAdError.message}")
+                    onAdLoaded.invoke(false)
+                }
+                override fun onAdImpression() {
+                    Logger.d("MyAdsManager", "Ad impression")
+                }
+
+                override fun onAdLoaded() {
+                    super.onAdLoaded()
+                    onAdLoaded.invoke(true)
+                }
+
+            })
+            .build()
+        adLoader.loadAd(AdRequest.Builder().build())
+
+        onDispose {
+            nativeAd?.destroy()
+        }
+    }
+    if (nativeAd != null) {
+        AdViewSmall(nativeAd)
+    } else {
+        Text("Loading Ad... ")
+    }
+
+}
+
+@Composable
+fun AdViewSmall(nativeAd: NativeAd?) {
+
+    var adViewState by remember { mutableStateOf<NativeAdView?>(null) }
+
+        Row {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(1.dp)
+                    .weight(1f)
+                    .height(130.dp) // Adjust height as needed
+            ) {
+                nativeAd?.mediaContent?.let { mediaContent ->
+                    /*AndroidView(
+                        factory = { context ->
+                            MediaView(context).apply {
+                                setMediaContent(mediaContent)
+                            }
+                        }
+                    )*/
+                    AndroidView(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        factory = { context ->
+                            val nativeAdView = NativeAdView(context)
+                            val mediaView = MediaView(context)
+                            nativeAdView.mediaView = mediaView
+                            nativeAdView.addView(mediaView, LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                LinearLayout.LayoutParams.MATCH_PARENT
+                            ))
+                            nativeAdView
+                        },
+                        update = { adView ->
+                            adViewState = adView
+                            adView.setNativeAd(nativeAd)
+                            nativeAd.mediaContent?.let { adView.mediaView?.mediaContent = it }
+                        }
+                    )
+
+                } ?: run {
+                    Box(
+                        modifier = Modifier
+                            .background(Color.LightGray)
+                            .fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("No media available", color = Color.Gray)
+                    }
+                }
+
+            }
+
+            Spacer(
+                modifier = Modifier
+                    .width(4.dp)
+            )
+
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 2.dp)
+            ) {
+
+                Row(
+                    modifier = Modifier
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .background(color = colors.custom100, shape = RoundedCornerShape(8.dp))
+                            .padding(horizontal = 6.dp, vertical = 1.dp)
+                            .align(Alignment.CenterVertically),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = "Ad",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = colors.onCustom100,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(4.dp))
+
+                    nativeAd?.headline?.let {
+                        Text(
+                            text = it,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = colors.onCustom400,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier
+                                .align(Alignment.CenterVertically)
+                        )
+                    }
+
+                }
+
+                nativeAd?.body?.let {
+
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.titleSmall,
+                        color = colors.onCustom400,
+                        fontWeight = FontWeight.Normal,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier
+                            .align(Alignment.Start)
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+
+                androidx.compose.material3.Button(
+                    modifier = Modifier
+                        .padding(horizontal = 4.dp)
+                        .fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(colors.primary),
+                    onClick = {
+                        adViewState?.performClick()
+                    },
+                    content = {
+                        nativeAd?.callToAction?.let {
+                            Text(
+                                text = it,
+                                color = colors.onSecondary,
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                        }
+                    }
+                )
+            }
+        }
+}
+
+@Preview("Light")
+@Preview("Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun NativeAdPreview1() {
+    val context = LocalContext.current
+    val nativeID = "ca-app-pub-3940256099942544/2247696110" // Sample AdMob native ad unit ID
+    PreviewContainer {
+        NativeAdViewCompose(
+            context = context,
+            nativeID = nativeID
+        )
+    }
+}

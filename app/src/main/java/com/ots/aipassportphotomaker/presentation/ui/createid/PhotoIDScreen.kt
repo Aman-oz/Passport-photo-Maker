@@ -2,18 +2,25 @@ package com.ots.aipassportphotomaker.presentation.ui.createid
 
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -21,12 +28,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -34,6 +43,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
+import com.google.android.gms.ads.AdSize
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
 import com.ots.aipassportphotomaker.common.utils.Logger
@@ -48,6 +58,8 @@ import com.ots.aipassportphotomaker.presentation.ui.main.MainRouter
 import com.ots.aipassportphotomaker.presentation.ui.theme.colors
 import kotlinx.coroutines.flow.flowOf
 import com.ots.aipassportphotomaker.R
+import com.ots.aipassportphotomaker.adsmanager.admob.AdMobBanner
+import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
 import com.ots.aipassportphotomaker.common.utils.AnalyticsConstants
 import com.ots.aipassportphotomaker.presentation.ui.components.EmptyStateIcon
 
@@ -109,6 +121,7 @@ fun PhotoIDPage(
     PhotoIDScreen(
         documents = documentsToShow,
         uiState = uiState,
+        isPremium = viewModel.isPremiumUser(),
         lazyGridState = lazyGridState,
         onDocumentClick = { documentId ->
             viewModel.sendEvent(AnalyticsConstants.CLICKED, "documentItem_PhotoIDTab")
@@ -131,11 +144,13 @@ private fun PhotoIDScreen(
     documents: LazyPagingItems<DocumentListItem>,
     uiState: PhotoIDScreenUiState,
     lazyGridState: LazyGridState,
+    isPremium: Boolean,
     onDocumentClick: (documentId: Int) -> Unit,
     onQueryChange: (query: String) -> Unit,
     onSeeAllClick: (type: String) -> Unit
 ) {
 
+    val TAG = "PhotoIDScreen"
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -194,6 +209,47 @@ private fun PhotoIDScreen(
                         modifier = Modifier.padding(top = 80.dp, start = 24.dp, end = 24.dp)
                     )
                 } else {
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    if (!isPremium) {
+                        var adLoadState by remember { mutableStateOf(false) }
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .animateContentSize()
+                                .height(54.dp) // match banner height
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                if (!adLoadState) {
+                                    Text(
+                                        text = "Advertisement",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium,
+                                        color = colors.onSurfaceVariant,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .wrapContentSize(align = Alignment.Center)
+                                    )
+                                }
+
+                                AdMobBanner(
+                                    adUnit = AdIdsFactory.getBannerAdId(),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .animateContentSize()
+                                        .align(Alignment.Center),
+                                    adSize = AdSize.BANNER, // or adaptive size if needed
+                                    onAdLoaded = { isLoaded ->
+                                        adLoadState = isLoaded
+                                        Logger.d(TAG, "AdMobBanner: onAdLoaded: $isLoaded")
+                                    }
+                                )
+                            }
+                        }
+
+                    }
+
                     DocumentList(
                         documents,
                         onDocumentClick,
@@ -298,6 +354,7 @@ fun PhotoIDScreenPreview() {
             )
         )
     ).collectAsLazyPagingItems()
+
     PreviewContainer {
         PhotoIDScreen(
             documents = documents,
@@ -305,6 +362,7 @@ fun PhotoIDScreenPreview() {
                 showLoading = false,
                 errorMessage = null,
             ),
+            isPremium = false,
             lazyGridState = rememberLazyGridState(),
             onDocumentClick = {},
             onQueryChange = {},

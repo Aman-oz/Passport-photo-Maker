@@ -47,6 +47,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.android.gms.ads.AdSize
 import com.ots.aipassportphotomaker.adsmanager.admob.AdMobCollapsableBanner
 import com.ots.aipassportphotomaker.adsmanager.admob.CollapseDirection
+import com.ots.aipassportphotomaker.adsmanager.admob.NativeAdViewCompose
 import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
 import com.ots.aipassportphotomaker.common.ext.animatedBorder
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
@@ -296,7 +297,7 @@ private fun ImageProcessingScreen(
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(52.dp) // match banner height
+                            .animateContentSize()
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             if (!adLoadState) {
@@ -306,16 +307,25 @@ private fun ImageProcessingScreen(
                                     fontWeight = FontWeight.Medium,
                                     color = colors.onSurfaceVariant,
                                     modifier = Modifier
-                                        .padding(horizontal = 16.dp)
                                         .fillMaxWidth()
+                                        .animateContentSize()
                                         .wrapContentSize(align = Alignment.Center)
                                 )
                             }
 
-                            AdMobCollapsableBanner(
-                                adUnit = AdIdsFactory.getSplashBannerAdId(),
+                            NativeAdViewCompose(
+                                context = context,
+                                nativeID = AdIdsFactory.getNativeAdId(),
+                                onAdLoaded = {
+                                    adLoadState = it
+                                }
+                            )
+
+                            /*AdMobCollapsableBanner(
+                                adUnit = AdIdsFactory.getBannerAdId(),
                                 modifier = Modifier
                                     .fillMaxWidth()
+                                    .animateContentSize()
                                     .align(Alignment.Center),
                                 adSize = AdSize.LARGE_BANNER, // or adaptive size if needed
                                 collapseDirection = CollapseDirection.BOTTOM,
@@ -323,7 +333,7 @@ private fun ImageProcessingScreen(
                                     adLoadState = isLoaded
                                     Logger.d(TAG, "AdMobBanner: onAdLoaded: $isLoaded")
                                 }
-                            )
+                            )*/
                         }
                     }
                 }

@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -34,6 +35,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -70,7 +72,10 @@ import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
+import com.google.android.gms.ads.AdSize
 import com.ots.aipassportphotomaker.R
+import com.ots.aipassportphotomaker.adsmanager.admob.AdMobBanner
+import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
 import com.ots.aipassportphotomaker.common.ext.animatedBorder
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
@@ -170,11 +175,21 @@ fun CutOutImagePage(
                         Logger.i(TAG, "onSaveImage: Navigating to final screen")
                         val savedUri = saveBitmapToGallery(context, bitmap.asAndroidBitmap())
                         if (savedUri != null) {
-                            Logger.i(TAG, "Image saved successfully: $savedUri")
-                            viewModel.onImageSaved(savedUri.toString())
 
-                            // Rewarded ad
-                            viewModel.showInterstitialAd(activity) { }
+                            viewModel.loadAndShowRewardedAd(
+                                activity,
+                                onAdClosed = {
+                                    viewModel.onImageSaved(savedUri.toString())
+                                },
+                                onRewardedEarned = { isEarned ->
+                                    if (!isEarned) {
+                                        viewModel.onImageSaved(savedUri.toString())
+                                        viewModel.showInterstitialAd(activity) { }
+                                    }
+
+                                })
+
+                            Logger.i(TAG, "Image saved successfully: $savedUri")
 
                         } else {
                             Logger.e(TAG, "Failed to save image")
@@ -235,6 +250,7 @@ private fun CutOutImageScreen(
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.ai_erase))
     val systemBarsPadding = WindowInsets.systemBars.asPaddingValues()
 
+    val TAG = "CutOutImageScreen"
     Surface(
         modifier = Modifier
             .padding(bottom = systemBarsPadding.calculateBottomPadding())
@@ -487,13 +503,13 @@ private fun CutOutImageScreen(
 
                     Column(
                         modifier = Modifier
-                            .padding(16.dp)
                             .align(Alignment.BottomCenter)
                     ) {
 
 
                         Row(
                             modifier = Modifier
+                                .padding(end = 16.dp)
                                 .align(Alignment.End)
                         ) {
                             Icon(
@@ -519,7 +535,10 @@ private fun CutOutImageScreen(
                             )
                         }
 
-                        Column {
+                        Column(
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp)
+                        ) {
                             Row {
 
                                 Text(
@@ -554,7 +573,10 @@ private fun CutOutImageScreen(
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        Column {
+                        Column(
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp)
+                        ) {
                             Row {
 
                                 Text(
@@ -594,49 +616,6 @@ private fun CutOutImageScreen(
                             R.drawable.brush_tab_item_icon,
                             R.drawable.tick_icon_thick
                         )
-
-                        /*LaunchedEffect(selected) {
-                            when (selected) {
-                                0 -> {
-                                    graphicOverlay?.setAction(DrawViewAction.NONE)
-                                    currentMode = DrawViewAction.NONE
-                                }
-
-                                1 -> {
-                                    graphicOverlay?.setAction(DrawViewAction.ERASE_BACKGROUND)
-                                    currentMode = DrawViewAction.ERASE_BACKGROUND
-                                }
-
-                                2 -> {
-                                    graphicOverlay?.setAction(DrawViewAction.RECOVER_AREA)
-                                    currentMode = DrawViewAction.RECOVER_AREA
-                                }
-
-                                3 -> {
-
-                                    graphicOverlay?.setAction(DrawViewAction.NONE)
-                                    currentMode = DrawViewAction.NONE
-
-                                        graphicOverlay?.getCurrentBitmap()?.let { bitmap ->
-
-                                            val transparentBitmap = Bitmap.createBitmap(
-                                                bitmap.width,
-                                                bitmap.height,
-                                                Bitmap.Config.ARGB_8888
-                                            ).apply { eraseColor(AndroidColor.TRANSPARENT) }
-                                            Canvas(transparentBitmap).drawBitmap(
-                                                bitmap,
-                                                0f,
-                                                0f,
-                                                null
-                                            )
-                                            finalBitmap = transparentBitmap.asImageBitmap()
-                                        }
-
-                                    setSelected(1)
-                                }
-                            }
-                        }*/
 
                         LaunchedEffect(selected) {
                             when (selected) {
@@ -689,6 +668,7 @@ private fun CutOutImageScreen(
                             }
                         }
 
+                        Spacer(modifier = Modifier.height(4.dp))
                         CustomTab(
                             selectedItemIndex = selected,
                             items = tabItems,
@@ -696,6 +676,47 @@ private fun CutOutImageScreen(
                             tabWidth = 100.dp,
                             onClick = setSelected
                         )
+
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        if (!isPremium) {
+                            var adLoadState by remember { mutableStateOf(false) }
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .animateContentSize()
+                                    .height(54.dp) // match banner height
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    if (!adLoadState) {
+                                        Text(
+                                            text = "Advertisement",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Medium,
+                                            color = colors.onSurfaceVariant,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .wrapContentSize(align = Alignment.Center)
+                                        )
+                                    }
+
+                                    AdMobBanner(
+                                        adUnit = AdIdsFactory.getBannerAdId(),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .animateContentSize()
+                                            .align(Alignment.Center),
+                                        adSize = AdSize.BANNER, // or adaptive size if needed
+                                        onAdLoaded = { isLoaded ->
+                                            adLoadState = isLoaded
+                                            Logger.d(TAG, "AdMobBanner: onAdLoaded: $isLoaded")
+                                        }
+                                    )
+                                }
+                            }
+
+                        }
 
                     }
 

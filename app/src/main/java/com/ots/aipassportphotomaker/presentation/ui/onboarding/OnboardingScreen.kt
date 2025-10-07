@@ -375,7 +375,8 @@ fun BottomSection(
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(52.dp) // match banner height
+                        .animateContentSize()
+                        .height(54.dp) // match banner height
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         if (!adLoadState) {
@@ -385,7 +386,6 @@ fun BottomSection(
                                 fontWeight = FontWeight.Medium,
                                 color = colors.onSurfaceVariant,
                                 modifier = Modifier
-                                    .padding(horizontal = 16.dp)
                                     .fillMaxWidth()
                                     .wrapContentSize(align = Alignment.Center)
                             )
@@ -395,6 +395,7 @@ fun BottomSection(
                             adUnit = AdIdsFactory.getOnboardingBannerAdId(),
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .animateContentSize()
                                 .align(Alignment.Center),
                             adSize = AdSize.BANNER, // or adaptive size if needed
                             onAdLoaded = { isLoaded ->

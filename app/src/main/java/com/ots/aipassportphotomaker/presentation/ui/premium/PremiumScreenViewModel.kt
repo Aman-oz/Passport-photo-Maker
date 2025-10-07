@@ -3,7 +3,9 @@ package com.ots.aipassportphotomaker.presentation.ui.premium
 import android.app.Activity
 import android.app.Application
 import android.content.Context
+import android.content.Intent
 import android.os.Build
+import android.os.Process
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.mutableStateListOf
 import com.las.collage.maker.iab.ProductItem
@@ -130,8 +132,19 @@ class PremiumScreenViewModel @Inject constructor(
                     loadState(false)
                     adsManager.setEnabledNoAds(true)
                     _uiState.update { it.copy(errorMessage = "Purchase successful") }
+                    // restart the app to remove ads
+
+                    // Restart the app
+                    val packageManager = context.packageManager
+                    val intent = packageManager.getLaunchIntentForPackage(context.packageName)
+                    intent?.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+                    context.startActivity(intent)
+                    if (context is Activity) {
+                        context.finishAffinity()
+                    }
+                    Process.killProcess(Process.myPid())
                     // Navigate to home or update UI as needed
-                    _navigationState.tryEmit(PremiumScreenNavigationState.HomeScreen(0))
+//                    _navigationState.tryEmit(PremiumScreenNavigationState.HomeScreen(0))
                 }
 
                 override fun error(error: String) {

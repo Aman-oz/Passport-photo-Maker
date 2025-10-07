@@ -1,20 +1,27 @@
 package com.ots.aipassportphotomaker.presentation.ui.createid
 
+import android.app.Activity
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -22,12 +29,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -35,7 +44,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
+import com.google.android.gms.ads.AdSize
 import com.ots.aipassportphotomaker.R
+import com.ots.aipassportphotomaker.adsmanager.admob.AdMobBanner
+import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
 import com.ots.aipassportphotomaker.common.utils.AnalyticsConstants
@@ -62,6 +74,8 @@ fun PhotoIDDetailPage(
     sharedViewModel: NavigationBarSharedViewModel,
 ) {
     val TAG = "PhotoIDDetailPage"
+    val context = LocalContext.current
+    val activity = context as Activity
 
     val documentsPaging = viewModel.documents.collectAsLazyPagingItems()
     val documentsSearchedPaging = viewModel.searchedDocuments.collectAsLazyPagingItems()
@@ -126,6 +140,8 @@ fun PhotoIDDetailPage(
         onBackClick = {
             viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnBack_DocumentDetailScreen")
             mainRouter.goBack()
+
+            viewModel.showInterstitialAd(activity = activity) {  }
         },
         onGetProClick = {
             viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnGetPro_DocumentDetailScreen")
@@ -146,6 +162,7 @@ private fun PhotoIDDetailScreen(
     onBackClick: () -> Unit = {},
     onGetProClick: () -> Unit = {},
 ) {
+    val TAG = "PhotoIDDetailScreen"
 
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -236,6 +253,45 @@ private fun PhotoIDDetailScreen(
                             modifier = Modifier.padding(top = 80.dp, start = 24.dp, end = 24.dp)
                         )
                     } else {
+
+                        if (!isPremium) {
+                            var adLoadState by remember { mutableStateOf(false) }
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .animateContentSize()
+                                    .height(54.dp) // match banner height
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    if (!adLoadState) {
+                                        Text(
+                                            text = "Advertisement",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Medium,
+                                            color = colors.onSurfaceVariant,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .wrapContentSize(align = Alignment.Center)
+                                        )
+                                    }
+
+                                    AdMobBanner(
+                                        adUnit = AdIdsFactory.getBannerAdId(),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .animateContentSize()
+                                            .align(Alignment.Center),
+                                        adSize = AdSize.BANNER, // or adaptive size if needed
+                                        onAdLoaded = { isLoaded ->
+                                            adLoadState = isLoaded
+                                            Logger.d(TAG, "AdMobBanner: onAdLoaded: $isLoaded")
+                                        }
+                                    )
+                                }
+                            }
+
+                        }
+
                         DocumentDetailList(
                             documents,
                             onDocumentClick,

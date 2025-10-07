@@ -335,7 +335,7 @@ class ImageProcessingScreenViewModel @Inject constructor(
                         delay(500)
                     } else {
                         delay(1500)
-                        _processingStage.value = ProcessingStage.COMPLETED
+                        _processingStage.value = ProcessingStage.BACKGROUND_REMOVAL
 
                         lastCroppedUrl = apiResponse.filename
                         _uiState.value = _uiState.value.copy(
@@ -531,7 +531,23 @@ class ImageProcessingScreenViewModel @Inject constructor(
                         "Image saved locally at: $localImagePath"
                     )
                     updateCurrentImagePath(localImagePath)
-                    removeBackground(File(localImagePath))
+//                    removeBackground(File(localImagePath))
+
+                    withContext(dispatcher.main) {
+                        _navigationState.tryEmit(
+                            ImageProcessingScreenNavigationState.EditImageScreen(
+                                documentId = documentId,
+                                imageUrl = localImagePath.toString(),
+                                documentName = documentName ?: "",
+                                documentSize = documentSize ?: "",
+                                documentUnit = documentUnit ?: "",
+                                documentPixels = documentPixels ?: "",
+                                selectedBackgroundColor = uiState.value.selectedColor,
+                                selectedDpi = selectedDpi,
+                                sourceScreen = "ImageProcessingScreen"
+                            )
+                        )
+                    }
                 } else {
                     _error.value = "Failed to save image locally"
                 }

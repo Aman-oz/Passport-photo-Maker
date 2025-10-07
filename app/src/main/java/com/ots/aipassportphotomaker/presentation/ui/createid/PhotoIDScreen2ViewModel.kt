@@ -1,5 +1,6 @@
 package com.ots.aipassportphotomaker.presentation.ui.createid
 
+import android.app.Activity
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.paging.CombinedLoadStates
@@ -7,6 +8,7 @@ import androidx.paging.LoadState
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.map
+import com.ots.aipassportphotomaker.adsmanager.admob.MyAdsManager
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
 import com.ots.aipassportphotomaker.common.managers.AnalyticsManager
 import com.ots.aipassportphotomaker.common.managers.PreferencesHelper
@@ -45,6 +47,7 @@ class PhotoIDScreen2ViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     photoIDScreen2Bundle: PhotoIDScreen2Bundle,
     getDocumentsWithSeparators: GetDocumentsWithSeparators,
+    private val adsManager: MyAdsManager,
     private val preferencesHelper: PreferencesHelper,
     private val analyticsManager: AnalyticsManager
 ) : BaseViewModel() {
@@ -177,6 +180,16 @@ class PhotoIDScreen2ViewModel @Inject constructor(
 
     companion object {
         const val KEY_SEARCH_QUERY = "search_query"
+    }
+
+    fun showInterstitialAd(activity: Activity, onAdClosed: (Boolean) -> Unit) {
+        adsManager.showInterstitial(activity, true) { isAdShown ->
+            if (isAdShown == true) {
+                onAdClosed.invoke(true)
+            } else {
+                onAdClosed.invoke(false)
+            }
+        }
     }
 
     fun isPremiumUser(): Boolean {

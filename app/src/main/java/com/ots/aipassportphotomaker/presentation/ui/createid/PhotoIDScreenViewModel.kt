@@ -9,6 +9,8 @@ import androidx.paging.cachedIn
 import androidx.paging.map
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
 import com.ots.aipassportphotomaker.common.managers.AnalyticsManager
+import com.ots.aipassportphotomaker.common.managers.PreferencesHelper
+import com.ots.aipassportphotomaker.common.utils.AdsConstants
 import com.ots.aipassportphotomaker.domain.model.DocumentListItem
 import com.ots.aipassportphotomaker.domain.usecase.photoid.SearchDocuments
 import com.ots.aipassportphotomaker.domain.util.NetworkMonitor
@@ -38,7 +40,8 @@ class PhotoIDScreenViewModel @Inject constructor(
     private val searchDocuments: SearchDocuments,
     private val savedStateHandle: SavedStateHandle,
     getDocumentsWithSeparators: GetDocumentsWithSeparators,
-    private val analyticsManager: AnalyticsManager
+    private val analyticsManager: AnalyticsManager,
+    private val preferencesHelper: PreferencesHelper,
 ) : BaseViewModel() {
 
     private val _uiState: MutableStateFlow<PhotoIDScreenUiState> = MutableStateFlow(PhotoIDScreenUiState())
@@ -125,6 +128,10 @@ class PhotoIDScreenViewModel @Inject constructor(
 
     companion object {
         const val KEY_SEARCH_QUERY = "search_query"
+    }
+
+    fun isPremiumUser(): Boolean {
+        return preferencesHelper.getBoolean(AdsConstants.IS_NO_ADS_ENABLED, false)
     }
 
     fun sendEvent(eventName: String, eventValue: String) {

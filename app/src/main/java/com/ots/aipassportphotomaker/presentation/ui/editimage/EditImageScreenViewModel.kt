@@ -11,6 +11,8 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.aman.downloader.OziDownloader
 import com.ots.aipassportphotomaker.adsmanager.admob.MyAdsManager
+import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
+import com.ots.aipassportphotomaker.adsmanager.callbacks.RewardAdCallback
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
 import com.ots.aipassportphotomaker.common.managers.AnalyticsManager
 import com.ots.aipassportphotomaker.common.managers.PreferencesHelper
@@ -653,6 +655,19 @@ class EditImageScreenViewModel @Inject constructor(
                 onAdClosed.invoke(false)
             }
         }
+    }
+
+    fun loadAndShowRewardedAd(activity: Activity, onAdClosed: (Boolean) -> Unit, onRewardedEarned: (Boolean) -> Unit) {
+        adsManager.loadAndShowRewardedAd(activity, AdIdsFactory.getRewardedAdId(), object : RewardAdCallback {
+            override fun onRewardEarned(value: Boolean) {
+                onRewardedEarned.invoke(value)
+            }
+
+            override fun onDismissRewardAd() {
+                onAdClosed.invoke(true)
+            }
+
+        })
     }
 
     fun isPremiumUser(): Boolean {

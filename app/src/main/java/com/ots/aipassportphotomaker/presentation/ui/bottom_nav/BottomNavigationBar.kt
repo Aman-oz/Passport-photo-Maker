@@ -27,7 +27,7 @@ import com.ots.aipassportphotomaker.presentation.ui.theme.onCustom400
 
 @Composable
 fun BottomNavigationBar(
-    systemBarsPadding: PaddingValues,
+    /*systemBarsPadding: PaddingValues,*/
     items: List<BottomNavigationBarItem>,
     navController: NavController,
     onItemClick: (BottomNavigationBarItem) -> Unit
@@ -35,7 +35,7 @@ fun BottomNavigationBar(
     val backStackEntry = navController.currentBackStackEntryAsState()
     NavigationBar (
         modifier = Modifier
-            .padding(bottom = systemBarsPadding.calculateBottomPadding()),
+            /*.padding(bottom = systemBarsPadding.calculateBottomPadding())*/,
         containerColor = colors.background,
         contentColor = colors.onBackground,
         windowInsets = WindowInsets(0)
@@ -67,7 +67,7 @@ fun BottomNavigationBar(
 private fun BottomNavigationBarViewPreview() {
     PreviewContainer {
         BottomNavigationBar(
-            systemBarsPadding = PaddingValues(0.dp),
+            /*systemBarsPadding = PaddingValues(0.dp),*/
             items = listOf(
             BottomNavigationBarItem.Home,
             BottomNavigationBarItem.CreateID,

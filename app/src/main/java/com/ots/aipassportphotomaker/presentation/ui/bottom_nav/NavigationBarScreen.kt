@@ -1,19 +1,32 @@
 package com.ots.aipassportphotomaker.presentation.ui.bottom_nav
 
 import android.content.res.Configuration
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontWeight
@@ -24,8 +37,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.google.android.gms.ads.AdSize
 import com.ots.aipassportphotomaker.R
+import com.ots.aipassportphotomaker.adsmanager.admob.AdMobBanner
+import com.ots.aipassportphotomaker.adsmanager.admob.NativeAdViewCompose
+import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
+import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.domain.bottom_nav.route
 import com.ots.aipassportphotomaker.presentation.ui.components.TopBar
 import com.ots.aipassportphotomaker.presentation.ui.main.MainRouter
@@ -50,6 +68,7 @@ fun NavigationBarScreen(
     content: @Composable () -> Unit
 ) {
     val uiState = NavigationBarUiState()
+    val context = LocalContext.current
     Scaffold(
         topBar = {
             TopBar(
@@ -72,23 +91,97 @@ fun NavigationBarScreen(
 
         },
         bottomBar = {
-            BottomNavigationBar(
-                systemBarsPadding = systemBarsPadding,
-                items = uiState.bottomItems,
-                navController = nestedNavController,
-                onItemClick = { bottomItem ->
-                    val currentPageRoute = nestedNavController.currentDestination?.route
-                    val clickedPageRoute = bottomItem.page
-                    val notSamePage = currentPageRoute != clickedPageRoute.route()
-                    if (notSamePage) {
-                        nestedNavController.navigate(clickedPageRoute) {
-                            launchSingleTop = true
-                            popUpTo(nestedNavController.graph.findStartDestination().id)
+            Column(
+                modifier = Modifier
+                    .padding(bottom = systemBarsPadding.calculateBottomPadding())
+            ) {
+
+                BottomNavigationBar(
+                    /*systemBarsPadding = systemBarsPadding,*/
+                    items = uiState.bottomItems,
+                    navController = nestedNavController,
+                    onItemClick = { bottomItem ->
+                        val currentPageRoute = nestedNavController.currentDestination?.route
+                        val clickedPageRoute = bottomItem.page
+                        val notSamePage = currentPageRoute != clickedPageRoute.route()
+                        if (notSamePage) {
+                            nestedNavController.navigate(clickedPageRoute) {
+                                launchSingleTop = true
+                                popUpTo(nestedNavController.graph.findStartDestination().id)
+                            }
+                        }
+                        sharedViewModel.onBottomItemClicked(bottomItem)
+                    }
+                )
+                if (!isPremium) {
+                    var adLoadState by remember { mutableStateOf(false) }
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .animateContentSize()
+                            .height(54.dp) // match banner height
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            if (!adLoadState) {
+                                Text(
+                                    text = "Advertisement",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium,
+                                    color = colors.onSurfaceVariant,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .wrapContentSize(align = Alignment.Center)
+                                )
+                            }
+
+                            AdMobBanner(
+                                adUnit = AdIdsFactory.getBannerAdId(),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .animateContentSize()
+                                    .align(Alignment.Center),
+                                adSize = AdSize.BANNER, // or adaptive size if needed
+                                onAdLoaded = { isLoaded ->
+                                    adLoadState = isLoaded
+                                    Logger.d("AdMobBanner", "AdMobBanner: onAdLoaded: $isLoaded")
+                                }
+                            )
                         }
                     }
-                    sharedViewModel.onBottomItemClicked(bottomItem)
+
                 }
-            )
+               /* if (!isPremium) {
+                    var adLoadState by remember { mutableStateOf(false) }
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .animateContentSize()
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            if (!adLoadState) {
+                                Text(
+                                    text = "Advertisement",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium,
+                                    color = colors.onSurfaceVariant,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .animateContentSize()
+                                        .wrapContentSize(align = Alignment.Center)
+                                )
+                            }
+
+                            NativeAdViewCompose(
+                                context = context,
+                                nativeID = AdIdsFactory.getNativeAdId(),
+                                onAdLoaded = {
+                                    adLoadState = it
+                                }
+                            )
+                        }
+                    }
+                }*/
+            }
         }
     ) { paddingValues ->
         Box(

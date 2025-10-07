@@ -45,9 +45,18 @@ class App: Application(), ImageLoaderFactory {
     @Inject
     lateinit var preferencesHelper: PreferencesHelper
 
+    companion object {
+        private lateinit var instance: App
+        @JvmStatic
+        fun getInstance(): App {
+            return instance
+        }
+    }
+
     override fun onCreate() {
         super.onCreate()
 
+        instance = this
         oziDownloader = create(applicationContext, DownloaderConfig())
 
         getSubscriptionDetails()

@@ -98,6 +98,8 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.android.gms.ads.AdSize
 import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.adsmanager.admob.AdMobBanner
+import com.ots.aipassportphotomaker.adsmanager.admob.AdMobCollapsableBanner
+import com.ots.aipassportphotomaker.adsmanager.admob.CollapseDirection
 import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
 import com.ots.aipassportphotomaker.common.ext.animatedBorder
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
@@ -209,10 +211,20 @@ fun EditImagePage(
         isPremium = viewModel.isPremiumUser(),
         onImageSaved = { imagePath ->
             viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnSaveImage_EditImageScreen")
-            viewModel.onImageSaved(imagePath)
 
             //Rewarded ad
-            viewModel.showInterstitialAd(activity) { }
+            viewModel.loadAndShowRewardedAd(
+                activity,
+                onAdClosed = {
+                    viewModel.onImageSaved(imagePath)
+                },
+                onRewardedEarned = { isEarned ->
+                    if (!isEarned) {
+                        viewModel.onImageSaved(imagePath)
+                        viewModel.showInterstitialAd(activity) { }
+                    }
+
+                })
         },
         onColorChange = { color, colorType ->
             viewModel.sendEvent(AnalyticsConstants.CLICKED, "color_${colorType}_EditImageScreen")
@@ -844,11 +856,11 @@ private fun EditImageScreen(
                                                                     "EditImageScreen",
                                                                     "Image saved to: $imagePath"
                                                                 )
-                                                                Toast.makeText(
+                                                                /*Toast.makeText(
                                                                     context,
                                                                     "Image saved to gallery",
                                                                     Toast.LENGTH_SHORT
-                                                                ).show()
+                                                                ).show()*/
                                                             } else {
                                                                 Toast.makeText(
                                                                     context,
@@ -998,7 +1010,8 @@ private fun EditImageScreen(
                             Surface(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(52.dp) // match banner height
+                                    .animateContentSize()
+                                    .height(54.dp) // match banner height
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
                                     if (!adLoadState) {
@@ -1008,23 +1021,38 @@ private fun EditImageScreen(
                                             fontWeight = FontWeight.Medium,
                                             color = colors.onSurfaceVariant,
                                             modifier = Modifier
-                                                .padding(horizontal = 16.dp)
                                                 .fillMaxWidth()
+                                                .animateContentSize()
                                                 .wrapContentSize(align = Alignment.Center)
                                         )
                                     }
 
-                                    AdMobBanner(
+                                    AdMobCollapsableBanner(
                                         adUnit = AdIdsFactory.getBannerAdId(),
                                         modifier = Modifier
                                             .fillMaxWidth()
+                                            .animateContentSize()
+                                            .align(Alignment.Center),
+                                        adSize = AdSize.FULL_BANNER, // or adaptive size if needed
+                                        collapseDirection = CollapseDirection.BOTTOM,
+                                        onAdLoaded = { isLoaded ->
+                                            adLoadState = isLoaded
+                                            Logger.d(TAG, "AdMobBanner: onAdLoaded: $isLoaded")
+                                        }
+                                    )
+
+                                    /*AdMobBanner(
+                                        adUnit = AdIdsFactory.getBannerAdId(),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .animateContentSize()
                                             .align(Alignment.Center),
                                         adSize = AdSize.BANNER, // or adaptive size if needed
                                         onAdLoaded = { isLoaded ->
                                             adLoadState = isLoaded
                                             Logger.d(TAG, "AdMobBanner: onAdLoaded: $isLoaded")
                                         }
-                                    )
+                                    )*/
                                 }
                             }
 

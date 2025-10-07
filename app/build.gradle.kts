@@ -13,16 +13,25 @@ plugins {
 val applicationName = "AI Passport Photo Maker"
 val versionMajor = 1
 val versionMinor = 0
-val versionPatch = 3
+val versionPatch = 5
 
 android {
     namespace = "com.ots.aipassportphotomaker"
-    compileSdk = 35
+    compileSdk = 36
+
+    signingConfigs {
+        create("release") {
+            storeFile = file("./keystore/PhotoIDMaker.jks")
+            storePassword = "123456"
+            keyAlias = "key0"
+            keyPassword = "123456"
+        }
+    }
 
     defaultConfig {
         applicationId = "com.tas.passport.id.maker"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
 
         versionCode = versionMajor * 10000 + versionMinor * 1000 + versionPatch * 100 + versionPatch
         versionName = "${versionMajor}.${versionMinor}.${versionPatch}"
@@ -46,6 +55,9 @@ android {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
+            
+            signingConfig = signingConfigs.getByName("release")
+
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -85,12 +97,9 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
 
-//    implementation(project(path = ":image-picker"))
-
     implementation(libs.coil.compose.video)
     implementation(libs.coil.compose.gif)
 
-    implementation ("io.github.farimarwat:permissionmate-compose:1.1")
     implementation(libs.media.downloader)
     implementation(libs.accompanist.permission)
     implementation(libs.compose.capturable)

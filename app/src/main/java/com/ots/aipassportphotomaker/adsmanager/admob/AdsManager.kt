@@ -988,7 +988,6 @@ class AdsManager(
 
         rewardAd!!.fullScreenContentCallback = object : FullScreenContentCallback() {
             override fun onAdShowedFullScreenContent() {
-                // Called when ad is shown.
                 Logger.d(TAG, "onAdShowedFullScreenContent")
                 isOtherAdShowing = true
             }
@@ -997,8 +996,6 @@ class AdsManager(
                 // Called when ad fails to show.
                 Logger.d(TAG, "onAdFailedToShowFullScreenContent")
                 isOtherAdShowing = false
-                // Don't forget to set the ad reference to null so you
-                // don't show the ad a second time.
                 rewardAd = null
             }
 
@@ -1017,7 +1014,6 @@ class AdsManager(
                 adValue.valueMicros.toDouble()
             )
         }
-
 
         rewardAd?.show(activityContext!!) {
             Logger.d(TAG, "The user earned the reward.")

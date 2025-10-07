@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -27,7 +29,11 @@ import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.LoadAdError
+import com.google.android.gms.ads.OnPaidEventListener
+import com.ots.aipassportphotomaker.adsmanager.revenue.logAdRevenue
+import com.ots.aipassportphotomaker.common.managers.AnalyticsManager
 import com.ots.aipassportphotomaker.common.utils.Logger
+import kotlin.text.toDouble
 
 @Composable
 fun AdMobBanner(
@@ -36,8 +42,44 @@ fun AdMobBanner(
     adSize: AdSize = AdSize.FULL_BANNER,
     onAdLoaded: (Boolean) -> Unit = {},
 ) {
+    val context = LocalContext.current
+    val adView = remember {
+        AdView(context).apply {
+            setAdSize(adSize)
+            adUnitId = adUnit
+        }
+    }
+
+    LaunchedEffect(adView) {
+        adView.adListener = object : AdListener() {
+            override fun onAdLoaded() {
+                super.onAdLoaded()
+                onAdLoaded(true)
+                Logger.d("MyAdsManager", "Banner Ad Loaded")
+            }
+            override fun onAdFailedToLoad(p0: LoadAdError) {
+                super.onAdFailedToLoad(p0)
+                onAdLoaded(false)
+                Logger.e("MyAdsManager", "Ad Failed to load: ${p0.message}")
+            }
+        }
+        adView.onPaidEventListener = OnPaidEventListener { adValue ->
+            logAdRevenue(
+                analyticsManager = AnalyticsManager.getInstance(),
+                adType = "banner",
+                adValue = adValue.valueMicros.toDouble()
+            )
+        }
+        adView.loadAd(AdRequest.Builder().build())
+    }
+
     AndroidView(
-        modifier = modifier.clip(RoundedCornerShape(10)),
+        modifier = modifier,
+        factory = { adView }
+    )
+
+    /*AndroidView(
+        modifier = modifier,
         factory = { context ->
             AdView(context).apply {
                 setAdSize(adSize)
@@ -47,30 +89,41 @@ fun AdMobBanner(
                     override fun onAdLoaded() {
                         super.onAdLoaded()
                         onAdLoaded(true)
-                        Logger.d("AdMobBanner", "Ad Loaded")
+                        Logger.d("MyAdsManager", "Banner Ad Loaded")
                     }
 
                     override fun onAdFailedToLoad(p0: LoadAdError) {
                         super.onAdFailedToLoad(p0)
                         onAdLoaded(false)
-                        Logger.e("AdMobBanner", "Ad Failed to load: ${p0.message}")
+                        Logger.e("MyAdsManager", "Ad Failed to load: ${p0.message}")
                     }
                 }
 
-                loadAd(AdRequest.Builder()
-                    .build())
+                onPaidEventListener = OnPaidEventListener { adValue ->
+                    logAdRevenue(
+                        analyticsManager = AnalyticsManager.getInstance(),
+                        adType = "banner",
+                        adValue = adValue.valueMicros.toDouble()
+                    )
+                }
+
+                loadAd(
+                    AdRequest.Builder()
+                        .build()
+                )
             }
         }
-    )
+    )*/
 }
 
 @Composable
 fun AdMobAdaptiveBanner(
     modifier: Modifier = Modifier,
     margin: Dp = 0.dp,
-    strokeColor : Color = MaterialTheme.colorScheme.onBackground,
+    strokeColor: Color = MaterialTheme.colorScheme.onBackground,
     strokeWidth: Dp = 0.2.dp,
-    @StringRes unitIdRes: Int
+    adUnit: String,
+    onAdLoaded: (Boolean) -> Unit = {},
 ) {
     val context = LocalContext.current
     val configuration = LocalConfiguration.current
@@ -86,7 +139,7 @@ fun AdMobAdaptiveBanner(
         context,
         screenWidthPx
     )
-    val unitId = stringResource(unitIdRes)
+
     AndroidView(
         modifier = modifier
             .padding(margin)
@@ -95,9 +148,33 @@ fun AdMobAdaptiveBanner(
         factory = {
             AdView(context).apply {
                 setAdSize(adSize)
-                adUnitId = unitId
+                adUnitId = adUnit
+
+                adListener = object : AdListener() {
+                    override fun onAdLoaded() {
+                        super.onAdLoaded()
+                        onAdLoaded(true)
+                        Logger.d("MyAdsManager", "Banner Ad Loaded")
+                    }
+
+                    override fun onAdFailedToLoad(p0: LoadAdError) {
+                        super.onAdFailedToLoad(p0)
+                        onAdLoaded(false)
+                        Logger.e("MyAdsManager", "Ad Failed to load: ${p0.message}")
+                    }
+                }
+
+                onPaidEventListener = OnPaidEventListener { adValue ->
+                    logAdRevenue(
+                        analyticsManager = AnalyticsManager.getInstance(),
+                        adType = "banner",
+                        adValue = adValue.valueMicros.toDouble()
+                    )
+                }
+
                 loadAd(AdRequest.Builder().build())
             }
+
         }
     )
 }
@@ -118,9 +195,7 @@ fun AdMobCollapsableBanner(
 ) {
 
     AndroidView(
-        modifier = modifier
-            .padding(5.dp)
-            .clip(RoundedCornerShape(10)),
+        modifier = modifier,
         factory = { context ->
             AdView(context).apply {
                 setAdSize(adSize)
@@ -131,16 +206,23 @@ fun AdMobCollapsableBanner(
                     override fun onAdLoaded() {
                         super.onAdLoaded()
                         onAdLoaded(true)
-                        Logger.d("AdMobCollapsable", "Ad Loaded")
+                        Logger.d("MyAdsManager", "Banner Ad Loaded")
                     }
 
                     override fun onAdFailedToLoad(p0: LoadAdError) {
                         super.onAdFailedToLoad(p0)
                         onAdLoaded(false)
-                        Logger.e("AdMobCollapsable", "Ad Failed to load: ${p0.message}")
+                        Logger.e("MyAdsManager", "Ad Failed to load: ${p0.message}")
                     }
                 }
 
+                onPaidEventListener = OnPaidEventListener { adValue ->
+                    logAdRevenue(
+                        analyticsManager = AnalyticsManager.getInstance(),
+                        adType = "banner",
+                        adValue = adValue.valueMicros.toDouble()
+                    )
+                }
 
                 loadAd(
                     AdRequest.Builder()

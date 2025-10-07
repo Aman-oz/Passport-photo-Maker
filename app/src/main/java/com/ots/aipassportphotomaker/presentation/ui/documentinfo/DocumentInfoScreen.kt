@@ -66,6 +66,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -114,7 +115,6 @@ import io.mhssn.colorpicker.ColorPickerDialog
 import io.mhssn.colorpicker.ColorPickerType
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.text.compareTo
 
 @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
 @Composable
@@ -167,7 +167,7 @@ fun DocumentInfoPage(
                 mainRouter.navigateToSelectPhotoScreen(
                     documentId = navigationState.documentId,
 
-                )
+                    )
             }
         }
     }
@@ -186,12 +186,12 @@ fun DocumentInfoPage(
         Manifest.permission.READ_MEDIA_IMAGES
     )
 
-    val permissionsToRequest: List<String>
-     = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-        permissionsForAndroid14AndAbove
-    } else {
-        permissionsForAndroid13AndBelow
-    }
+    val permissionsToRequest: List<String> =
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            permissionsForAndroid14AndAbove
+        } else {
+            permissionsForAndroid13AndBelow
+        }
     val multiplePermissionResultLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions(),
         onResult = { perms ->
@@ -225,36 +225,39 @@ fun DocumentInfoPage(
 
             viewModel.selectedImagesList.clear()
             viewModel.selectedImagesList.addAll(
-                listOf(AssetInfo(
-                    id = 0L,
-                    uriString = uri.toString(),
-                    filepath = uri.toString(),
-                    filename = StringUtil.randomString(10),
-                    "Camera", 0L,
-                    0,
-                    "",
-                    0L,
-                    0L
-                )))
+                listOf(
+                    AssetInfo(
+                        id = 0L,
+                        uriString = uri.toString(),
+                        filepath = uri.toString(),
+                        filename = StringUtil.randomString(10),
+                        "Camera", 0L,
+                        0,
+                        "",
+                        0L,
+                        0L
+                    )
+                )
+            )
 //            viewModel.onOpenCameraClicked()
         },
         isPremium = viewModel.isPremiumUser(),
         onCreatePhotoClick = { type ->
             viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnCreatePhoto_DocumentInfo")
             viewModel.onCreatePhotoClicked()
-            viewModel.showInterstitialAd(activityContext) {  }
+            viewModel.showInterstitialAd(activityContext) { }
         },
         onReselectDocument = {
             viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnReselectDocument_DocumentInfo")
             mainRouter.goBack()
 
-            viewModel.showInterstitialAd(activityContext) {  }
+            viewModel.showInterstitialAd(activityContext) { }
         },
         onBackClick = {
             viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnBack_DocumentInfo")
             mainRouter.goBack()
 
-            viewModel.showInterstitialAd(activityContext) {  }
+            viewModel.showInterstitialAd(activityContext) { }
         },
         onGetProClick = {
             viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnGetPro_DocumentInfo")
@@ -289,7 +292,10 @@ fun DocumentInfoPage(
             assetPickerConfig = AssetPickerConfig(gridCount = 3),
             onPicked = {
                 isImageSelected = it.isNotEmpty()
-                Logger.i("DocumentInfoPage", "Selected images: ${it.size}, asset: ${it.firstOrNull()?.uriString}")
+                Logger.i(
+                    "DocumentInfoPage",
+                    "Selected images: ${it.size}, asset: ${it.firstOrNull()?.uriString}"
+                )
                 viewModel.selectedImagesList.clear()
                 viewModel.selectedImagesList.addAll(it)
                 showAssetPicker.value = false
@@ -311,10 +317,12 @@ fun DocumentInfoPage(
                     Manifest.permission.CAMERA -> {
                         CameraPermissionTextProvider()
                     }
+
                     Manifest.permission.READ_MEDIA_IMAGES,
                     Manifest.permission.READ_EXTERNAL_STORAGE -> {
                         StoragePermissionTextProvider()
                     }
+
                     else -> return@forEach
                 },
                 isPermanentlyDeclined = !activityContext.shouldShowRequestPermissionRationale(
@@ -336,7 +344,7 @@ fun DocumentInfoPage(
     BackHandler {
         viewModel.sendEvent(AnalyticsConstants.CLICKED, "backPress_DocumentInfo")
         mainRouter.goBack()
-        viewModel.showInterstitialAd(activityContext) {  }
+        viewModel.showInterstitialAd(activityContext) { }
     }
 
 }
@@ -370,18 +378,19 @@ private fun DocumentInfoScreen(
     val context = LocalContext.current
 
     // Define permissions based on Android version
-    val permissionsToRequest: List<String> = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        listOf(
-            Manifest.permission.CAMERA,
-            Manifest.permission.READ_MEDIA_IMAGES
-        )
-    } else {
-        listOf(
-            Manifest.permission.CAMERA,
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
-        )
-    }
+    val permissionsToRequest: List<String> =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            listOf(
+                Manifest.permission.CAMERA,
+                Manifest.permission.READ_MEDIA_IMAGES
+            )
+        } else {
+            listOf(
+                Manifest.permission.CAMERA,
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            )
+        }
     // Camera launcher
     var preparedUri: Uri? by remember { mutableStateOf(null) }
     val cameraLauncher = rememberLauncherForActivityResult(
@@ -438,7 +447,8 @@ private fun DocumentInfoScreen(
                 Logger.i(TAG, "Gallery permissions granted")
                 onOpenGalleryClick()
             } else {
-                val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) Manifest.permission.READ_MEDIA_IMAGES else Manifest.permission.READ_EXTERNAL_STORAGE
+                val permission =
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) Manifest.permission.READ_MEDIA_IMAGES else Manifest.permission.READ_EXTERNAL_STORAGE
                 onPermissionResult(permission, allGranted)
                 Logger.w(TAG, "Some gallery permissions denied")
 //                Toast.makeText(context, "Storage permissions are required to access photos", Toast.LENGTH_SHORT).show()
@@ -637,19 +647,22 @@ private fun DocumentInfoScreen(
                                 selectedColor = selectedColor,
                                 colorFactory = colorFactory,
                                 text = "Document Size",
-                                isChecked = true)
+                                isChecked = true
+                            )
                             ChecklistItem(
                                 uiState,
                                 selectedColor = selectedColor,
                                 colorFactory = colorFactory,
                                 text = "Unit",
-                                isChecked = true)
+                                isChecked = true
+                            )
                             ChecklistItem(
                                 uiState,
                                 selectedColor = selectedColor,
                                 colorFactory = colorFactory,
                                 text = "Pixel",
-                                isChecked = true)
+                                isChecked = true
+                            )
                             ChecklistItem(
                                 uiState,
                                 selectedColor = selectedColor,
@@ -670,8 +683,8 @@ private fun DocumentInfoScreen(
                                 text = "Background",
                                 isChecked = true,
                                 onSetCustomColor = { color -> onSetCustomColor(color) },
-                                onBackgroundOptionChanged = {
-                                        option -> onBackgroundOptionChanged(option)
+                                onBackgroundOptionChanged = { option ->
+                                    onBackgroundOptionChanged(option)
                                 },
                                 selectPredefinedColor = { colorType: ColorFactory.ColorType ->
                                     selectPredefinedColor(colorType)
@@ -766,8 +779,7 @@ private fun DocumentInfoScreen(
                             }
                         }
 
-                    }
-                    else {
+                    } else {
                         var preparedUri: Uri? by remember { mutableStateOf(null) }
                         val cameraLauncher = rememberLauncherForActivityResult(
                             contract = ActivityResultContracts.TakePicture()
@@ -810,7 +822,9 @@ private fun DocumentInfoScreen(
                                     Text(
                                         text = "Open Gallery",
                                         color = colors.onPrimary,
-                                        fontSize = 16.sp
+                                        style = MaterialTheme.typography.titleMedium,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
                                     )
                                 }
                             }
@@ -838,7 +852,9 @@ private fun DocumentInfoScreen(
                                     Text(
                                         text = "Take Photo",
                                         color = colors.primary,
-                                        fontSize = 16.sp
+                                        style = MaterialTheme.typography.titleMedium,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
                                     )
                                 }
                             }
@@ -850,7 +866,8 @@ private fun DocumentInfoScreen(
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(52.dp) // match banner height
+                                .animateContentSize()
+                                .height(54.dp) // match banner height
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 if (!adLoadState) {
@@ -860,8 +877,8 @@ private fun DocumentInfoScreen(
                                         fontWeight = FontWeight.Medium,
                                         color = colors.onSurfaceVariant,
                                         modifier = Modifier
-                                            .padding(horizontal = 16.dp)
                                             .fillMaxWidth()
+                                            .animateContentSize()
                                             .wrapContentSize(align = Alignment.Center)
                                     )
                                 }
@@ -1092,7 +1109,8 @@ fun ChecklistItem(
                     radioButtonList = listOf("Keep Original", "Change background color"),
                     selectedIndex = if (uiState.backgroundOption == BackgroundOption.KEEP_ORIGINAL) 0 else 1
                 ) { selectedIndex ->
-                    val option = if (selectedIndex == 0) BackgroundOption.KEEP_ORIGINAL else BackgroundOption.CHANGE_BACKGROUND
+                    val option =
+                        if (selectedIndex == 0) BackgroundOption.KEEP_ORIGINAL else BackgroundOption.CHANGE_BACKGROUND
                     onBackgroundOptionChanged(option)
                 }
 
@@ -1106,8 +1124,9 @@ fun ChecklistItem(
                         uiState.backgroundOption == BackgroundOption.CHANGE_BACKGROUND
 
                     // 1st: Custom Color (Color Picker)
-                    val isCustomSelected = colorFactory.selectedColorType == ColorFactory.ColorType.CUSTOM &&
-                            colorFactory.customColor == selectedColor
+                    val isCustomSelected =
+                        colorFactory.selectedColorType == ColorFactory.ColorType.CUSTOM &&
+                                colorFactory.customColor == selectedColor
                     ColorItem(
                         modifier = Modifier.width(42.dp),
                         color = if (colorFactory.isCustomColorSelected()) colorFactory.customColor else Color.White,
@@ -1129,8 +1148,9 @@ fun ChecklistItem(
                         }
                     )
 
-                    val isTransparentSelected = colorFactory.selectedColorType == ColorFactory.ColorType.TRANSPARENT &&
-                            colorFactory.getColorByType(ColorFactory.ColorType.TRANSPARENT) == selectedColor
+                    val isTransparentSelected =
+                        colorFactory.selectedColorType == ColorFactory.ColorType.TRANSPARENT &&
+                                colorFactory.getColorByType(ColorFactory.ColorType.TRANSPARENT) == selectedColor
                     ColorItem(
                         modifier = Modifier
                             .width(42.dp),
@@ -1152,8 +1172,9 @@ fun ChecklistItem(
 
                     )
 
-                    val isWhiteSelected = colorFactory.selectedColorType == ColorFactory.ColorType.WHITE &&
-                            colorFactory.getColorByType(ColorFactory.ColorType.WHITE) == selectedColor
+                    val isWhiteSelected =
+                        colorFactory.selectedColorType == ColorFactory.ColorType.WHITE &&
+                                colorFactory.getColorByType(ColorFactory.ColorType.WHITE) == selectedColor
                     ColorItem(
                         modifier = Modifier
                             .width(42.dp),
@@ -1174,8 +1195,9 @@ fun ChecklistItem(
 
                     )
 
-                    val isGreenSelected = colorFactory.selectedColorType == ColorFactory.ColorType.GREEN &&
-                            colorFactory.getColorByType(ColorFactory.ColorType.GREEN) == selectedColor
+                    val isGreenSelected =
+                        colorFactory.selectedColorType == ColorFactory.ColorType.GREEN &&
+                                colorFactory.getColorByType(ColorFactory.ColorType.GREEN) == selectedColor
                     ColorItem(
                         modifier = Modifier
                             .width(42.dp),
@@ -1196,8 +1218,9 @@ fun ChecklistItem(
 
                     )
 
-                    val isBlueSelected = colorFactory.selectedColorType == ColorFactory.ColorType.BLUE &&
-                            colorFactory.getColorByType(ColorFactory.ColorType.BLUE) == selectedColor
+                    val isBlueSelected =
+                        colorFactory.selectedColorType == ColorFactory.ColorType.BLUE &&
+                                colorFactory.getColorByType(ColorFactory.ColorType.BLUE) == selectedColor
                     ColorItem(
                         modifier = Modifier
                             .width(42.dp),
@@ -1218,8 +1241,9 @@ fun ChecklistItem(
 
                     )
 
-                    val isRedSelected = colorFactory.selectedColorType == ColorFactory.ColorType.RED &&
-                            colorFactory.getColorByType(ColorFactory.ColorType.RED) == selectedColor
+                    val isRedSelected =
+                        colorFactory.selectedColorType == ColorFactory.ColorType.RED &&
+                                colorFactory.getColorByType(ColorFactory.ColorType.RED) == selectedColor
                     ColorItem(
                         modifier = Modifier
                             .width(42.dp),
@@ -1388,7 +1412,7 @@ fun DocumentInfoScreenPreview() {
             selectPredefinedColor = { colorType: ColorFactory.ColorType ->
 
             },
-            onApplySelectedColor = {  }
+            onApplySelectedColor = { }
         )
     }
 }
