@@ -381,7 +381,7 @@ fun BottomSection(
                     Box(contentAlignment = Alignment.Center) {
                         if (!adLoadState) {
                             Text(
-                                text = "Advertisement",
+                                text = stringResource(R.string.advertisement),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Medium,
                                 color = colors.onSurfaceVariant,

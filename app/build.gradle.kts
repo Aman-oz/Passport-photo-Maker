@@ -108,7 +108,9 @@ dependencies {
 
     implementation(libs.androidx.constraintlayout.compose)
 //    implementation(libs.compose.colorpicker)
-    implementation ("io.mhssn:colorpicker:1.0.0")
+    implementation (libs.colorpicker)
+
+    implementation("androidx.window:window:1.5.0")
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)

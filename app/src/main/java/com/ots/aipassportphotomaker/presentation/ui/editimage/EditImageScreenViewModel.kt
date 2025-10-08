@@ -10,6 +10,7 @@ import androidx.paging.LoadState
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.aman.downloader.OziDownloader
+import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.adsmanager.admob.MyAdsManager
 import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
 import com.ots.aipassportphotomaker.adsmanager.callbacks.RewardAdCallback
@@ -226,7 +227,7 @@ class EditImageScreenViewModel @Inject constructor(
 
             if (imageUrl.isNullOrEmpty()) {
                 Logger.e("EditImageScreenViewModel", "No image path provided")
-                _error.value = "No image was selected"
+                _error.value = context.getString(R.string.no_image_was_selected)
                 return@launch
             }
 

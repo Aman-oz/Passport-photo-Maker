@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.wrapContentSize
@@ -40,6 +41,7 @@ import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.ads.AdSize
 import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.adsmanager.admob.AdMobBanner
+import com.ots.aipassportphotomaker.adsmanager.admob.AdaptiveBannerAd
 import com.ots.aipassportphotomaker.adsmanager.admob.NativeAdViewCompose
 import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
@@ -119,7 +121,7 @@ fun NavigationBarScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .animateContentSize()
-                            .height(54.dp) // match banner height
+                            .heightIn(min = 54.dp)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             if (!adLoadState) {
@@ -134,7 +136,19 @@ fun NavigationBarScreen(
                                 )
                             }
 
-                            AdMobBanner(
+                            AdaptiveBannerAd(
+                                adUnit = AdIdsFactory.getBannerAdId(),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .animateContentSize()
+                                    .align(Alignment.Center),
+                                onAdLoaded = { isLoaded ->
+                                    adLoadState = true
+                                    Logger.d("AdmobBanner", "AdaptiveBannerAd: onAdLoaded: $isLoaded")
+                                }
+                            )
+
+                            /*AdMobBanner(
                                 adUnit = AdIdsFactory.getBannerAdId(),
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -145,7 +159,7 @@ fun NavigationBarScreen(
                                     adLoadState = isLoaded
                                     Logger.d("AdMobBanner", "AdMobBanner: onAdLoaded: $isLoaded")
                                 }
-                            )
+                            )*/
                         }
                     }
 

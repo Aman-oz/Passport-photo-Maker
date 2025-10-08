@@ -49,6 +49,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -305,7 +306,7 @@ private fun HomeScreen(
                         .weight(1f)
                         .background(colors.background)
                 ) {
-                    val itemsList = mainItems
+                    val itemsList = mainItems(context)
                     items(itemsList.size) { index ->
                         val item = itemsList[index]
                         HomeCardItem(
@@ -340,7 +341,7 @@ private fun HomeScreen(
                         Logger.d("HomeScreen", "Camera image clicked")
                     },
                     onChooseImage = {
-                        itemClicked = "Choose from Gallery"
+                        itemClicked = context.getString(R.string.choose_from_gallery)
                         galleryLauncher.launch("image/*")
                         Logger.d("HomeScreen", "Choose image clicked")
                     },
@@ -397,7 +398,7 @@ private fun HomeScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Choose custom Size",
+                                text = stringResource(R.string.choose_custom_size),
                                 color = colors.onCustom400,
                                 fontWeight = FontWeight.Bold,
                                 style = MaterialTheme.typography.titleLarge
@@ -486,7 +487,7 @@ private fun HomeScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(
-                                    text = "Width",
+                                    text = stringResource(R.string.width),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = colors.onBackground,
@@ -550,7 +551,7 @@ private fun HomeScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(
-                                    text = "Height",
+                                    text = stringResource(R.string.height),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = colors.onBackground,
@@ -604,7 +605,7 @@ private fun HomeScreen(
                         // Error Text
                         AnimatedVisibility(showErrorText) {
                             Text(
-                                text = "Please fill all fields",
+                                text = stringResource(R.string.please_fill_all_fields),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = colors.customError,
                                 modifier = Modifier.padding(bottom = 16.dp)
@@ -648,7 +649,7 @@ private fun HomeScreen(
                             colors = ButtonDefaults.buttonColors(containerColor = if (isValidWidth && isValidHeight) colors.primary else colors.surfaceVariant)
                         ) {
                             Text(
-                                text = "Done",
+                                text = stringResource(R.string.done),
                                 color = if (isValidWidth && isValidHeight) colors.onPrimary else colors.onSurfaceVariant,
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold

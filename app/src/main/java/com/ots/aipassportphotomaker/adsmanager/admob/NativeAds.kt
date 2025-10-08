@@ -1166,7 +1166,7 @@ fun NativeAdViewCompose(context: Context, nativeID: String, onAdLoaded: (Boolean
     if (nativeAd != null) {
         AdViewSmall(nativeAd)
     } else {
-        Text("Loading Ad... ")
+//        Text("Loading Ad... ")
     }
 
 }

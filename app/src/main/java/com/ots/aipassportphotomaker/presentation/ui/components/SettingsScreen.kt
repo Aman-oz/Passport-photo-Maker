@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -100,7 +101,7 @@ fun SettingsScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Settings",
+                text = stringResource(R.string.settings),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onCustom400
@@ -108,7 +109,7 @@ fun SettingsScreen(
             IconButton(onClick = onCloseClick) {
                 Icon(
                     painter = painterResource(id = R.drawable.close_circled_icon),
-                    contentDescription = "Close",
+                    contentDescription = stringResource(R.string.close),
                     tint = MaterialTheme.colorScheme.onBackground
                 )
             }
@@ -164,33 +165,33 @@ fun SettingsScreen(
         // Settings Items
         Column {
             SettingsItem(
-                title = "Change Theme",
+                title = stringResource(id = R.string.change_theme),
                 selectedTheme = when (themeSelectedIndex) {
-                    0 -> "System Default"
-                    1 -> "Light Mode"
-                    2 -> "Dark Mode"
-                    else -> "Light Mode"
+                    0 -> stringResource(id = R.string.system_default)
+                    1 -> stringResource(id = R.string.light_mode)
+                    2 -> stringResource(id = R.string.dark_mode)
+                    else -> stringResource(id = R.string.light_mode)
                 },
                 icon = R.drawable.theme_icon,
                 onClick = { onChangeThemeClick() }
             )
             SettingsItem(
-                title = "Language",
+                title = stringResource(R.string.language),
                 icon = R.drawable.language_icon,
                 onClick = { onLanguageClick() }
             )
             SettingsItem(
-                title = "Rate Us",
+                title = stringResource(R.string.rate_us),
                 icon = R.drawable.star_icon,
                 onClick = { onRateUs() }
             )
             SettingsItem(
-                title = "Share App",
+                title = stringResource(R.string.share_app),
                 icon = R.drawable.share_app_icon,
                 onClick = { onShareApp() }
             )
             SettingsItem(
-                title = "Privacy Policy",
+                title = stringResource(R.string.privacy_policy),
                 icon = R.drawable.privacy_icon,
                 onClick = { onPrivacyPolicy() }
             )
@@ -198,7 +199,7 @@ fun SettingsScreen(
 
         // App Version
         Text(
-            text = "Version $appVersion",
+            text = "${stringResource(id = R.string.version)}: $appVersion",
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Normal,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -258,7 +259,7 @@ fun PremiumItem(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Get Premium",
+                        text = stringResource(id = R.string.get_premium),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = colors.onPrimaryContainer,
@@ -296,8 +297,8 @@ fun SettingsItem(
     modifier: Modifier = Modifier,
     title: String,
     icon: Int = R.drawable.settings_icon,
-    selectedTheme: String = "Light Mode",
-    selectedLanguage: String = "English",
+    selectedTheme: String = stringResource(R.string.light_mode),
+    selectedLanguage: String = stringResource(R.string.english),
     onClick: () -> Unit
 ) {
 
@@ -341,8 +342,8 @@ fun SettingsItem(
                         .padding(vertical = 16.dp, horizontal = 16.dp)
                 )
 
-                if (title == "Change Theme" || title == "Language") {
-                    val text = if (title == "Change Theme") selectedTheme else selectedLanguage
+                if (title == stringResource(R.string.change_theme) || title == stringResource(R.string.language)) {
+                    val text = if (title == stringResource(R.string.change_theme)) selectedTheme else selectedLanguage
                     val annotatedString = buildAnnotatedString {
                         withStyle(style = SpanStyle(color = colors.onBackground)) {
                             append("( ")

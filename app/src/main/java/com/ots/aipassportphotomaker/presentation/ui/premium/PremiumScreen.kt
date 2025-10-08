@@ -241,7 +241,7 @@ private fun PremiumScreen(
                         )
                 ) {
                     Text(
-                        text = "Restore",
+                        text = stringResource(R.string.restore),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Medium,
                         color = colors.onBackground,
@@ -342,7 +342,7 @@ private fun PremiumScreen(
                                 ) {
 
                                     Text(
-                                        text = "PRO",
+                                        text = stringResource(R.string.pro),
                                         style = MaterialTheme.typography.titleSmall,
                                         fontWeight = FontWeight.Bold,
                                         color = Color.White,
@@ -367,7 +367,7 @@ private fun PremiumScreen(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Text(
-                            text = "Unlock all premium benefits and features.",
+                            text = stringResource(R.string.unlock_all_premium_benefits_and_features),
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.SemiBold,
                             color = colors.onSurfaceVariant,
@@ -399,7 +399,7 @@ private fun PremiumScreen(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        text = "Unlimited Ai Usage",
+                                        text = stringResource(R.string.unlimited_ai_usage),
                                         style = MaterialTheme.typography.labelLarge,
                                         fontWeight = FontWeight.SemiBold,
                                         color = colors.onCustom100,
@@ -423,7 +423,7 @@ private fun PremiumScreen(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        text = "No Annoying Ads",
+                                        text = stringResource(R.string.no_annoying_ads),
                                         style = MaterialTheme.typography.labelLarge,
                                         fontWeight = FontWeight.SemiBold,
                                         color = colors.onCustom100,
@@ -448,7 +448,7 @@ private fun PremiumScreen(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        text = "Faster Processing",
+                                        text = stringResource(R.string.faster_processing),
                                         style = MaterialTheme.typography.labelLarge,
                                         fontWeight = FontWeight.SemiBold,
                                         color = colors.onCustom100,
@@ -472,7 +472,7 @@ private fun PremiumScreen(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        text = "No Watermark",
+                                        text = stringResource(R.string.no_watermark),
                                         style = MaterialTheme.typography.labelLarge,
                                         fontWeight = FontWeight.SemiBold,
                                         color = colors.onCustom100,
@@ -520,7 +520,7 @@ private fun PremiumScreen(
                                     Text(
                                         modifier = Modifier
                                             .weight(1f),
-                                        text = "Subscribe Weekly",
+                                        text = stringResource(R.string.subscribe_weekly),
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.Bold,
                                         color = colors.onBackground
@@ -544,7 +544,7 @@ private fun PremiumScreen(
                         val monthlyItem =
                             uiState.subscriptionItems.find { it.sku == AppBillingClient.SKU_ITEM_ONE_MONTH }
                         PremiumMonthlyButton(
-                            buttonText = "Subscribe Monthly",
+                            buttonText = stringResource(R.string.subscribe_monthly),
                             buttonPrice = monthlyItem?.pricingPhase?.formattedPrice
                                 ?: "Rs. 1,499.00",
                             onSubscribeMonthly = {
@@ -553,7 +553,7 @@ private fun PremiumScreen(
                         )
 
                         Text(
-                            text = "Auto renew, cancel anytime",
+                            text = stringResource(R.string.auto_renew_cancel_anytime),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Medium,
                             color = colors.onSurfaceVariant,
@@ -575,7 +575,7 @@ private fun PremiumScreen(
                         ) {
 
                             Text(
-                                text = "Terms of Service",
+                                text = stringResource(R.string.terms_of_service),
                                 style = MaterialTheme.typography.labelMedium,
                                 textDecoration = TextDecoration.Underline,
                                 fontWeight = FontWeight.SemiBold,
@@ -599,7 +599,7 @@ private fun PremiumScreen(
                             )
 
                             Text(
-                                text = "Privacy policy",
+                                text = stringResource(R.string.privacy_policy),
                                 style = MaterialTheme.typography.labelMedium,
                                 textDecoration = TextDecoration.Underline,
                                 fontWeight = FontWeight.SemiBold,
@@ -630,7 +630,7 @@ private fun PremiumScreen(
 @Composable
 fun PremiumMonthlyButton(
     modifier: Modifier = Modifier,
-    buttonText: String = "Subscribe Monthly",
+    buttonText: String = stringResource(R.string.subscribe_monthly),
     buttonPrice: String = "Rs. 1,499.00",
     onSubscribeMonthly: () -> Unit = {},
 ) {
@@ -718,7 +718,7 @@ fun PremiumMonthlyButton(
                     modifier = Modifier.padding(end = 4.dp)
                 )
                 Text(
-                    text = "Recommended",
+                    text = stringResource(R.string.recommended),
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
                     color = Color.White

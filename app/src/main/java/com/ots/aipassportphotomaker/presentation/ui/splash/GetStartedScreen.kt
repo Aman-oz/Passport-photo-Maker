@@ -8,7 +8,9 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -16,9 +18,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
@@ -60,8 +64,7 @@ import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.OnPaidEventListener
 import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.ots.aipassportphotomaker.R
-import com.ots.aipassportphotomaker.adsmanager.admob.AdMobAdaptiveBanner
-import com.ots.aipassportphotomaker.adsmanager.admob.AdMobBanner
+import com.ots.aipassportphotomaker.adsmanager.admob.AdaptiveBannerAd
 import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
 import com.ots.aipassportphotomaker.adsmanager.admob.adids.TestAdIds
 import com.ots.aipassportphotomaker.adsmanager.admob.loadFullScreenAd
@@ -313,7 +316,7 @@ private fun GetStartedScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = "Creation of Professional identification Photos.",
+                        text = stringResource(R.string.creation_of_professional_identification_photos),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
                         color = colors.onSurfaceVariant,
@@ -349,7 +352,7 @@ private fun GetStartedScreen(
                             Text(
                                 modifier = Modifier
                                     .padding(vertical = 4.dp),
-                                text = "Get Started",
+                                text = stringResource(R.string.get_started),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = colors.onPrimary
                             )
@@ -360,17 +363,24 @@ private fun GetStartedScreen(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    if (!isPremium  && consentState) {
+                    if (!isPremium && consentState) {
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .animateContentSize()
-                                .height(54.dp) // match banner height
+                                .heightIn(min = 54.dp)
+                                .animateContentSize(
+                                    animationSpec = spring(
+                                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                                        stiffness = Spring.StiffnessLow
+                                    )
+                                )
                         ) {
-                            Box(contentAlignment = Alignment.Center) {
+                            Box(
+                                contentAlignment = Alignment.Center,
+                            ) {
                                 if (!adLoadState) {
                                     Text(
-                                        text = "Advertisement",
+                                        text = stringResource(R.string.advertisement),
                                         style = MaterialTheme.typography.bodyMedium,
                                         fontWeight = FontWeight.Medium,
                                         color = colors.onSurfaceVariant,
@@ -380,16 +390,15 @@ private fun GetStartedScreen(
                                     )
                                 }
 
-                                AdMobBanner(
+                                AdaptiveBannerAd(
                                     adUnit = AdIdsFactory.getSplashBannerAdId(),
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .animateContentSize()
                                         .align(Alignment.Center),
-                                    adSize = AdSize.BANNER, // or adaptive size if needed
                                     onAdLoaded = { isLoaded ->
                                         adLoadState = true
-                                        Logger.d(TAG, "AdMobBanner: onAdLoaded: $isLoaded")
+                                        Logger.d(TAG, "AdaptiveBannerAd: onAdLoaded: $isLoaded")
                                     }
                                 )
                             }

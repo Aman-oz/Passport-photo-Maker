@@ -25,10 +25,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
 import com.ots.aipassportphotomaker.domain.repository.ColorFactory
 import com.ots.aipassportphotomaker.presentation.ui.documentinfo.BackgroundOption
@@ -56,7 +58,7 @@ fun ChangeThemDialog(
             .padding(16.dp)
     ) {
         Text(
-            text = "Change theme",
+            text = stringResource(R.string.change_theme),
             color = colors.onCustom400,
             fontWeight = FontWeight.Bold,
             style = MaterialTheme.typography.titleLarge,
@@ -64,7 +66,11 @@ fun ChangeThemDialog(
         )
 
         RadioButtonSingleSelection(
-            radioButtonList = listOf("System default", "Light Mode", "Dark Mode"),
+            radioButtonList = listOf(
+                stringResource(R.string.system_default),
+                stringResource(R.string.light_mode),
+                stringResource(R.string.dark_mode)
+            ),
             selectedIndex =  selectedOption
         ) { selectedIndex ->
             selectedOption = selectedIndex
@@ -91,7 +97,7 @@ fun ChangeThemDialog(
             colors = ButtonDefaults.buttonColors(containerColor = colors.primary)
         ) {
             Text(
-                text = "Apply theme",
+                text = stringResource(R.string.apply_theme),
                 color = colors.onPrimary,
                 fontSize = 16.sp
             )

@@ -169,15 +169,15 @@ fun PermissionPage(
             PermissionDialog(
                 permissionTextProvider = when (permission) {
                     Manifest.permission.POST_NOTIFICATIONS -> {
-                        NotificationPermissionTextProvider()
+                        NotificationPermissionTextProvider(context)
                     }
                     Manifest.permission.CAMERA -> {
-                        CameraPermissionTextProvider()
+                        CameraPermissionTextProvider(context)
                     }
 
                     Manifest.permission.READ_MEDIA_IMAGES,
                     Manifest.permission.READ_EXTERNAL_STORAGE -> {
-                        StoragePermissionTextProvider()
+                        StoragePermissionTextProvider(context)
                     }
 
                     else -> return@forEach
@@ -307,7 +307,7 @@ private fun PermissionScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = "To continue, we need access to your photos to process them and save them.",
+                        text = stringResource(R.string.to_continue_we_need_access_to_your_photos_to_process_them_and_save_them),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
                         color = colors.onSurfaceVariant,
@@ -320,7 +320,7 @@ private fun PermissionScreen(
                     Spacer(modifier = Modifier.weight(1f))
 
                     Text(
-                        text = "We respect you privacy - your photos are never stored on our servers.",
+                        text = stringResource(R.string.we_respect_you_privacy_your_photos_are_never_stored_on_our_servers),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
                         color = colors.onSurfaceVariant,
@@ -344,7 +344,7 @@ private fun PermissionScreen(
                             .scale(buttonAnimatedScale),
                     ) {
                         Text(
-                            text = "Allow Permission",
+                            text = stringResource(R.string.allow_permission),
                             modifier = Modifier
                                 .padding(vertical = 4.dp),
                             style = MaterialTheme.typography.titleMedium,
@@ -364,7 +364,7 @@ private fun PermissionScreen(
                             Box(contentAlignment = Alignment.Center) {
                                 if (!adLoadState) {
                                     Text(
-                                        text = "Advertisement",
+                                        text = stringResource(R.string.advertisement),
                                         style = MaterialTheme.typography.bodyMedium,
                                         fontWeight = FontWeight.Medium,
                                         color = colors.onSurfaceVariant,

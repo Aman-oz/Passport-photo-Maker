@@ -31,6 +31,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
@@ -65,6 +66,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -77,6 +79,7 @@ import coil.request.ImageRequest
 import com.google.android.gms.ads.AdSize
 import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.adsmanager.admob.AdMobBanner
+import com.ots.aipassportphotomaker.adsmanager.admob.AdaptiveBannerAd
 import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
@@ -245,7 +248,7 @@ fun DocumentInfoPage(
         onCreatePhotoClick = { type ->
             viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnCreatePhoto_DocumentInfo")
             viewModel.onCreatePhotoClicked()
-            viewModel.showInterstitialAd(activityContext) { }
+//            viewModel.showInterstitialAd(activityContext) { }
         },
         onReselectDocument = {
             viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnReselectDocument_DocumentInfo")
@@ -315,12 +318,12 @@ fun DocumentInfoPage(
             PermissionDialog(
                 permissionTextProvider = when (permission) {
                     Manifest.permission.CAMERA -> {
-                        CameraPermissionTextProvider()
+                        CameraPermissionTextProvider(context)
                     }
 
                     Manifest.permission.READ_MEDIA_IMAGES,
                     Manifest.permission.READ_EXTERNAL_STORAGE -> {
-                        StoragePermissionTextProvider()
+                        StoragePermissionTextProvider(context)
                     }
 
                     else -> return@forEach
@@ -503,7 +506,7 @@ private fun DocumentInfoScreen(
                 ) {
 
                     CommonTopBar(
-                        title = "Document Info",
+                        title = stringResource(R.string.document_info),
                         showGetProButton = !isPremium,
                         onBackClick = onBackClick,
                         onGetProClick = {
@@ -637,7 +640,7 @@ private fun DocumentInfoScreen(
                             // Checklist Items
                             ChecklistItem(
                                 uiState,
-                                text = "Image Selection",
+                                text = stringResource(R.string.image_selection),
                                 isChecked = isImageSelected,
                                 selectedColor = selectedColor,
                                 colorFactory = colorFactory
@@ -646,28 +649,28 @@ private fun DocumentInfoScreen(
                                 uiState,
                                 selectedColor = selectedColor,
                                 colorFactory = colorFactory,
-                                text = "Document Size",
+                                text = stringResource(R.string.document_size),
                                 isChecked = true
                             )
                             ChecklistItem(
                                 uiState,
                                 selectedColor = selectedColor,
                                 colorFactory = colorFactory,
-                                text = "Unit",
+                                text = stringResource(R.string.unit),
                                 isChecked = true
                             )
                             ChecklistItem(
                                 uiState,
                                 selectedColor = selectedColor,
                                 colorFactory = colorFactory,
-                                text = "Pixel",
+                                text = stringResource(R.string.pixel),
                                 isChecked = true
                             )
                             ChecklistItem(
                                 uiState,
                                 selectedColor = selectedColor,
                                 colorFactory = colorFactory,
-                                text = "Resolution",
+                                text = stringResource(R.string.resolution),
                                 isChecked = true,
                                 onSelectDpi = { dpi ->
                                     onSelectDpi(dpi)
@@ -680,7 +683,7 @@ private fun DocumentInfoScreen(
                                 uiState,
                                 selectedColor = selectedColor,
                                 colorFactory = colorFactory,
-                                text = "Background",
+                                text = stringResource(R.string.background),
                                 isChecked = true,
                                 onSetCustomColor = { color -> onSetCustomColor(color) },
                                 onBackgroundOptionChanged = { option ->
@@ -739,7 +742,7 @@ private fun DocumentInfoScreen(
                                         .align(Alignment.CenterVertically)
                                 )
                                 Text(
-                                    text = "Retake image",
+                                    text = stringResource(R.string.retake_image),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = colors.onBackground,
                                     modifier = Modifier
@@ -772,7 +775,7 @@ private fun DocumentInfoScreen(
                                     .scale(buttonAnimatedScale)
                             ) {
                                 Text(
-                                    text = "Create Photo",
+                                    text = stringResource(R.string.create_photo),
                                     color = colors.onPrimary,
                                     fontSize = 16.sp
                                 )
@@ -820,7 +823,7 @@ private fun DocumentInfoScreen(
                                     )
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Text(
-                                        text = "Open Gallery",
+                                        text = stringResource(R.string.open_gallery),
                                         color = colors.onPrimary,
                                         style = MaterialTheme.typography.titleMedium,
                                         maxLines = 1,
@@ -850,7 +853,7 @@ private fun DocumentInfoScreen(
                                     )
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Text(
-                                        text = "Take Photo",
+                                        text = stringResource(R.string.take_photo),
                                         color = colors.primary,
                                         style = MaterialTheme.typography.titleMedium,
                                         maxLines = 1,
@@ -867,12 +870,12 @@ private fun DocumentInfoScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .animateContentSize()
-                                .height(54.dp) // match banner height
+                                .heightIn(min = 54.dp) // match banner height
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 if (!adLoadState) {
                                     Text(
-                                        text = "Advertisement",
+                                        text = stringResource(R.string.advertisement),
                                         style = MaterialTheme.typography.bodyMedium,
                                         fontWeight = FontWeight.Medium,
                                         color = colors.onSurfaceVariant,
@@ -883,7 +886,19 @@ private fun DocumentInfoScreen(
                                     )
                                 }
 
-                                AdMobBanner(
+                                AdaptiveBannerAd(
+                                    adUnit = AdIdsFactory.getBannerAdId(),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .animateContentSize()
+                                        .align(Alignment.Center),
+                                    onAdLoaded = { isLoaded ->
+                                        adLoadState = true
+                                        Logger.d(TAG, "AdaptiveBannerAd: onAdLoaded: $isLoaded")
+                                    }
+                                )
+
+                                /*AdMobBanner(
                                     adUnit = AdIdsFactory.getBannerAdId(),
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -893,7 +908,7 @@ private fun DocumentInfoScreen(
                                         adLoadState = isLoaded
                                         Logger.d(TAG, "OnboardingScreen: Ad Loaded: $isLoaded")
                                     }
-                                )
+                                )*/
                             }
                         }
                     }
@@ -975,7 +990,7 @@ fun ChecklistItem(
         )
 
         when (text) {
-            "Image Selection" -> {
+            stringResource(R.string.image_selection) -> {
                 Icon(
                     painter = painterResource(id = if (isChecked) R.drawable.tick_icon else R.drawable.cross_icon), // Replace with your drawable resource ID
                     contentDescription = null,
@@ -984,7 +999,7 @@ fun ChecklistItem(
 
             }
 
-            "Background" -> {
+            stringResource(R.string.background) -> {
                 Box(
                     modifier = Modifier
                         .width(36.dp)
@@ -1017,7 +1032,7 @@ fun ChecklistItem(
 
             }
 
-            "Resolution" -> {
+            stringResource(R.string.resolution) -> {
                 Box(
                     modifier = Modifier
                         .background(colors.custom300, shape = RoundedCornerShape(6.dp))
@@ -1058,9 +1073,9 @@ fun ChecklistItem(
                 ) {
                     Text(
                         text = when (text) {
-                            "Document Size" -> uiState.documentSize ?: "2.0 x 2.0"
-                            "Unit" -> uiState.documentUnit ?: "inch"
-                            "Pixel" -> uiState.documentPixels ?: "600 x 600 px"
+                            stringResource(R.string.document_size) -> uiState.documentSize ?: "2.0 x 2.0"
+                            stringResource(R.string.unit) -> uiState.documentUnit ?: "inch"
+                            stringResource(R.string.pixel) -> uiState.documentPixels ?: "600 x 600 px"
                             else -> ""
                         },
                         style = MaterialTheme.typography.bodyMedium,
@@ -1092,21 +1107,24 @@ fun ChecklistItem(
                     .padding(16.dp)
             ) {
                 Text(
-                    text = "Change Background",
+                    text = stringResource(R.string.change_background),
                     color = colors.onCustom400,
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
                 Text(
-                    text = "Select a background color for your document.",
+                    text = stringResource(R.string.select_a_background_color_for_your_document),
                     style = MaterialTheme.typography.bodyMedium,
                     color = colors.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
 
                 RadioButtonSingleSelection(
-                    radioButtonList = listOf("Keep Original", "Change background color"),
+                    radioButtonList = listOf(
+                        stringResource(R.string.keep_original),
+                        stringResource(R.string.change_background_color)
+                    ),
                     selectedIndex = if (uiState.backgroundOption == BackgroundOption.KEEP_ORIGINAL) 0 else 1
                 ) { selectedIndex ->
                     val option =
@@ -1269,7 +1287,7 @@ fun ChecklistItem(
                 // show this error text animatedly for 4 seconds when user tries to apply without selecting "Change background color" option
                 AnimatedVisibility(showErrorText) {
                     Text(
-                        text = "Select change background color option",
+                        text = stringResource(R.string.select_change_background_color_option),
                         style = MaterialTheme.typography.bodyMedium,
                         color = colors.customError,
                         modifier = Modifier.padding(bottom = 16.dp)
@@ -1291,7 +1309,7 @@ fun ChecklistItem(
                     colors = ButtonDefaults.buttonColors(containerColor = colors.primary)
                 ) {
                     Text(
-                        text = "Apply",
+                        text = stringResource(R.string.apply),
                         color = colors.onPrimary,
                         fontSize = 16.sp
                     )
@@ -1321,14 +1339,14 @@ fun ChecklistItem(
                     .padding(16.dp)
             ) {
                 Text(
-                    text = "Change resolution (DPI)",
+                    text = stringResource(R.string.change_resolution_dpi),
                     color = colors.onCustom400,
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
                 Text(
-                    text = "Higher resolution means better image quality.",
+                    text = stringResource(R.string.higher_resolution_means_better_image_quality),
                     style = MaterialTheme.typography.bodyMedium,
                     color = colors.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 16.dp)

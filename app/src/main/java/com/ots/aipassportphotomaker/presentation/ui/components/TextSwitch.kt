@@ -35,10 +35,12 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
 import com.ots.aipassportphotomaker.presentation.ui.theme.colors
 import com.ots.aipassportphotomaker.presentation.ui.theme.custom300
@@ -146,8 +148,10 @@ fun TextSwitch(
 @Preview("Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun TextSwitchTest() {
+    val item1 = stringResource(R.string.backdrop)
+    val item2 = stringResource(R.string.add_suit)
     val items = remember {
-        listOf("Backdrop", "Add suit")
+        listOf(item1, item2)
     }
 
     PreviewContainer {

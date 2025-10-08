@@ -14,6 +14,7 @@ import com.google.android.gms.tasks.OnSuccessListener
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.ots.aipassportphotomaker.App
 import com.ots.aipassportphotomaker.BuildConfig
+import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.adsmanager.admob.MyAdsManager
 import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
 import com.ots.aipassportphotomaker.adsmanager.openad.ResumeAdManager
@@ -164,13 +165,13 @@ class GetStartedScreenViewModel @Inject constructor(
         val builder = AlertDialog.Builder(activity)
         val progressBar = ProgressBar(activity, null, android.R.attr.progressBarStyle)
         val textView = TextView(activity).apply {
-            text = "Loading ad..."
-            gravity = Gravity.CENTER
+            text = context.getString(R.string.loading_ad)
+            gravity = Gravity.START
             setPadding(50, 50, 50, 50)
         }
         val linearLayout = LinearLayout(activity).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.START
             addView(progressBar)
             addView(textView)
             setPadding(50, 50, 50, 50)

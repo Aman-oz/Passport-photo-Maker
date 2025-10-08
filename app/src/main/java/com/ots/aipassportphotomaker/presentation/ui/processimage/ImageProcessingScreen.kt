@@ -40,11 +40,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.android.gms.ads.AdSize
+import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.adsmanager.admob.AdMobCollapsableBanner
 import com.ots.aipassportphotomaker.adsmanager.admob.CollapseDirection
 import com.ots.aipassportphotomaker.adsmanager.admob.NativeAdViewCompose
@@ -150,13 +152,13 @@ private fun ImageProcessingScreen(
 
         // Get appropriate message based on processing stage
         val currentMessage = when (processingStage) {
-            ProcessingStage.UPLOADING -> "🔄 Uploading Photo..."
+            ProcessingStage.UPLOADING -> stringResource(R.string.uploading_photo)
             ProcessingStage.PROCESSING -> {
                 // Alternate between these messages during processing
                 val processingMessages = listOf(
-                    "🔮 AI Magic in progress… just a moment!",
-                    "🎨 Crafting the best fit for your document!",
-                    "☺ Head centered"
+                    stringResource(R.string.ai_magic_in_progress_just_a_moment),
+                    stringResource(R.string.crafting_the_best_fit_for_your_document),
+                    stringResource(R.string.head_centered)
                 )
                 val messageIndex by produceState(initialValue = 0) {
                     while (processingStage == ProcessingStage.PROCESSING) {
@@ -167,18 +169,18 @@ private fun ImageProcessingScreen(
                 processingMessages[messageIndex]
             }
 
-            ProcessingStage.CROPPING_IMAGE -> "💫 Cropping image..."
+            ProcessingStage.CROPPING_IMAGE -> stringResource(R.string.cropping_image)
             ProcessingStage.COMPLETED -> {
-                "✅ Process completed successfully"
+                stringResource(R.string.process_completed_successfully)
 
             }
 
             ProcessingStage.NONE -> ""
-            ProcessingStage.NO_NETWORK_AVAILABLE -> "❌ No network connection"
-            ProcessingStage.ERROR -> "❌ Something went wrong"
-            ProcessingStage.DOWNLOADING -> "⬇️ Applying Changes..."
-            ProcessingStage.SAVING_IMAGE -> "💾 Saving image..."
-            ProcessingStage.BACKGROUND_REMOVAL -> "🖼️ Removing background..."
+            ProcessingStage.NO_NETWORK_AVAILABLE -> stringResource(R.string.no_network_connection)
+            ProcessingStage.ERROR -> stringResource(R.string.something_went_wrong)
+            ProcessingStage.DOWNLOADING -> stringResource(R.string.applying_changes)
+            ProcessingStage.SAVING_IMAGE -> stringResource(R.string.saving_image)
+            ProcessingStage.BACKGROUND_REMOVAL -> stringResource(R.string.removing_background)
         }
 
         Column(
@@ -193,7 +195,7 @@ private fun ImageProcessingScreen(
                 }
         ) {
             CommonTopBar(
-                title = "Processing",
+                title = stringResource(R.string.processing),
                 showGetProButton = !isPremium,
                 onBackClick = {
                     onBackClick.invoke()
@@ -227,8 +229,8 @@ private fun ImageProcessingScreen(
                                 borderColors = listOf(Color.Red, Color.Green, Color.Blue),
                                 backgroundColor = Color.White,
                                 shape = RoundedCornerShape(16.dp),
-                                borderWidth = 4.dp,
-                                animationDurationInMillis = 2500
+                                borderWidth = 3.dp,
+                                animationDurationInMillis = 2200
                             )
                             .align(Alignment.CenterHorizontally),
                         imagePath = uiState.currentImagePath ?: imagePath,
@@ -269,7 +271,7 @@ private fun ImageProcessingScreen(
                         Text(
                             modifier = Modifier
                                 .align(Alignment.CenterHorizontally),
-                            text = "Processing Image",
+                            text = stringResource(R.string.processing_image),
                             color = animatedColor,
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold
@@ -302,7 +304,7 @@ private fun ImageProcessingScreen(
                         Box(contentAlignment = Alignment.Center) {
                             if (!adLoadState) {
                                 Text(
-                                    text = "Advertisement",
+                                    text = stringResource(R.string.advertisement),
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Medium,
                                     color = colors.onSurfaceVariant,
@@ -337,26 +339,6 @@ private fun ImageProcessingScreen(
                         }
                     }
                 }
-
-
-                /*var nativeAd by remember { mutableStateOf<NativeAd?>(null) }
-
-                LaunchedEffect(null) {
-                    loadNativeAd(context, AdIdsFactory.getNativeAdId()) {
-                        nativeAd = it
-                    }
-                }
-
-                nativeAd?.let {
-                    CallNativeAd(nativeAd = it)
-                }*/
-
-
-                /*NativeAdComposable(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    adUnitId = AdIdsFactory.getNativeAdId() // Sample AdMob native ad unit ID
-                )*/
 
             }
         }

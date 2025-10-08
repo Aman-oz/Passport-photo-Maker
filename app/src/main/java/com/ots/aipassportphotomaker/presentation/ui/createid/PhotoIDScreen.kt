@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.wrapContentSize
@@ -59,6 +60,7 @@ import com.ots.aipassportphotomaker.presentation.ui.theme.colors
 import kotlinx.coroutines.flow.flowOf
 import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.adsmanager.admob.AdMobBanner
+import com.ots.aipassportphotomaker.adsmanager.admob.AdaptiveBannerAd
 import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
 import com.ots.aipassportphotomaker.common.utils.AnalyticsConstants
 import com.ots.aipassportphotomaker.presentation.ui.components.EmptyStateIcon
@@ -209,46 +211,6 @@ private fun PhotoIDScreen(
                         modifier = Modifier.padding(top = 80.dp, start = 24.dp, end = 24.dp)
                     )
                 } else {
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    if (!isPremium) {
-                        var adLoadState by remember { mutableStateOf(false) }
-                        Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .animateContentSize()
-                                .height(54.dp) // match banner height
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                if (!adLoadState) {
-                                    Text(
-                                        text = "Advertisement",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Medium,
-                                        color = colors.onSurfaceVariant,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .wrapContentSize(align = Alignment.Center)
-                                    )
-                                }
-
-                                AdMobBanner(
-                                    adUnit = AdIdsFactory.getBannerAdId(),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .animateContentSize()
-                                        .align(Alignment.Center),
-                                    adSize = AdSize.BANNER, // or adaptive size if needed
-                                    onAdLoaded = { isLoaded ->
-                                        adLoadState = isLoaded
-                                        Logger.d(TAG, "AdMobBanner: onAdLoaded: $isLoaded")
-                                    }
-                                )
-                            }
-                        }
-
-                    }
 
                     DocumentList(
                         documents,

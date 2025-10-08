@@ -24,11 +24,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.android.gms.ads.AdSize
+import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.adsmanager.admob.AdMobBanner
 import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
@@ -54,7 +56,7 @@ fun ExitDialog(
             .padding(16.dp)
     ) {
         Text(
-            text = "Exit App",
+            text = stringResource(R.string.exit_app),
             color = colors.onCustom400,
             fontWeight = FontWeight.Bold,
             style = MaterialTheme.typography.titleLarge,
@@ -76,7 +78,7 @@ fun ExitDialog(
                 ) {
                     if (!adLoadState) {
                         Text(
-                            text = "Advertisement",
+                            text = stringResource(R.string.advertisement),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Medium,
                             color = colors.onSurfaceVariant,
@@ -119,7 +121,7 @@ fun ExitDialog(
                 colors = ButtonDefaults.buttonColors(containerColor = colors.primary.copy(alpha = 0.5f))
             ) {
                 Text(
-                    text = "Cancel",
+                    text = stringResource(id = R.string.cancel),
                     color = colors.onPrimary,
                     fontSize = 16.sp
                 )
@@ -140,7 +142,7 @@ fun ExitDialog(
                 colors = ButtonDefaults.buttonColors(containerColor = if (!adLoadState && !isPremium) colors.primaryContainer else colors.primary)
             ) {
                 Text(
-                    text = "Exit",
+                    text = stringResource(R.string.exit),
                     color = if (!adLoadState && !isPremium) colors.onPrimaryContainer else colors.onPrimary,
                     fontSize = 16.sp
                 )

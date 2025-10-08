@@ -97,7 +97,16 @@ fun HistoryPage(
     val TAG = "HomePage"
     val uiState by viewModel.uiState.collectAsState()
     val lazyGridState = rememberLazyGridState()
-    val types = listOf("All", "Passport", "Visa", "Standard", "National ID", "Driver's License", "Resident Card", "Profile")
+    val types = listOf(
+        stringResource(R.string.all),
+        stringResource(R.string.passport),
+        stringResource(R.string.visa),
+        stringResource(R.string.standard),
+        stringResource(R.string.national_id),
+        stringResource(R.string.driver_s_license),
+        stringResource(R.string.resident_card),
+        stringResource(R.string.profile)
+    )
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { types.size })
     val coroutineScope = rememberCoroutineScope()
 
@@ -165,20 +174,20 @@ fun HistoryPage(
             modifier = Modifier
                 .background(color = colors.background, shape = RoundedCornerShape(12.dp)),
             onDismissRequest = { viewModel.hideDeleteDialog() },
-            title = { Text("Delete Image") },
-            text = { Text("Are you sure you want to delete this image?") },
+            title = { Text(stringResource(R.string.delete_image)) },
+            text = { Text(stringResource(R.string.are_you_sure_you_want_to_delete_this_image)) },
             confirmButton = {
                 viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnYes_DeleteHistoryItem")
                 TextButton(onClick = {
                     viewModel.deleteSelectedImage()
                 }) {
-                    Text("Yes")
+                    Text(stringResource(R.string.yes))
                 }
             },
             dismissButton = {
                 viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnNo_DeleteHistoryItem")
                 TextButton(onClick = { viewModel.hideDeleteDialog() }) {
-                    Text("No")
+                    Text(stringResource(R.string.no))
                 }
             }
         )

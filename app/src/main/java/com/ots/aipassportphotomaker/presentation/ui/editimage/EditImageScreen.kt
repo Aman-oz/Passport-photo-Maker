@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
@@ -76,6 +77,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -99,6 +101,7 @@ import com.google.android.gms.ads.AdSize
 import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.adsmanager.admob.AdMobBanner
 import com.ots.aipassportphotomaker.adsmanager.admob.AdMobCollapsableBanner
+import com.ots.aipassportphotomaker.adsmanager.admob.AdaptiveBannerAd
 import com.ots.aipassportphotomaker.adsmanager.admob.CollapseDirection
 import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
 import com.ots.aipassportphotomaker.common.ext.animatedBorder
@@ -326,38 +329,6 @@ private fun EditImageScreen(
         val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.ai_erase))
 //        val shouldRemoveBg by remember { mutableStateOf(uiState.sourceScreen == "HomeScreen" && shouldRemoveBg) }
         var showRemoveBackgroundDialog by remember { mutableStateOf(false) }
-        // Get appropriate message based on processing stage
-        val currentMessage = when (processingStage) {
-            ProcessingStage.UPLOADING -> "🔄 Uploading Photo..."
-            ProcessingStage.PROCESSING -> {
-                // Alternate between these messages during processing
-                val processingMessages = listOf(
-                    "🔮 AI Magic in progress… just a moment!",
-                    "🎨 Removing the best fit for your requirements!",
-                    "☺ Face detection in progress… almost there!",
-                )
-                val messageIndex by produceState(initialValue = 0) {
-                    while (processingStage == ProcessingStage.PROCESSING) {
-                        delay(3000)
-                        value = (value + 1) % processingMessages.size
-                    }
-                }
-                processingMessages[messageIndex]
-            }
-
-            ProcessingStage.CROPPING_IMAGE -> "💫 Cropping image..."
-            ProcessingStage.COMPLETED -> {
-                "✅ Process completed successfully"
-
-            }
-
-            ProcessingStage.NONE -> ""
-            ProcessingStage.NO_NETWORK_AVAILABLE -> "❌ No network connection"
-            ProcessingStage.ERROR -> "❌ Something went wrong"
-            ProcessingStage.DOWNLOADING -> "⬇️ Applying Changes..."
-            ProcessingStage.SAVING_IMAGE -> "💾 Saving image..."
-            ProcessingStage.BACKGROUND_REMOVAL -> "🖼️ Removing background..."
-        }
 
         showNoSuitsFound = suits.itemCount == 0
 
@@ -380,7 +351,7 @@ private fun EditImageScreen(
                 }
         ) {
             CommonTopBar(
-                title = "Edit image",
+                title = stringResource(R.string.edit_image),
                 showGetProButton = !isPremium,
                 onBackClick = {
                     onBackClick.invoke()
@@ -629,8 +600,13 @@ private fun EditImageScreen(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
+                        val item1 = stringResource(R.string.backdrop)
+                        val item2 = stringResource(R.string.add_suit)
                         val items = remember {
-                            listOf("Backdrop", "Add suit")
+                            listOf(
+                                item1,
+                                item2
+                            )
                         }
                         var selectedIndex by remember {
                             mutableStateOf(uiState.editPosition)
@@ -810,7 +786,7 @@ private fun EditImageScreen(
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     Text(
-                                        "Preview of Ticket image \uD83D\uDC47",
+                                        "${stringResource(R.string.preview_of_final_image)} \uD83D\uDC47",
                                         color = colors.background,
                                         modifier = Modifier
                                             .align(Alignment.CenterHorizontally),
@@ -823,7 +799,7 @@ private fun EditImageScreen(
                                     Spacer(Modifier.size(4.dp))
                                     Row {
                                         Button(onClick = { ticketBitmap = null }) {
-                                            Text("Close")
+                                            Text(stringResource(R.string.close))
                                         }
 
                                         Spacer(Modifier.size(6.dp))
@@ -864,7 +840,7 @@ private fun EditImageScreen(
                                                             } else {
                                                                 Toast.makeText(
                                                                     context,
-                                                                    "Failed to save image",
+                                                                    context.getString(R.string.failed_to_save_image),
                                                                     Toast.LENGTH_SHORT
                                                                 ).show()
                                                             }
@@ -873,8 +849,8 @@ private fun EditImageScreen(
                                                 } else if (writeStorageAccessState.shouldShowRationale) {
                                                     coroutineScope.launch {
                                                         val result = snackbarHostState.showSnackbar(
-                                                            message = "The storage permission is needed to save the image",
-                                                            actionLabel = "Grant Access"
+                                                            message = context.getString(R.string.the_storage_permission_is_needed_to_save_the_image),
+                                                            actionLabel = context.getString(R.string.grant_access)
                                                         )
                                                         if (result == SnackbarResult.ActionPerformed) {
                                                             writeStorageAccessState.launchMultiplePermissionRequest()
@@ -886,7 +862,7 @@ private fun EditImageScreen(
                                             }
 
                                         }) {
-                                            Text("Save")
+                                            Text(stringResource(R.string.save))
                                         }
                                     }
                                 }
@@ -946,7 +922,7 @@ private fun EditImageScreen(
                                 if (boxWidth.value <= 0 || boxHeight.value <= 0 || !isLayoutReady) {
                                     Toast.makeText(
                                         context,
-                                        "Layout not ready, please wait",
+                                        context.getString(R.string.layout_not_ready_please_wait),
                                         Toast.LENGTH_SHORT
                                     ).show()
                                     return@Button
@@ -996,9 +972,10 @@ private fun EditImageScreen(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        text = "Save to Gallery",
+                                        text = stringResource(R.string.save_to_gallery),
                                         color = colors.onPrimary,
-                                        fontSize = 16.sp
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold
                                     )
                                 }
                             }
@@ -1011,12 +988,12 @@ private fun EditImageScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .animateContentSize()
-                                    .height(54.dp) // match banner height
+                                    .heightIn(min = 54.dp) // match banner height
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
                                     if (!adLoadState) {
                                         Text(
-                                            text = "Advertisement",
+                                            text = stringResource(R.string.advertisement),
                                             style = MaterialTheme.typography.bodyMedium,
                                             fontWeight = FontWeight.Medium,
                                             color = colors.onSurfaceVariant,
@@ -1027,7 +1004,19 @@ private fun EditImageScreen(
                                         )
                                     }
 
-                                    AdMobCollapsableBanner(
+                                    AdaptiveBannerAd(
+                                        adUnit = AdIdsFactory.getBannerAdId(),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .animateContentSize()
+                                            .align(Alignment.Center),
+                                        onAdLoaded = { isLoaded ->
+                                            adLoadState = true
+                                            Logger.d(TAG, "AdaptiveBannerAd: onAdLoaded: $isLoaded")
+                                        }
+                                    )
+
+                                    /*AdMobCollapsableBanner(
                                         adUnit = AdIdsFactory.getBannerAdId(),
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -1035,19 +1024,6 @@ private fun EditImageScreen(
                                             .align(Alignment.Center),
                                         adSize = AdSize.FULL_BANNER, // or adaptive size if needed
                                         collapseDirection = CollapseDirection.BOTTOM,
-                                        onAdLoaded = { isLoaded ->
-                                            adLoadState = isLoaded
-                                            Logger.d(TAG, "AdMobBanner: onAdLoaded: $isLoaded")
-                                        }
-                                    )
-
-                                    /*AdMobBanner(
-                                        adUnit = AdIdsFactory.getBannerAdId(),
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .animateContentSize()
-                                            .align(Alignment.Center),
-                                        adSize = AdSize.BANNER, // or adaptive size if needed
                                         onAdLoaded = { isLoaded ->
                                             adLoadState = isLoaded
                                             Logger.d(TAG, "AdMobBanner: onAdLoaded: $isLoaded")
@@ -1080,7 +1056,7 @@ private fun EditImageScreen(
                                     color = colors.primary
                                 )
                                 Text(
-                                    text = "Saving image, please wait...",
+                                    text = stringResource(R.string.saving_image_please_wait),
                                     color = Color.White
                                 )
                             }

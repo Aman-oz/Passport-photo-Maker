@@ -9,6 +9,7 @@ import android.os.Process
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.mutableStateListOf
 import com.las.collage.maker.iab.ProductItem
+import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.adsmanager.admob.MyAdsManager
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
 import com.ots.aipassportphotomaker.common.iab.AppBillingClient
@@ -76,32 +77,32 @@ class PremiumScreenViewModel @Inject constructor(
             connectResponse = object : ConnectResponse {
                 override fun disconnected() {
                     loadState(false)
-                    _uiState.update { it.copy(errorMessage = "Billing service disconnected") }
+                    _uiState.update { it.copy(errorMessage = context.getString(R.string.billing_service_disconnected)) }
                 }
 
                 override fun billingUnavailable() {
                     loadState(false)
-                    _uiState.update { it.copy(errorMessage = "Billing unavailable") }
+                    _uiState.update { it.copy(errorMessage = context.getString(R.string.billing_unavailable)) }
                 }
 
                 override fun developerError() {
                     loadState(false)
-                    _uiState.update { it.copy(errorMessage = "Developer error") }
+                    _uiState.update { it.copy(errorMessage = context.getString(R.string.developer_error)) }
                 }
 
                 override fun error() {
                     loadState(false)
-                    _uiState.update { it.copy(errorMessage = "Billing error") }
+                    _uiState.update { it.copy(errorMessage = context.getString(R.string.billing_error)) }
                 }
 
                 override fun featureNotSupported() {
                     loadState(false)
-                    _uiState.update { it.copy(errorMessage = "Feature not supported") }
+                    _uiState.update { it.copy(errorMessage = context.getString(R.string.feature_not_supported)) }
                 }
 
                 override fun itemUnavailable() {
                     loadState(false)
-                    _uiState.update { it.copy(errorMessage = "Item unavailable") }
+                    _uiState.update { it.copy(errorMessage = context.getString(R.string.item_unavailable)) }
                 }
 
                 override fun ok(subscriptionItems: List<SubscriptionItem>) {
@@ -111,27 +112,27 @@ class PremiumScreenViewModel @Inject constructor(
 
                 override fun serviceDisconnected() {
                     loadState(false)
-                    _uiState.update { it.copy(errorMessage = "Service disconnected") }
+                    _uiState.update { it.copy(errorMessage = context.getString(R.string.service_disconnected)) }
                 }
 
                 override fun serviceUnavailable() {
                     loadState(false)
-                    _uiState.update { it.copy(errorMessage = "Service unavailable") }
+                    _uiState.update { it.copy(errorMessage = context.getString(R.string.service_unavailable)) }
                 }
             },
             purchaseResponse = object : PurchaseResponse {
                 override fun isAlreadyOwned() {
-                    _uiState.update { it.copy(errorMessage = "Subscription already owned") }
+                    _uiState.update { it.copy(errorMessage = context.getString(R.string.subscription_already_owned)) }
                 }
 
                 override fun userCancelled() {
-                    _uiState.update { it.copy(errorMessage = "Purchase cancelled by user") }
+                    _uiState.update { it.copy(errorMessage = context.getString(R.string.purchase_cancelled_by_user)) }
                 }
 
                 override fun ok(productItem: ProductItem) {
                     loadState(false)
                     adsManager.setEnabledNoAds(true)
-                    _uiState.update { it.copy(errorMessage = "Purchase successful") }
+                    _uiState.update { it.copy(errorMessage = context.getString(R.string.purchase_successful)) }
                     // restart the app to remove ads
 
                     // Restart the app
@@ -165,7 +166,7 @@ class PremiumScreenViewModel @Inject constructor(
             )
         } else {
             loadState(false)
-            _uiState.update { it.copy(errorMessage = "Subscription item not found") }
+            _uiState.update { it.copy(errorMessage = context.getString(R.string.subscription_item_not_found)) }
         }
     }
 

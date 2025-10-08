@@ -40,11 +40,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.android.billingclient.BuildConfig
 import com.ots.aipassportphotomaker.App
+import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.adsmanager.admob.MyAdsManager
 import com.ots.aipassportphotomaker.common.managers.AdsConsentManager
 import com.ots.aipassportphotomaker.common.managers.AnalyticsManager
@@ -242,8 +244,8 @@ class MainActivity : ComponentActivity() {
                     analyticsManager.sendAnalytics(AnalyticsConstants.ACTION_VIEW, "deleteAllDialog")
                     AlertDialog(
                         onDismissRequest = { showDeleteAllDialog = false },
-                        title = { Text("Delete All Images") },
-                        text = { Text("Are you sure you want to delete all images?") },
+                        title = { Text(stringResource(R.string.delete_all_images)) },
+                        text = { Text(stringResource(R.string.are_you_sure_you_want_to_delete_all_images)) },
                         confirmButton = {
                             analyticsManager.sendAnalytics(AnalyticsConstants.CLICKED, "btnYes_DeleteAllDialog")
                             TextButton(onClick = {
@@ -253,13 +255,13 @@ class MainActivity : ComponentActivity() {
                                     showDeleteAllDialog = false
                                 }
                             }) {
-                                Text("Yes")
+                                Text(stringResource(R.string.yes))
                             }
                         },
                         dismissButton = {
                             analyticsManager.sendAnalytics(AnalyticsConstants.CLICKED, "btnNo_DeleteAllDialog")
                             TextButton(onClick = { showDeleteAllDialog = false }) {
-                                Text("No")
+                                Text(stringResource(R.string.no))
                             }
                         }
                     )
@@ -312,7 +314,8 @@ class MainActivity : ComponentActivity() {
                             if (isHistoryItemsAvailable) {
                                 showDeleteAllDialog = true
                             } else {
-                                Toast.makeText(this@MainActivity, "No history available", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(this@MainActivity,
+                                    getString(R.string.no_history_available), Toast.LENGTH_SHORT).show()
                             }
                         },
                         onThemeUpdated = {
@@ -349,12 +352,12 @@ class MainActivity : ComponentActivity() {
                         PermissionDialog(
                             permissionTextProvider = when (permission) {
                                 Manifest.permission.CAMERA -> {
-                                    CameraPermissionTextProvider()
+                                    CameraPermissionTextProvider(this)
                                 }
 
                                 Manifest.permission.READ_MEDIA_IMAGES,
                                 Manifest.permission.READ_EXTERNAL_STORAGE -> {
-                                    StoragePermissionTextProvider()
+                                    StoragePermissionTextProvider(this)
                                 }
 
                                 else -> return@forEach
@@ -437,7 +440,7 @@ class MainActivity : ComponentActivity() {
                                     action = Intent.ACTION_SEND
                                     putExtra(
                                         Intent.EXTRA_TEXT,
-                                        "Check out this app: https://play.google.com/store/apps/details?id=$packageName"
+                                        "Check out this app: ${UrlFactory.GOOGLE_PLAY_URL}$packageName"
                                     )
                                     type = "text/plain"
                                 }
@@ -464,7 +467,7 @@ class MainActivity : ComponentActivity() {
                                     startActivity(
                                         Intent(
                                             Intent.ACTION_VIEW,
-                                            Uri.parse("http://play.google.com/store/apps/details?id=$packageName")
+                                            Uri.parse("${UrlFactory.GOOGLE_PLAY_URL}$packageName")
                                         )
                                     )
                                 }
@@ -581,8 +584,6 @@ class MainActivity : ComponentActivity() {
                 }
             )
         }
-
-//        initConsent()
     }
 
     private fun isSystemInDarkMode(): Boolean {
@@ -596,58 +597,6 @@ class MainActivity : ComponentActivity() {
             if (isDarkModeEnabled()) 2 else 1
         } else {
             0 // Default to system theme if no preference set
-        }
-    }
-
-    /*@Deprecated("Deprecated in Java")
-    override fun onBackPressed() {
-        if (isHomeScreen && isOnHomeTab.value) {
-            Logger.d(TAG, "Back pressed on Home Screen, showing exit dialog")
-            // Use runOnUiThread to ensure UI updates happen on the main thread
-            lifecycleScope.launch {
-                showExitDialog = true
-            }
-        } else {
-            Logger.d(TAG, "Back pressed on non-Home Screen, going back")
-            super.onBackPressed()
-        }
-    }*/
-
-
-    private fun initConsent() {
-        val canRequestAds: Boolean = adsConsentManager.canRequestAds
-
-        if (canRequestAds != null && !canRequestAds && preferencesHelper.getBoolean(
-                AdsConstants.IS_NO_ADS_ENABLED,
-                false
-            ) == false
-        ) {
-
-            adsConsentManager.canRequestAds.apply {
-                if (this == false) {
-                    adsConsentManager.showGDPRConsent(
-                        this@MainActivity,
-                        true
-                    ) { consentError ->
-
-                        if (consentError != null) {
-                            Logger.e(
-                                TAG,
-                                "Error during consent gathering: ${consentError.message}"
-                            )
-                        }
-                        Logger.d(TAG, "Consent gathering complete")
-                        //Can request ads
-
-                    }
-                } else {
-                    Logger.d(TAG, "Consent already gathered")
-                    //can request ads
-                }
-            }
-        } else {
-            Log.d(TAG, "Ads can be requested or user is premium")
-            //can request ads
         }
     }
 }

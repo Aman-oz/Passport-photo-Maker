@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
@@ -58,6 +59,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -75,6 +77,7 @@ import com.airbnb.lottie.compose.rememberLottieComposition
 import com.google.android.gms.ads.AdSize
 import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.adsmanager.admob.AdMobBanner
+import com.ots.aipassportphotomaker.adsmanager.admob.AdaptiveBannerAd
 import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
 import com.ots.aipassportphotomaker.common.ext.animatedBorder
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
@@ -271,39 +274,6 @@ private fun CutOutImageScreen(
         var finalBitmap: ImageBitmap? by remember { mutableStateOf(null) }
         var removeBackgroundBitmap: ImageBitmap? by remember { mutableStateOf(null) }
         val (selected, setSelected) = remember { mutableStateOf(1) }
-
-        // Get appropriate message based on processing stage
-        val currentMessage = when (processingStage) {
-            ProcessingStage.UPLOADING -> "🔄 Uploading Photo..."
-            ProcessingStage.PROCESSING -> {
-                // Alternate between these messages during processing
-                val processingMessages = listOf(
-                    "🔮 AI Magic in progress… just a moment!",
-                    "🎨 Removing the best fit for your requirements!",
-                    "☺ Face detection in progress… almost there!",
-                )
-                val messageIndex by produceState(initialValue = 0) {
-                    while (processingStage == ProcessingStage.PROCESSING) {
-                        delay(3000)
-                        value = (value + 1) % processingMessages.size
-                    }
-                }
-                processingMessages[messageIndex]
-            }
-
-            ProcessingStage.CROPPING_IMAGE -> "💫 Cropping image..."
-            ProcessingStage.COMPLETED -> {
-                "✅ Process completed successfully"
-
-            }
-
-            ProcessingStage.NONE -> ""
-            ProcessingStage.NO_NETWORK_AVAILABLE -> "❌ No network connection"
-            ProcessingStage.ERROR -> "❌ Something went wrong"
-            ProcessingStage.DOWNLOADING -> "⬇️ Applying Changes..."
-            ProcessingStage.SAVING_IMAGE -> "💾 Saving image..."
-            ProcessingStage.BACKGROUND_REMOVAL -> "🖼️ Removing background..."
-        }
 
         Logger.i(
             "CutOutImagePage",
@@ -542,7 +512,7 @@ private fun CutOutImageScreen(
                             Row {
 
                                 Text(
-                                    text = "Size",
+                                    text = stringResource(R.string.size),
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Medium,
                                     color = colors.onSurfaceVariant,
@@ -580,7 +550,7 @@ private fun CutOutImageScreen(
                             Row {
 
                                 Text(
-                                    text = "Offset",
+                                    text = stringResource(R.string.offset),
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Medium,
                                     color = colors.onSurfaceVariant,
@@ -686,12 +656,12 @@ private fun CutOutImageScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .animateContentSize()
-                                    .height(54.dp) // match banner height
+                                    .heightIn(min = 54.dp) // match banner height
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
                                     if (!adLoadState) {
                                         Text(
-                                            text = "Advertisement",
+                                            text = stringResource(R.string.advertisement),
                                             style = MaterialTheme.typography.bodyMedium,
                                             fontWeight = FontWeight.Medium,
                                             color = colors.onSurfaceVariant,
@@ -701,7 +671,19 @@ private fun CutOutImageScreen(
                                         )
                                     }
 
-                                    AdMobBanner(
+                                    AdaptiveBannerAd(
+                                        adUnit = AdIdsFactory.getBannerAdId(),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .animateContentSize()
+                                            .align(Alignment.Center),
+                                        onAdLoaded = { isLoaded ->
+                                            adLoadState = true
+                                            Logger.d(TAG, "AdaptiveBannerAd: onAdLoaded: $isLoaded")
+                                        }
+                                    )
+
+                                    /*AdMobBanner(
                                         adUnit = AdIdsFactory.getBannerAdId(),
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -712,7 +694,7 @@ private fun CutOutImageScreen(
                                             adLoadState = isLoaded
                                             Logger.d(TAG, "AdMobBanner: onAdLoaded: $isLoaded")
                                         }
-                                    )
+                                    )*/
                                 }
                             }
 
@@ -734,7 +716,7 @@ private fun CutOutImageScreen(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                "Preview of Ticket image \uD83D\uDC47",
+                                "${stringResource(R.string.preview_of_final_image)} \uD83D\uDC47",
                                 style = MaterialTheme.typography.titleMedium,
                                 color = colors.onBackground,
                                 modifier = Modifier
@@ -756,7 +738,7 @@ private fun CutOutImageScreen(
                                         .weight(1f) // Takes 50% of the width
                                         .padding(end = 3.dp) // Optional: small padding to separate buttons
                                 ) {
-                                    Text("Close", modifier = Modifier.padding(horizontal = 10.dp))
+                                    Text(stringResource(R.string.close), modifier = Modifier.padding(horizontal = 10.dp))
                                 }
 
                                 Spacer(Modifier.size(6.dp))
@@ -770,7 +752,7 @@ private fun CutOutImageScreen(
                                         .weight(1f) // Takes 50% of the width
                                         .padding(start = 3.dp) // Optional: small padding to separate buttons
                                 ) {
-                                    Text("Save", modifier = Modifier.padding(horizontal = 10.dp))
+                                    Text(stringResource(R.string.save), modifier = Modifier.padding(horizontal = 10.dp))
                                 }
                             }
                         }
@@ -840,7 +822,7 @@ private fun CutOutImageScreen(
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     Text(
-                                        "Do you want to remove background through Ai? \uD83D\uDC47",
+                                        "${stringResource(R.string.do_you_want_to_remove_background)} \uD83D\uDC47",
                                         style = MaterialTheme.typography.titleMedium,
                                         textAlign = TextAlign.Center,
                                         color = colors.onBackground,
@@ -864,7 +846,7 @@ private fun CutOutImageScreen(
                                                 .padding(end = 3.dp)
                                         ) {
                                             Text(
-                                                "No",
+                                                stringResource(R.string.no),
                                                 modifier = Modifier.padding(horizontal = 10.dp)
                                             )
                                         }
@@ -882,7 +864,7 @@ private fun CutOutImageScreen(
                                                 .padding(end = 3.dp)
                                         ) {
                                             Text(
-                                                "Yes",
+                                                stringResource(R.string.yes),
                                                 modifier = Modifier.padding(horizontal = 10.dp)
                                             )
                                         }
@@ -890,72 +872,6 @@ private fun CutOutImageScreen(
                                 }
                             }
 
-                            /*if (removeBg) {
-                                Column(
-                                    modifier = Modifier
-                                        .size(300.dp)
-                                        .padding(16.dp)
-                                        .align(Alignment.Center)
-                                ) {
-
-                                    CircularProgressIndicator(
-                                        color = colors.primary,
-                                        modifier = Modifier
-                                            .size(48.dp)
-                                            .align(Alignment.CenterHorizontally)
-                                    )
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text(
-                                        text = currentMessage,
-                                        color = colors.onBackground,
-                                        modifier = Modifier
-                                            .align(Alignment.CenterHorizontally)
-                                    )
-                                    if (currentMessage == "✅ Process completed successfully") {
-                                        // Delay for a moment to let user see the completed message
-                                        LaunchedEffect(Unit) {
-                                            delay(500)
-                                            removeBackgroundBitmap = null
-                                        }
-                                    }
-                                }
-                            }
-                            else {
-                                Column(
-                                    modifier = Modifier
-                                        .padding(16.dp)
-                                        .align(Alignment.Center),
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Text(
-                                        "Do you want to remove background through Ai? \uD83D\uDC47",
-                                        color = colors.onBackground,
-                                        modifier = Modifier
-                                            .align(Alignment.CenterHorizontally),
-                                    )
-                                    Spacer(Modifier.size(16.dp))
-                                    Image(
-                                        bitmap = bitmap,
-                                        contentDescription = "Preview of Removed Background image"
-                                    )
-                                    Spacer(Modifier.size(4.dp))
-                                    Row {
-                                        Button(onClick = { removeBackgroundBitmap = null }) {
-                                            Text("No")
-                                        }
-
-                                        Spacer(Modifier.size(6.dp))
-
-                                        Button(onClick = {
-                                            removeBg = true
-                                            onRemoveBackgroundAi(bitmap)
-
-                                        }) {
-                                            Text("Yes")
-                                        }
-                                    }
-                                }
-                            }*/
                         }
 
                     }

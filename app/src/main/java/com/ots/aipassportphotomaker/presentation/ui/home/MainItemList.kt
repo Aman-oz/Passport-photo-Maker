@@ -1,6 +1,8 @@
 package com.ots.aipassportphotomaker.presentation.ui.home
 
+import android.content.Context
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import com.ots.aipassportphotomaker.R
 
 data class MainItem(
@@ -13,45 +15,45 @@ data class MainItem(
     val sparkleImage: Int? = null
 )
 
-val mainItems = listOf(
+fun mainItems(context: Context) = listOf(
     MainItem(
         name = "PhotoID",
-        title = "Photo ID",
+        title = context.getString(R.string.photo_id),
         description = "Create a photo ID",
         backgroundColor = Color.Blue,
         backgroundImage = R.drawable.bg_card_photo_id
     ),
     MainItem(
         name = "Cutout",
-        title = "Cut out",
+        title = context.getString(R.string.cut_out),
         description = "Remove background",
         backgroundColor = Color.Green,
         backgroundImage = R.drawable.bg_card_cut_out
     ),
     MainItem(
         name = "ChangeBG",
-        title = "Change BG",
+        title = context.getString(R.string.change_bg),
         description = "Change background color",
         backgroundColor = Color.Cyan,
         backgroundImage = R.drawable.bg_card_change_bg
     ),
     MainItem(
         name = "AddSuits",
-        title = "Add Suits",
+        title = context.getString(R.string.add_suits),
         description = "Add suits to photo",
         backgroundColor = Color.Magenta,
         backgroundImage = R.drawable.bg_card_add_suits
     ),
     MainItem(
         name = "CustomSize",
-        title = "Custom Size",
+        title = context.getString(R.string.custom_size),
         description = "Resize photo to custom size",
         backgroundColor = Color.Yellow,
         backgroundImage = R.drawable.bg_card_custom_size
     ),
     MainItem(
         name = "SocialProfile",
-        title = "Social Profile",
+        title = context.getString(R.string.social_profile),
         description = "Create social profile photo",
         backgroundColor = Color.Red,
         backgroundImage = R.drawable.bg_card_social_profile

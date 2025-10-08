@@ -3,6 +3,7 @@ package com.ots.aipassportphotomaker.presentation.ui.components
 // Created by amanullah on 15/09/2025.
 // Copyright (c) 2025 Ozi Publishing. All rights reserved.
 
+import android.content.Context
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -13,10 +14,13 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
 
 @Composable
@@ -32,7 +36,7 @@ fun PermissionDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "Permission required",
+                text = stringResource(R.string.permission_required),
                 style = MaterialTheme.typography.headlineMedium
             )
         },
@@ -52,7 +56,9 @@ fun PermissionDialog(
                 }
             ) {
                 Text(
-                    text = if (isPermanentlyDeclined) "Grant permission" else "OK",
+                    text = if (isPermanentlyDeclined) stringResource(R.string.grant_permission) else stringResource(
+                        R.string.ok
+                    ),
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
                     modifier = Modifier
@@ -62,7 +68,8 @@ fun PermissionDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel",
+                Text(
+                    stringResource(R.string.cancel),
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
                     modifier = Modifier
@@ -77,61 +84,32 @@ interface PermissionTextProvider {
     fun getDescription(isPermanentlyDeclined: Boolean): String
 }
 
-class NotificationPermissionTextProvider : PermissionTextProvider {
+class NotificationPermissionTextProvider(private val context: Context) : PermissionTextProvider {
     override fun getDescription(isPermanentlyDeclined: Boolean): String {
         return if (isPermanentlyDeclined) {
-            "It seems you permanently declined notification permission. " +
-                    "You can go to the app settings to grant it."
+            context.getString(R.string.it_seems_you_permanently_declined_notification_permission)
         } else {
-            "This app needs access to send you notifications so that you can stay " +
-                    "updated with the latest news and updates."
+            context.getString(R.string.this_app_needs_access_to_send_you_notifications_so_that_you_can_stay_updated_with_the_latest_news_and_updates)
         }
     }
 }
 
-class CameraPermissionTextProvider : PermissionTextProvider {
+class CameraPermissionTextProvider(private val context: Context) : PermissionTextProvider {
     override fun getDescription(isPermanentlyDeclined: Boolean): String {
         return if (isPermanentlyDeclined) {
-            "It seems you permanently declined camera permission. " +
-                    "You can go to the app settings to grant it."
+            context.getString(R.string.it_seems_you_permanently_declined_camera_permission_you_can_go_to_the_app_settings_to_grant_it)
         } else {
-            "This app needs access to your camera so that you can tak picture for Photo ID"
+            context.getString(R.string.this_app_needs_access_to_your_camera_so_that_you_can_tak_picture_for_photo_id)
         }
     }
 }
 
-class StoragePermissionTextProvider : PermissionTextProvider {
+class StoragePermissionTextProvider(private val context: Context) : PermissionTextProvider {
     override fun getDescription(isPermanentlyDeclined: Boolean): String {
         return if (isPermanentlyDeclined) {
-            "It seems you permanently declined storage permission. " +
-                    "You can go to the app settings to grant it."
+            context.getString(R.string.it_seems_you_permanently_declined_storage_permission_you_can_go_to_the_app_settings_to_grant_it)
         } else {
-            "This app needs access to your device storage so that you can " +
-                    "select and save photos."
-        }
-    }
-}
-
-class RecordAudioPermissionTextProvider : PermissionTextProvider {
-    override fun getDescription(isPermanentlyDeclined: Boolean): String {
-        return if (isPermanentlyDeclined) {
-            "It seems you permanently declined microphone permission. " +
-                    "You can go to the app settings to grant it."
-        } else {
-            "This app needs access to your microphone so that your friends " +
-                    "can hear you in a call."
-        }
-    }
-}
-
-class PhoneCallPermissionTextProvider : PermissionTextProvider {
-    override fun getDescription(isPermanentlyDeclined: Boolean): String {
-        return if (isPermanentlyDeclined) {
-            "It seems you permanently declined phone calling permission. " +
-                    "You can go to the app settings to grant it."
-        } else {
-            "This app needs phone calling permission so that you can talk " +
-                    "to your friends."
+            context.getString(R.string.this_app_needs_access_to_your_device_storage_so_that_you_can_select_and_save_photos)
         }
     }
 }
@@ -140,9 +118,10 @@ class PhoneCallPermissionTextProvider : PermissionTextProvider {
 @Preview("Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun PermissionDialogPreview() {
+    val context = LocalContext.current
     PreviewContainer {
         PermissionDialog(
-            permissionTextProvider = CameraPermissionTextProvider(),
+            permissionTextProvider = CameraPermissionTextProvider(context = context),
             isPermanentlyDeclined = false,
             onDismiss = {},
             onOkClick = {},

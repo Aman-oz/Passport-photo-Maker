@@ -9,6 +9,7 @@ import androidx.core.net.toUri
 import androidx.lifecycle.viewModelScope
 import androidx.paging.CombinedLoadStates
 import androidx.paging.LoadState
+import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.adsmanager.admob.MyAdsManager
 import com.ots.aipassportphotomaker.common.ext.FacebookPackage
 import com.ots.aipassportphotomaker.common.ext.InstagramPackage
@@ -228,7 +229,7 @@ class SavedImageScreenViewModel @Inject constructor(
                     if (result) {
                         onSuccess()
                     } else {
-                        onError("Failed to delete image")
+                        onError(context.getString(R.string.failed_to_delete_image))
                     }
                 }
             } catch (e: Exception) {

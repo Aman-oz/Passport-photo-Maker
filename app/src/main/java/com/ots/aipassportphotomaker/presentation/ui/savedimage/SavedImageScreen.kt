@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
@@ -65,6 +66,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.toUpperCase
 import androidx.compose.ui.tooling.preview.Preview
@@ -79,6 +81,7 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.android.gms.ads.AdSize
 import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.adsmanager.admob.AdMobBanner
+import com.ots.aipassportphotomaker.adsmanager.admob.AdaptiveBannerAd
 import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.ext.segmentedShadow
@@ -152,7 +155,8 @@ fun SavedImagePage(
             viewModel.deleteImage(
                 imagePath = uiState.imagePath,
                 onSuccess = {
-                    Toast.makeText(context, "Image deleted successfully", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context,
+                        context.getString(R.string.image_deleted_successfully), Toast.LENGTH_SHORT).show()
                     mainRouter.navigateToHomeScreen()
                 },
                 onError = { errorMessage ->
@@ -215,10 +219,10 @@ private fun SavedImageScreen(
     var showDeleteDialog by remember { mutableStateOf(false) }
 
     val socialItemList = listOf(
-        R.drawable.whatsapp_icons to "WhatsApp",
-        R.drawable.insta_icon to "Instagram",
-        R.drawable.facebook_icon to "Facebook",
-        R.drawable.share_icon to "Others",
+        R.drawable.whatsapp_icons to stringResource(R.string.whatsapp),
+        R.drawable.insta_icon to stringResource(R.string.instagram),
+        R.drawable.facebook_icon to stringResource(R.string.facebook),
+        R.drawable.share_icon to stringResource(R.string.others),
     )
 
     Surface(
@@ -249,8 +253,8 @@ private fun SavedImageScreen(
             if (showDeleteDialog) {
                 AlertDialog(
                     onDismissRequest = { showDeleteDialog = false },
-                    title = { Text("Delete Image") },
-                    text = { Text("Are you sure you want to delete this image?") },
+                    title = { Text(stringResource(R.string.delete_image)) },
+                    text = { Text(stringResource(R.string.are_you_sure_you_want_to_delete_this_image)) },
                     confirmButton = {
                         TextButton(
                             onClick = {
@@ -258,19 +262,19 @@ private fun SavedImageScreen(
                                 onDeleteClick()
                             }
                         ) {
-                            Text("Delete", color = colors.customError)
+                            Text(stringResource(R.string.delete), color = colors.customError)
                         }
                     },
                     dismissButton = {
                         TextButton(onClick = { showDeleteDialog = false }) {
-                            Text("Cancel")
+                            Text(stringResource(R.string.cancel))
                         }
                     }
                 )
             }
 
             FinalScreenTopBar(
-                title = "Image Saved",
+                title = stringResource(R.string.image_saved),
                 showGetProButton = !isPremium,
                 onBackClick = {
                     onBackClick.invoke()
@@ -409,12 +413,12 @@ private fun SavedImageScreen(
                                 // Checklist Items
                                 ChecklistItem(
                                     uiState,
-                                    text = "Printable"
+                                    text = stringResource(R.string.printable)
                                 )
 
                                 ChecklistItem(
                                     uiState,
-                                    text = "Compressed"
+                                    text = stringResource(R.string.compressed)
                                 )
 
                             }
@@ -426,6 +430,7 @@ private fun SavedImageScreen(
                     LazyRow(
                         modifier = Modifier
                             .padding(vertical = 4.dp, horizontal = 4.dp)
+                            .align(Alignment.CenterHorizontally)
                     ) {
                         items(socialItemList.size) { index ->
                             val (iconRes, platformName) = socialItemList[index]
@@ -435,16 +440,19 @@ private fun SavedImageScreen(
                                     .padding(horizontal = 12.dp)
                                     .clickable {
                                         when (platformName) {
-                                            "WhatsApp" -> {
+                                            context.getString(R.string.whatsapp) -> {
                                                 onWhatsAppShare.invoke(imagePath ?: "")
                                             }
-                                            "Instagram" -> {
+
+                                            context.getString(R.string.instagram) -> {
                                                 onInstagramShare.invoke(imagePath ?: "")
                                             }
-                                            "Facebook" -> {
+
+                                            context.getString(R.string.facebook) -> {
                                                 onFacebookShare.invoke(imagePath ?: "")
                                             }
-                                            "Others" -> {
+
+                                            context.getString(R.string.others) -> {
                                                 onShare.invoke(imagePath ?: "")
                                                 /*imagePath?.let {
                                                     ShareCompat.IntentBuilder(context)
@@ -458,7 +466,7 @@ private fun SavedImageScreen(
                                         }
                                     }
                             ) {
-                                if (platformName == "Others") {
+                                if (platformName == stringResource(R.string.others)) {
                                     Surface(
                                         shape = RoundedCornerShape(10.dp),
                                         color = colors.custom300,
@@ -519,7 +527,7 @@ private fun SavedImageScreen(
                         Spacer(modifier = Modifier.width(8.dp))
 
                         Text(
-                            text = "Go to home",
+                            text = stringResource(R.string.go_to_home),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Medium,
                             color = colors.onBackground,
@@ -542,7 +550,7 @@ private fun SavedImageScreen(
                         colors = ButtonDefaults.buttonColors(containerColor = colors.primary)
                     ) {
                         Text(
-                            text = "Create Again!",
+                            text = stringResource(R.string.create_again),
                             color = colors.onPrimary,
                             fontSize = 16.sp
                         )
@@ -555,12 +563,12 @@ private fun SavedImageScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .animateContentSize()
-                                .height(54.dp) // match banner height
+                                .heightIn(min = 54.dp) // match banner height
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 if (!adLoadState) {
                                     Text(
-                                        text = "Advertisement",
+                                        text = stringResource(R.string.advertisement),
                                         style = MaterialTheme.typography.bodyMedium,
                                         fontWeight = FontWeight.Medium,
                                         color = colors.onSurfaceVariant,
@@ -570,7 +578,19 @@ private fun SavedImageScreen(
                                     )
                                 }
 
-                                AdMobBanner(
+                                AdaptiveBannerAd(
+                                    adUnit = AdIdsFactory.getBannerAdId(),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .animateContentSize()
+                                        .align(Alignment.Center),
+                                    onAdLoaded = { isLoaded ->
+                                        adLoadState = true
+                                        Logger.d(TAG, "AdaptiveBannerAd: onAdLoaded: $isLoaded")
+                                    }
+                                )
+
+                                /*AdMobBanner(
                                     adUnit = AdIdsFactory.getBannerAdId(),
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -581,7 +601,7 @@ private fun SavedImageScreen(
                                         adLoadState = isLoaded
                                         Logger.d(TAG, "OnboardingScreen: Ad Loaded: $isLoaded")
                                     }
-                                )
+                                )*/
                             }
                         }
 
@@ -638,8 +658,8 @@ private fun ChecklistItem(
         ) {
             Text(
                 text = when (text) {
-                    "Printable" -> "${selectedDpi.uppercase()} DPI" ?: "300 DPI"
-                    "Compressed" -> "${uiState.fileSize}" ?: "400 KB"
+                    stringResource(R.string.printable) -> "${selectedDpi.uppercase()} DPI" ?: "300 DPI"
+                    stringResource(R.string.compressed) -> "${uiState.fileSize}" ?: "400 KB"
                     else -> ""
                 },
                 style = MaterialTheme.typography.bodyMedium,
