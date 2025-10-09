@@ -81,16 +81,6 @@ fun ImageWithLottieScan(
             placeholder = painterResource(id = R.drawable.transparent_bg)
 
         )
-        // Image as the background
-        /*Image(
-            painter = painterResource(id = R.drawable.scan_image_male),
-            contentDescription = null,
-            modifier = Modifier
-                .fillMaxSize()
-                .background(color = Color.Transparent, shape = RoundedCornerShape(16.dp))
-                .clip(RoundedCornerShape(16.dp)),
-            contentScale = ContentScale.Crop
-        )*/
 
         // Lottie animation overlaid on the image
         LottieAnimation(

@@ -106,7 +106,7 @@ fun ExitDialog(
 
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.padding(bottom = 16.dp)
+            modifier = Modifier.padding(start = 8.dp, end = 8.dp,bottom = 16.dp)
         ) {
             Button(
                 onClick = {

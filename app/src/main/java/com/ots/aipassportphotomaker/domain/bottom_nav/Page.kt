@@ -93,6 +93,11 @@ sealed class Page {
     ) : Page()
 
     @Serializable
+    data class LanguagesScreen(
+        val sourceScreen: String
+    ) : Page()
+
+    @Serializable
     data class SavedImageScreen(
         val documentId: Int,
         val imagePath: String?,

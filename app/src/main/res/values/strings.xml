@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">AI Passport Photo Maker</string>
+    <string name="app_name_localized">AI Passport Photo Maker</string>
     <string name="photo_id">Photo ID</string>
     <string name="no_internet_connection">No Internet Connection</string>
     <string name="choose_image_to_create_id">Choose image to create ID</string>
@@ -178,4 +179,10 @@
     <string name="change_resolution_dpi">Change resolution (DPI)</string>
     <string name="higher_resolution_means_better_image_quality">Higher resolution means better image quality.</string>
     <string name="search_document_here">Search document here</string>
+    <string name="get_pro">Get Pro</string>
+    <string name="hd_1080">HD (1080)</string>
+    <string name="remove_ads_and_unlock_all_features">Remove ads and unlock all features</string>
+    <string name="auto_fit_image_through_advanced_ai">Auto-Fit image through advanced AI.</string>
+    <string name="premium">Premium</string>
+    <string name="select_language">Select Language</string>
 </resources>

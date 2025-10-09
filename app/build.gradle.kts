@@ -38,6 +38,8 @@ android {
 
         setProperty("archivesBaseName", "${applicationName}_vc${versionCode}_vn${versionName}")
 
+        resourceConfigurations.addAll(listOf("en", "ar", "de", "es", "fr", "hi", "it", "ja", "nl", "pl", "pt","tr"))
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 

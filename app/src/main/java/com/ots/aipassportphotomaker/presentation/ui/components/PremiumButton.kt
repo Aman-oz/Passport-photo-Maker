@@ -22,6 +22,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -66,7 +67,7 @@ fun PremiumButton(
 
                 Text(
                     style = MaterialTheme.typography.bodyMedium,
-                    text = "HD (1080)",
+                    text = stringResource(R.string.hd_1080),
                     color = Color.White,
                 )
             }

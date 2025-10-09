@@ -35,6 +35,7 @@ import coil.compose.AsyncImage
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.stringResource
 import coil.compose.AsyncImagePainter
 import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
@@ -60,7 +61,7 @@ fun SuitItem(
             .clickable {
                 onItemClick(suit)
                 onSelectionChange(suit, !isSelected)
-                       },
+            },
         border = BorderStroke(
             width = 1.dp,
             color = if (isSelected) colors.primary else colors.custom100
@@ -112,11 +113,12 @@ fun SuitItem(
                 Badge(
                     containerColor = Color.Red.copy(alpha = 0.8f),
                     contentColor = Color.White,
-                    modifier = Modifier.padding(top = 4.dp, bottom = 4.dp)
+                    modifier = Modifier
+                        .padding(top = 4.dp, bottom = 4.dp)
                         .align(Alignment.BottomCenter),
 
                 ) {
-                    Text("Premium", fontSize = 12.sp)
+                    Text(stringResource(R.string.premium), fontSize = 12.sp)
                 }
             }
         }

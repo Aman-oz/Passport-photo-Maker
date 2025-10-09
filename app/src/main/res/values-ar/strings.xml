@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AI Passport Photo Maker</string>
+    <string name="app_name_localized">صانع صور جواز السفر باستخدام الذكاء الاصطناعي</string>
+    <string name="photo_id">بطاقة الهوية</string>
+    <string name="no_internet_connection">لا يوجد اتصال بالإنترنت</string>
+    <string name="choose_image_to_create_id">اختر صورة لإنشاء الهوية</string>
+    <string name="no_history_found_title">لم يُعثر على سجل!</string>
+    <string name="no_history_found_subtitle">لم يُعثر على سجل لـ "%s".</string>
+    <string name="create_id">إنشاء هوية</string>
+    <string name="see_all">عرض الكل</string>
+    <string name="no_search_results_title">لا توجد نتائج</string>
+    <string name="no_search_results_subtitle">لم تُعثر على نتائج لـ "%s". الرجاء تجربة بحث آخر.</string>
+
+    <string name="text_gif">صورة متحركة (GIF)</string>
+    <string name="label_camera">الكاميرا</string>
+    <string name="label_album">الألبوم</string>
+    <string name="text_select_tip">اختر الصور</string>
+    <string name="message_selected_exceed">اختر حتى %d صور</string>
+    <string name="text_deselect_all">إلغاء تحديد الكل</string>
+    <string name="text_select_all">تحديد الكل</string>
+
+    <string name="tab_item_all">الكل</string>
+    <string name="tab_item_video">فيديوهات</string>
+    <string name="tab_item_image">صور</string>
+    <string name="preview_title_video">فيديو</string>
+    <string name="preview_title_image">صورة</string>
+    <string name="text_done">تم</string>
+    <string name="text_asset_select">تحديد</string>
+    <string name="text_select_button">التالي (%1$d/%2$d)</string>
+    <string name="button_select_photo">اختر صورة (%d)</string>
+    <string name="app_not_installed">التطبيق غير مثبت!</string>
+    <string name="title1">لمسة واحدة، AI ✨ تناسب مثالي.</string>
+    <string name="text1">اضبط صورتك بشكل مثالي من خلال نموذج الذكاء الاصطناعي بالحجم المطلوب.</string>
+    <string name="title2">لمسة واحدة، تحرير مثالي.</string>
+    <string name="text2">اقتطِع الصور بدقة، غير خلفية اللون وأضف بدلات.</string>
+    <string name="title3">لمسة واحدة، هوية مثالية.</string>
+    <string name="text3">حوّل صور المعرض أو الكاميرا إلى حسب المستندات التي تريدها.</string>
+    <string name="storage_permission">إذن التخزين</string>
+    <string name="get_premium">احصل على النسخة المميزة</string>
+    <string name="advertisement">إعلان</string>
+    <string name="save_to_gallery">حفظ في المعرض</string>
+    <string name="creation_of_professional_identification_photos">إنشاء صور تعريفية احترافية.</string>
+    <string name="get_started">ابدأ الآن</string>
+    <string name="loading_ad">جارٍ تحميل الإعلان…</string>
+    <string name="delete_all_images">حذف كل الصور</string>
+    <string name="are_you_sure_you_want_to_delete_all_images">هل أنت متأكد أنك تريد حذف كل الصور؟</string>
+    <string name="yes">نعم</string>
+    <string name="no">لا</string>
+    <string name="no_history_available">لا يوجد سجل متاح</string>
+    <string name="permission_required">مطلوب إذن</string>
+    <string name="grant_permission">منح الإذن</string>
+    <string name="ok">حسناً</string>
+    <string name="cancel">إلغاء</string>
+    <string name="it_seems_you_permanently_declined_notification_permission">يبدو أنك رفضت إذن الإشعارات بشكل دائم.</string>
+    <string name="this_app_needs_access_to_send_you_notifications_so_that_you_can_stay_updated_with_the_latest_news_and_updates">هذا التطبيق بحاجة إلى الوصول لإرسال الإشعارات حتى تتمكن من البقاء على اطلاع بأحدث الأخبار والتحديثات.</string>
+    <string name="it_seems_you_permanently_declined_camera_permission_you_can_go_to_the_app_settings_to_grant_it">يبدو أنك رفضت إذن الكاميرا بشكل دائم. يمكنك الذهاب إلى إعدادات التطبيق لمنحه.</string>
+    <string name="this_app_needs_access_to_your_camera_so_that_you_can_tak_picture_for_photo_id">هذا التطبيق يحتاج الوصول إلى الكاميرا حتى تتمكن من التقاط صورة لبطاقة الهوية.</string>
+    <string name="it_seems_you_permanently_declined_storage_permission_you_can_go_to_the_app_settings_to_grant_it">يبدو أنك رفضت إذن التخزين بشكل دائم. يمكنك الذهاب إلى إعدادات التطبيق لمنحه.</string>
+    <string name="this_app_needs_access_to_your_device_storage_so_that_you_can_select_and_save_photos">هذا التطبيق يحتاج إلى الوصول إلى تخزين الجهاز حتى تتمكن من اختيار الصور وحفظها.</string>
+    <string name="exit_app">خروج من التطبيق</string>
+    <string name="exit">خروج</string>
+    <string name="change_theme">تغيير النسق</string>
+    <string name="system_default">افتراضي النظام</string>
+    <string name="light_mode">الوضع الفاتح</string>
+    <string name="dark_mode">الوضع الداكن</string>
+    <string name="apply_theme">تطبيق النسق</string>
+    <string name="settings">الإعدادات</string>
+    <string name="close">إغلاق</string>
+    <string name="language">اللغة</string>
+    <string name="rate_us">قيّمنا</string>
+    <string name="share_app">مشاركة التطبيق</string>
+    <string name="privacy_policy">سياسة الخصوصية</string>
+    <string name="version">الإصدار:</string>
+    <string name="english">الإنجليزية</string>
+    <string name="image_deleted_successfully">تم حذف الصورة بنجاح</string>
+    <string name="delete_image">حذف الصورة</string>
+    <string name="are_you_sure_you_want_to_delete_this_image">هل أنت متأكد أنك تريد حذف هذه الصورة؟</string>
+    <string name="delete">حذف</string>
+    <string name="image_saved">تم حفظ الصورة</string>
+    <string name="go_to_home">اذهب إلى الصفحة الرئيسية</string>
+    <string name="create_again">إنشئ مرة أخرى!</string>
+    <string name="printable">قابل للطباعة</string>
+    <string name="compressed">مضغوط</string>
+    <string name="failed_to_delete_image">فشل في حذف الصورة</string>
+    <string name="whatsapp">واتساب</string>
+    <string name="instagram">إنستغرام</string>
+    <string name="facebook">فيسبوك</string>
+    <string name="others">أخرى</string>
+    <string name="processing_image">يعالج الصورة</string>
+    <string name="uploading_photo">🔄 جاري رفع الصورة…</string>
+    <string name="ai_magic_in_progress_just_a_moment">🔮 سحر الذكاء الاصطناعي جارٍ… لحظة فقط!</string>
+    <string name="crafting_the_best_fit_for_your_document">🎨 صناعة أفضل تناسب لمستندك!</string>
+    <string name="head_centered">☺ الرأس في الوسط</string>
+    <string name="cropping_image">💫 اقتصاص الصورة…</string>
+    <string name="process_completed_successfully">✅ اكتمل المعالجة بنجاح</string>
+    <string name="no_network_connection">❌ لا يوجد اتصال بالشبكة</string>
+    <string name="something_went_wrong">❌ حدث خطأ ما</string>
+    <string name="applying_changes">⬇️ تطبيق التغييرات…</string>
+    <string name="saving_image">💾 حفظ الصورة…</string>
+    <string name="removing_background">🖼️ إزالة الخلفية…</string>
+    <string name="processing">جارٍ المعالجة</string>
+    <string name="restore">استعادة</string>
+    <string name="pro">برو</string>
+    <string name="unlock_all_premium_benefits_and_features">افتح جميع المزايا والخصائص المميزة.</string>
+    <string name="unlimited_ai_usage">استخدام غير محدود للذكاء الاصطناعي</string>
+    <string name="no_annoying_ads">بدون إعلانات مزعجة</string>
+    <string name="faster_processing">معالجة أسرع</string>
+    <string name="no_watermark">بدون علامة مائية</string>
+    <string name="subscribe_weekly">اشترك أسبوعياً</string>
+    <string name="subscribe_monthly">اشترك شهرياً</string>
+    <string name="auto_renew_cancel_anytime">تجديد تلقائي، يمكنك الإلغاء في أي وقت</string>
+    <string name="terms_of_service">شروط الخدمة</string>
+    <string name="recommended">موصى به</string>
+    <string name="purchase_successful">تم الشراء بنجاح</string>
+    <string name="purchase_cancelled_by_user">أُلغِي الشراء من قِبل المستخدم</string>
+    <string name="subscription_already_owned">الاشتراك مملوك مسبقاً</string>
+    <string name="service_unavailable">الخدمة غير متوفرة</string>
+    <string name="service_disconnected">الخدمة مفصولة</string>
+    <string name="item_unavailable">العنصر غير متوفر</string>
+    <string name="feature_not_supported">الميزة غير مدعومة</string>
+    <string name="billing_error">خطأ في الفوترة</string>
+    <string name="developer_error">خطأ من المطوّر</string>
+    <string name="billing_unavailable">الفوترة غير متوفرة</string>
+    <string name="billing_service_disconnected">خدمة الفوترة مفصولة</string>
+    <string name="subscription_item_not_found">لم يُعثر على عنصر الاشتراك</string>
+    <string name="to_continue_we_need_access_to_your_photos_to_process_them_and_save_them">للمتابعة، نحتاج الوصول إلى صورك لمعالجتها وحفظها.</string>
+    <string name="we_respect_you_privacy_your_photos_are_never_stored_on_our_servers">نحترم خصوصيتك – صورك لا تُخزَّن أبداً على خوادمنا.</string>
+    <string name="allow_permission">السماح بالإذن</string>
+    <string name="cut_out">اقتطاع</string>
+    <string name="change_bg">تغيير الخلفية</string>
+    <string name="add_suits">إضافة بدلات</string>
+    <string name="custom_size">حجم مخصص</string>
+    <string name="social_profile">الملف الاجتماعي</string>
+    <string name="choose_from_gallery">اختر من المعرض</string>
+    <string name="choose_custom_size">اختر حجمًا مخصصًا</string>
+    <string name="width">العرض</string>
+    <string name="height">الارتفاع</string>
+    <string name="please_fill_all_fields">يرجى ملء جميع الحقول</string>
+    <string name="done">تم</string>
+    <string name="all">الكل</string>
+    <string name="passport">جواز السفر</string>
+    <string name="visa">تأشيرة</string>
+    <string name="standard">قياسي</string>
+    <string name="national_id">الهوية الوطنية</string>
+    <string name="driver_s_license">رخصة القيادة</string>
+    <string name="resident_card">بطاقة الإقامة</string>
+    <string name="profile">الملف الشخصي</string>
+    <string name="saving_image_please_wait">جاري حفظ الصورة، يرجى الانتظار…</string>
+    <string name="preview_of_final_image">معاينة الصورة النهائية</string>
+    <string name="failed_to_save_image">فشل في حفظ الصورة</string>
+    <string name="the_storage_permission_is_needed_to_save_the_image">يُطلب إذن التخزين لحفظ الصورة</string>
+    <string name="grant_access">منح الوصول</string>
+    <string name="save">حفظ</string>
+    <string name="layout_not_ready_please_wait">التخطيط ليس جاهزًا، يرجى الانتظار</string>
+    <string name="edit_image">تعديل الصورة</string>
+    <string name="backdrop">الخلفية</string>
+    <string name="add_suit">إضافة بدلة</string>
+    <string name="no_image_was_selected">لم يتم اختيار صورة</string>
+    <string name="size">الحجم</string>
+    <string name="offset">الإزاحة</string>
+    <string name="do_you_want_to_remove_background">هل تريد إزالة الخلفية بواسطة الذكاء الاصطناعي؟</string>
+    <string name="document_info">معلومات المستند</string>
+    <string name="retake_image">إعادة التقاط الصورة</string>
+    <string name="create_photo">إنشاء صورة</string>
+    <string name="open_gallery">افتح المعرض</string>
+    <string name="take_photo">التقط صورة</string>
+    <string name="image_selection">اختيار الصورة</string>
+    <string name="document_size">حجم المستند</string>
+    <string name="unit">الوحدة</string>
+    <string name="pixel">بكسل</string>
+    <string name="resolution">الدقة</string>
+    <string name="background">خلفية</string>
+    <string name="change_background">تغيير الخلفية</string>
+    <string name="select_a_background_color_for_your_document">اختر لون خلفية لمستندك.</string>
+    <string name="keep_original">احتفظ بالأصلي</string>
+    <string name="change_background_color">تغيير لون الخلفية</string>
+    <string name="select_change_background_color_option">اختر خيار تغيير لون الخلفية</string>
+    <string name="apply">تطبيق</string>
+    <string name="change_resolution_dpi">تغيير الدقة (DPI)</string>
+    <string name="higher_resolution_means_better_image_quality">الدقة الأعلى تعني جودة صورة أفضل.</string>
+    <string name="search_document_here">ابحث عن المستند هنا</string>
+    <string name="get_pro">احصل على النسخة المحترفة</string>
+    <string name="hd_1080">HD (1080)</string>
+    <string name="remove_ads_and_unlock_all_features">أزل الإعلانات وافتح جميع الميزات</string>
+    <string name="auto_fit_image_through_advanced_ai">تناسب تلقائي للصورة عبر الذكاء الاصطناعي المتقدم.</string>
+    <string name="premium">ممتاز</string>
+
+</resources>

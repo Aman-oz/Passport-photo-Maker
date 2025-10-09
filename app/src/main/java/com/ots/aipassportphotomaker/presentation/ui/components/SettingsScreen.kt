@@ -55,19 +55,19 @@ fun SettingsScreen(
 ) {
     val premiumItems = listOf(
         PremiumData(
-            title = "Remove ads and unlock all features",
+            title = stringResource(R.string.remove_ads_and_unlock_all_features),
             backgroundImageRes = R.drawable.feature_1, // Replace with your image
             diamondIconRes = R.drawable.diamond_blue, // Replace with your diamond
             adImageRes = R.drawable.premium_ads // Replace with your ad
         ),
         PremiumData(
-            title = "Auto-Fit image through advanced AI.",
+            title = stringResource(R.string.auto_fit_image_through_advanced_ai),
             backgroundImageRes = R.drawable.feature_1, // Replace with your image
             diamondIconRes = R.drawable.diamond_orange, // Replace with your diamond
             adImageRes = R.drawable.premium_ads // Replace with your ad
         ),
         PremiumData(
-            title = "Remove ads and unlock all features",
+            title = stringResource(R.string.remove_ads_and_unlock_all_features),
             backgroundImageRes = R.drawable.feature_1, // Replace with your image
             diamondIconRes = R.drawable.diamond_blue, // Replace with your diamond
             adImageRes = R.drawable.premium_ads // Replace with your ad
