@@ -19,6 +19,19 @@
     <string name="text_deselect_all">Select All</string>
     <string name="text_select_all">Unselect All</string>
 
+    <string name="done_english" translatable="false">Done</string>
+    <string name="done_spanish" translatable="false">Hecho</string>
+    <string name="done_hindi" translatable="false">हो गया</string>
+    <string name="done_french" translatable="false">Terminé</string>
+    <string name="done_arabic" translatable="false">مكَمَّل</string>
+    <string name="done_portuguese" translatable="false">Concluído</string>
+    <string name="done_german" translatable="false">Fertig</string>
+    <string name="done_dutch" translatable="false">Gedaan</string>
+    <string name="done_italian" translatable="false">Fatto</string>
+    <string name="done_japanese" translatable="false">できた</string>
+    <string name="done_polish" translatable="false">zrobione</string>
+    <string name="done_turkish" translatable="false">yapılmış</string>
+
     <string name="tab_item_all">All</string>
     <string name="tab_item_video">Videos</string>
     <string name="tab_item_image">Photos</string>
@@ -184,5 +197,66 @@
     <string name="remove_ads_and_unlock_all_features">Remove ads and unlock all features</string>
     <string name="auto_fit_image_through_advanced_ai">Auto-Fit image through advanced AI.</string>
     <string name="premium">Premium</string>
-    <string name="select_language">Select Language</string>
+
+    <string name="spanish">Spanish</string>
+    <string name="hindi">Hindi</string>
+    <string name="italian">Italian</string>
+    <string name="portuguese">Portuguese</string>
+    <string name="german">German</string>
+    <string name="dutch">Dutch</string>
+    <string name="french">French</string>
+    <string name="arabic">Arabic</string>
+    <string name="polish">Polish</string>
+    <string name="japanese">Japanese</string>
+    <string name="turkish">Turkish</string>
+
+    <string name="select_language_en" translatable="false">Select Language</string>
+    <string name="default_language_en" translatable="false">Default</string>
+    <string name="other_languages_en" translatable="false">Other languages</string>
+    <string name="select_language_es" translatable="false">Seleccionar idioma</string>
+    <string name="default_language_es" translatable="false">Predeterminado</string>
+    <string name="other_languages_es" translatable="false">Otros idiomas</string>
+    <string name="select_language_hi" translatable="false">भाषा चुनें</string>
+    <string name="default_language_hi" translatable="false">डिफ़ॉल्ट</string>
+    <string name="other_languages_hi" translatable="false">अन्य भाषाएँ</string>
+    <string name="select_language_it" translatable="false">Seleziona lingua</string>
+    <string name="default_language_it" translatable="false">Predefinito</string>
+    <string name="other_languages_it" translatable="false">Altre lingue</string>
+    <string name="select_language_ja" translatable="false">言語を選択</string>
+    <string name="default_language_ja" translatable="false">既定</string>
+    <string name="other_languages_ja" translatable="false">その他の言語</string>
+    <string name="select_language_pt" translatable="false">Selecionar idioma</string>
+    <string name="default_language_pt" translatable="false">Padrão</string>
+    <string name="other_languages_pt" translatable="false">Outras línguas</string>
+    <string name="select_language_de" translatable="false">Sprache auswählen</string>
+    <string name="default_language_de" translatable="false">Standard</string>
+    <string name="other_languages_de" translatable="false">Andere Sprachen</string>
+    <string name="select_language_nl" translatable="false">Taal selecteren</string>
+    <string name="default_language_nl" translatable="false">Standaard</string>
+    <string name="other_languages_nl" translatable="false">Andere talen</string>
+    <string name="select_language_fr" translatable="false">Sélectionner langue</string>
+    <string name="default_language_fr" translatable="false">Par défaut</string>
+    <string name="other_languages_fr" translatable="false">Autres langues</string>
+    <string name="select_language_ar" translatable="false">اختر اللغة</string>
+    <string name="default_language_ar" translatable="false">افتراضي</string>
+    <string name="other_languages_ar" translatable="false">لغات أخرى</string>
+    <string name="select_language_pl" translatable="false">Wybierz język</string>
+    <string name="default_language_pl" translatable="false">Domyślny</string>
+    <string name="other_languages_pl" translatable="false">Inne języki</string>
+    <string name="select_language_tr" translatable="false">Dil seç</string>
+    <string name="default_language_tr" translatable="false">Varsayılan</string>
+    <string name="other_languages_tr" translatable="false">Diğer diller</string>
+
+    <string name="english_native" translatable="false">English</string>
+    <string name="spanish_native" translatable="false">Español</string>
+    <string name="hindi_native" translatable="false">हिन्दी</string>
+    <string name="french_native" translatable="false">Français</string>
+    <string name="arabic_native" translatable="false">العربية</string>
+    <string name="portuguese_native" translatable="false">Português</string>
+    <string name="german_native" translatable="false">Deutsch</string>
+    <string name="dutch_native" translatable="false">Nederlands</string>
+    <string name="italian_native" translatable="false">Italiano</string>
+    <string name="polish_native" translatable="false">Polski</string>
+    <string name="japanese_native" translatable="false">日本語</string>
+    <string name="turkish_native" translatable="false">Türkçe</string>
 </resources>

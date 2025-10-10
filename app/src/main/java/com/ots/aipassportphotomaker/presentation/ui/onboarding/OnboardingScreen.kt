@@ -73,6 +73,7 @@ import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
 import com.ots.aipassportphotomaker.common.utils.AnalyticsConstants
 import com.ots.aipassportphotomaker.common.utils.Logger
+import com.ots.aipassportphotomaker.common.utils.SharedPrefUtils
 import com.ots.aipassportphotomaker.domain.model.OnBoardingItem
 import com.ots.aipassportphotomaker.presentation.ui.bottom_nav.NavigationBarSharedViewModel
 import com.ots.aipassportphotomaker.presentation.ui.components.LoaderFullScreen
@@ -116,6 +117,7 @@ fun OnboardingPage(
         },
         onFinishClick = {
             viewModel.sendEvent(AnalyticsConstants.CLICKED, "finish_OnboardingScreen")
+            viewModel.setBooleanPreference(SharedPrefUtils.FIRST_LAUNCH, false)
             onFinishClick()
         }
     )

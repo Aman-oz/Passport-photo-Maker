@@ -122,6 +122,7 @@ dependencies {
     implementation(libs.firebase.config)
 
     implementation(libs.android.gms)
+//    implementation(libs.android.gms.base)
 
     implementation(libs.lottie.compose)
 

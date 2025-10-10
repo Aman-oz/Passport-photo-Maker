@@ -1,6 +1,8 @@
 package com.ots.aipassportphotomaker.presentation.ui.languages
 
 import android.content.Context
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import com.ots.aipassportphotomaker.adsmanager.admob.MyAdsManager
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
 import com.ots.aipassportphotomaker.common.managers.AnalyticsManager
@@ -8,6 +10,7 @@ import com.ots.aipassportphotomaker.common.managers.PreferencesHelper
 import com.ots.aipassportphotomaker.common.utils.AdsConstants
 import com.ots.aipassportphotomaker.common.utils.AnalyticsConstants
 import com.ots.aipassportphotomaker.common.utils.Logger
+import com.ots.aipassportphotomaker.common.utils.SharedPrefUtils
 import com.ots.aipassportphotomaker.domain.util.DispatchersProvider
 import com.ots.aipassportphotomaker.domain.util.NetworkMonitor
 import com.ots.aipassportphotomaker.presentation.ui.base.BaseViewModel
@@ -18,6 +21,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import java.util.Locale
 import javax.inject.Inject
 
 // Created by amanullah on 27/08/2025.
@@ -60,7 +64,7 @@ class LanguagesScreenViewModel @Inject constructor(
             " initialized with sourceScreen: $sourceScreen"
         )
 
-        loadState(true)
+        loadState(false)
 
         onInitialState()
     }
@@ -91,5 +95,20 @@ class LanguagesScreenViewModel @Inject constructor(
 
     fun sendEvent(eventName: String, eventValue: String) {
         analyticsManager.sendAnalytics(eventName, eventValue)
+    }
+
+    fun getSavedLanguage(): String? {
+        return preferencesHelper.getString(SharedPrefUtils.SELECTED_LANGUAGE, "")
+    }
+
+    fun handleLanguageChange(code: String) {
+        val savedLang = getSavedLanguage()
+        if (code != savedLang) {
+            preferencesHelper.setString("app_language", code)
+            // Set via AppCompatDelegate for dynamic application
+            val locale = Locale(code)
+            val localeList = LocaleListCompat.forLanguageTags(locale.toLanguageTag())
+            AppCompatDelegate.setApplicationLocales(localeList)
+        }
     }
 }

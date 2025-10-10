@@ -1,6 +1,8 @@
 package com.ots.aipassportphotomaker.presentation.ui.components
 
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -15,6 +17,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -30,14 +34,20 @@ import com.ots.aipassportphotomaker.R
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CommonTopBar(
+    backgroundColor: Color = colors.background,
     title: String,
+    buttonText: String = stringResource(R.string.done),
     showGetProButton: Boolean = true,
+    showDoneButton: Boolean = false,
     onBackClick: () -> Unit,
-    onGetProClick: () -> Unit
+    onGetProClick: () -> Unit,
+    onDoneClick: () -> Unit = {}
 ) {
     TopAppBar(
         title = {
             Text(
+                modifier = Modifier
+                    .animateContentSize(),
                 text = title,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
@@ -55,13 +65,22 @@ fun CommonTopBar(
             }
         },
         actions = {
-            if (showGetProButton)
+            AnimatedVisibility(showGetProButton) {
                 GetProButton {
                     onGetProClick()
                 }
+            }
+
+            AnimatedVisibility(showDoneButton) {
+                DoneButton(
+                    text = buttonText
+                ) {
+                    onDoneClick()
+                }
+            }
         },
         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-            containerColor = colors.background
+            containerColor = backgroundColor
         )
     )
 }

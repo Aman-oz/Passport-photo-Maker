@@ -29,6 +29,8 @@ import com.ots.aipassportphotomaker.presentation.ui.documentinfo.DocumentInfoPag
 import com.ots.aipassportphotomaker.presentation.ui.documentinfo.DocumentInfoScreenViewModel
 import com.ots.aipassportphotomaker.presentation.ui.home.HomePage
 import com.ots.aipassportphotomaker.presentation.ui.home.HomeScreenViewModel
+import com.ots.aipassportphotomaker.presentation.ui.languages.LanguagesPage
+import com.ots.aipassportphotomaker.presentation.ui.languages.LanguagesScreenViewModel
 import com.ots.aipassportphotomaker.presentation.ui.onboarding.OnboardingPage
 import com.ots.aipassportphotomaker.presentation.ui.onboarding.OnboardingScreenViewModel
 import com.ots.aipassportphotomaker.presentation.ui.permission.PermissionPage
@@ -74,8 +76,24 @@ fun MainGraph(
                 viewModel = getStartedViewModel,
                 sharedViewModel = sharedViewModel,
                 onGetStartedClick = {
-                    val destination = if (isFirstLaunch) Page.OnboardingScreen else Page.NavigationBar
+                    val destination = if (isFirstLaunch) Page.LanguagesScreen("splash") else Page.NavigationBar
                     onGetStartedCompleted(destination)
+                }
+            )
+        }
+
+        composableHorizontalSlide<Page.LanguagesScreen> { backStack ->
+            val nestedNavController = rememberNavController()
+            val languagesScreenViewModel: LanguagesScreenViewModel = hiltViewModel()
+            val sharedViewModel = backStack.sharedViewModel<NavigationBarSharedViewModel>(navController = mainNavController)
+            LanguagesPage(
+                mainRouter = MainRouter(mainNavController),
+                viewModel = languagesScreenViewModel,
+                sharedViewModel = sharedViewModel,
+                onDoneClick = {
+                    mainNavController.navigate(Page.OnboardingScreen) {
+                        popUpTo(Page.LanguagesScreen::class) { inclusive = true }
+                    }
                 }
             )
         }
@@ -89,13 +107,14 @@ fun MainGraph(
                 viewModel = onboardingViewModel,
                 sharedViewModel = sharedViewModel,
                 onFinishClick = {
-                    mainNavController.navigate(Page.PermissionScreen) {
+                    mainNavController.navigate(Page.NavigationBar) {
                         popUpTo(Page.OnboardingScreen::class) { inclusive = true }
                     }
                 }
             )
         }
 
+        //its been skipped for now
         composableHorizontalSlide<Page.PermissionScreen> { backStack ->
             val nestedNavController = rememberNavController()
             val permissionViewModel: PermissionScreenViewModel = hiltViewModel()

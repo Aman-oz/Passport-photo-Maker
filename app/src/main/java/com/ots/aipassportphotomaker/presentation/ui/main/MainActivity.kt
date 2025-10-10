@@ -2,6 +2,7 @@ package com.ots.aipassportphotomaker.presentation.ui.main
 
 import android.Manifest
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
@@ -18,6 +19,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -41,6 +43,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
@@ -78,6 +81,7 @@ import com.ots.aipassportphotomaker.presentation.viewmodel.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.util.Locale
 import javax.inject.Inject
 import kotlin.compareTo
 
@@ -326,7 +330,7 @@ class MainActivity : ComponentActivity() {
                         },
                         onGetStartedCompleted = { destination ->
                             if (isFirstLaunch()) {
-                                setFirstLaunch(false)
+//                                setFirstLaunch(false)
                                 navController.navigate(destination) {
                                     popUpTo(Page.GetStartedScreen) { inclusive = true }
                                 }
@@ -598,6 +602,18 @@ class MainActivity : ComponentActivity() {
         } else {
             0 // Default to system theme if no preference set
         }
+    }
+
+    override fun attachBaseContext(newBase: Context) {
+        val prefs = newBase.getSharedPreferences(SharedPrefUtils.PREF_KEY, Context.MODE_PRIVATE)  // Use your PreferencesHelper
+        val savedLang = prefs.getString(SharedPrefUtils.SELECTED_LANGUAGE, Locale.getDefault().language) ?: "en"
+        val locale = Locale(savedLang)
+
+        // Apply via AppCompatDelegate for compat
+        val localeList = LocaleListCompat.forLanguageTags(locale.toLanguageTag())
+        AppCompatDelegate.setApplicationLocales(localeList)
+
+        super.attachBaseContext(newBase)
     }
 }
 

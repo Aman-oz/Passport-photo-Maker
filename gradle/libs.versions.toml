@@ -131,7 +131,9 @@ firebase-messaging-platform = { module = "com.google.android.ump:user-messaging-
 firebase-config = { module = "com.google.firebase:firebase-config" }
 
 # Gms
-android-gms = { module = "com.google.android.gms:play-services-ads", version = "24.6.0" }
+android-gms = { module = "com.google.android.gms:play-services-ads", version = "24.7.0" }
+#android-gms-base = { module = "com.google.android.gms:play-services-base", version = "24.7.0" }
+
 
 
 compose-colorpicker = { module = "com.github.skydoves:colorpicker-compose", version.ref = "colorpicker" }

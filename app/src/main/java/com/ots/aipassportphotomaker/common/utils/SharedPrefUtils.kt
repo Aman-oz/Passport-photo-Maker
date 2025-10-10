@@ -8,4 +8,7 @@ object SharedPrefUtils {
     const val THEME_MODE = "theme_mode"
     const val SHOW_PHOTO_GUIDE_DIALOG = "show_photo_guide_dialog"
     const val FIRST_LAUNCH = "first_launch"
+
+    const val SELECTED_LANGUAGE = "selected_language"
+    const val LANGUAGE_CODE = "language_code"
 }

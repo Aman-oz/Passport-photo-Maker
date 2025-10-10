@@ -48,6 +48,10 @@ class OnboardingScreenViewModel @Inject constructor(
 //        _navigationState.tryEmit(PhotoIDScreenNavigationState.TakePhotoScreen(documentId))
     }
 
+    fun setBooleanPreference(key: String, value: Boolean) {
+        preferencesHelper.setBoolean(key, value)
+    }
+
     fun isPremiumUser(): Boolean {
         return preferencesHelper.getBoolean(AdsConstants.IS_NO_ADS_ENABLED, false)
     }

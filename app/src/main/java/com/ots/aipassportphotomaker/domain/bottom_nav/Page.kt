@@ -16,6 +16,11 @@ sealed class Page {
     data object GetStartedScreen : Page()
 
     @Serializable
+    data class LanguagesScreen(
+        val sourceScreen: String
+    ) : Page()
+
+    @Serializable
     data object OnboardingScreen : Page()
 
     @Serializable
@@ -89,11 +94,6 @@ sealed class Page {
         val documentId: Int,
         val imageUrl: String?,
         val selectedBackgroundColor: String?,
-        val sourceScreen: String
-    ) : Page()
-
-    @Serializable
-    data class LanguagesScreen(
         val sourceScreen: String
     ) : Page()
 
