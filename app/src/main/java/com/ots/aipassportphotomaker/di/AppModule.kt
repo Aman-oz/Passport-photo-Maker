@@ -7,6 +7,7 @@ import com.ots.aipassportphotomaker.adsmanager.admob.MyAdsManager
 import com.ots.aipassportphotomaker.common.iab.AppBillingClient
 import com.ots.aipassportphotomaker.common.managers.AdsConsentManager
 import com.ots.aipassportphotomaker.common.managers.AnalyticsManager
+import com.ots.aipassportphotomaker.common.managers.AppLocaleManager
 import com.ots.aipassportphotomaker.common.managers.PreferencesHelper
 import com.ots.aipassportphotomaker.common.utils.SharedPrefUtils
 import com.ots.aipassportphotomaker.data.remote.api.CropImageApi
@@ -112,5 +113,11 @@ class AppModule {
     @Singleton
     fun provideBillingClient() : AppBillingClient {
         return AppBillingClient()
+    }
+
+    @Singleton
+    @Provides
+    fun provideAppLocaleManager(@ApplicationContext context: Context): AppLocaleManager {
+        return AppLocaleManager(context)
     }
 }

@@ -25,11 +25,13 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -60,6 +62,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.HorizontalPagerIndicator
@@ -68,7 +74,9 @@ import com.google.accompanist.pager.rememberPagerState
 import com.google.android.gms.ads.AdSize
 import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.adsmanager.admob.AdMobBanner
+import com.ots.aipassportphotomaker.adsmanager.admob.NativeAdViewCompose
 import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
+import com.ots.aipassportphotomaker.adsmanager.admob.adtype.NativeAdType
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
 import com.ots.aipassportphotomaker.common.utils.AnalyticsConstants
@@ -186,7 +194,8 @@ private fun OnboardingScreen(
                 val scope = rememberCoroutineScope()
 
                 Column(
-                    Modifier.fillMaxSize()
+                    Modifier
+                        .fillMaxSize()
                         .background(colors.background)
                 ) {
 
@@ -197,11 +206,12 @@ private fun OnboardingScreen(
                         state = statePager,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .weight(0.7f),
+                            .weight(0.61f),
                         count = items.size
                     ) { page ->
 
                         val item = items[page]
+                        val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(item.animation))
 
                         Box(
                             modifier = Modifier
@@ -233,7 +243,7 @@ private fun OnboardingScreen(
                             Spacer(
                                 Modifier
                                     .fillMaxWidth()
-                                    .height(100.dp)
+                                    .height(50.dp)
                                     .background(
                                         brush = Brush.verticalGradient(
                                             colors = listOf(
@@ -245,24 +255,32 @@ private fun OnboardingScreen(
                                     .align(Alignment.BottomCenter)
                             )
 
-                            if(statePager.currentPage == 0) {
-                                Image(
+//                            if (statePager.currentPage == 0) {
+                                /*Image(
                                     painter = painterResource(id = R.drawable.list_images),
                                     contentDescription = "Screen1",
                                     modifier = Modifier
                                         .align(Alignment.BottomCenter)
-                                        .animateContentSize()
-                                        ,
+                                        .animateContentSize(),
                                     contentScale = ContentScale.Fit,
+                                )*/
+
+                                LottieAnimation(
+                                    composition = composition,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .align(Alignment.BottomCenter), // Center the Lottie over the image
+                                    iterations = LottieConstants.IterateForever, // Loop the animation
+                                    contentScale = ContentScale.Fit
                                 )
-                            }
+//                            }
                         }
                     }
 
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .weight(0.27f),
+                            .weight(0.35f),
                     ) {
 
                         BottomSection(
@@ -315,13 +333,18 @@ fun BottomSection(
     onNextClicked: () -> Unit
 ) {
     val TAG = "OnboardingScreen"
+    val context = LocalContext.current
     Box(
         modifier = Modifier
             .background(colors.background)
-              .fillMaxSize()
+            .fillMaxSize()
             .padding(12.dp)
     ) {
-        val buttonText = if (size == index + 1) "Finish" else "Next"
+        val buttonText =
+            if (size == index + 1)
+                stringResource(R.string.finish)
+            else
+                stringResource(R.string.next)
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -370,47 +393,57 @@ fun BottomSection(
                         .padding(vertical = 4.dp),
                     text = buttonText,
                     style = MaterialTheme.typography.titleMedium,
-                    color = colors.onPrimary)
+                    color = colors.onPrimary
+                )
             }
+            var adViewLoadState by remember { mutableStateOf(true) }
+            var callback by remember { mutableStateOf(false) }
+
+
             if (!isPremium) {
-                var adLoadState by remember { mutableStateOf(false) }
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .animateContentSize()
-                        .height(54.dp) // match banner height
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        if (!adLoadState) {
-                            Text(
-                                text = stringResource(R.string.advertisement),
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Medium,
-                                color = colors.onSurfaceVariant,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .wrapContentSize(align = Alignment.Center)
+                if(adViewLoadState) {
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 54.dp)
+                            .animateContentSize(
+                                animationSpec = spring(
+                                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                                    stiffness = Spring.StiffnessLow
+                                )
+                            )
+                    ) {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            if (!callback) {
+                                Text(
+                                    text = stringResource(R.string.advertisement),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium,
+                                    color = colors.onSurfaceVariant,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .wrapContentSize(align = Alignment.Center)
+                                )
+                            }
+
+                            NativeAdViewCompose(
+                                context = context,
+                                adType = NativeAdType.NATIVE_AD_IMAGE_PROCESSING,
+                                nativeID = AdIdsFactory.getNativeAdId(),
+                                onAdLoaded = {
+                                    callback = true
+                                    adViewLoadState = it
+                                }
                             )
                         }
-
-                        AdMobBanner(
-                            adUnit = AdIdsFactory.getOnboardingBannerAdId(),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .animateContentSize()
-                                .align(Alignment.Center),
-                            adSize = AdSize.BANNER, // or adaptive size if needed
-                            onAdLoaded = { isLoaded ->
-                                adLoadState = isLoaded
-                                Logger.d(TAG, "OnboardingScreen: Ad Loaded: $isLoaded")
-                            }
-                        )
                     }
                 }
             }
 
         }
-        
+
     }
 }
 
@@ -420,6 +453,7 @@ fun BottomSection(
 fun OnboardingScreenPreview() {
     PreviewContainer {
         OnboardingScreen(
+            isPremium = true,
             uiState = OnboardingScreenUiState(
                 showLoading = false,
                 errorMessage = null

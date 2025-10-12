@@ -329,6 +329,7 @@ class MainActivity : ComponentActivity() {
                             selectedTheme = if (updated) 2 else 1
                         },
                         onGetStartedCompleted = { destination ->
+                            Logger.d("MainActivity", "Get Started completed, navigating to: $destination")
                             if (isFirstLaunch()) {
 //                                setFirstLaunch(false)
                                 navController.navigate(destination) {
@@ -424,6 +425,11 @@ class MainActivity : ComponentActivity() {
                             onLanguageClick = {
                                 analyticsManager.sendAnalytics(AnalyticsConstants.CLICKED, "btnLanguage_SettingsScreen")
                                 Logger.i("MainActivity", "Language Clicked")
+                                navController.navigate(Page.LanguagesScreen("main"))
+                                scope.launch {
+                                    customBottomSheetState.hide()
+                                }
+                                showSettingsDialog = false
 
                             },
                             onPremiumClick = {

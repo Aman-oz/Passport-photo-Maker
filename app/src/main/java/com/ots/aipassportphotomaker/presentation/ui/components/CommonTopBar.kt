@@ -27,6 +27,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
 import com.ots.aipassportphotomaker.presentation.ui.theme.colors
 import com.ots.aipassportphotomaker.R
+import com.ots.aipassportphotomaker.common.ext.bounceClick
 
 // Created by amanullah on 21/08/2025.
 // Copyright (c) 2025 Ozi Publishing. All rights reserved.
@@ -73,6 +74,8 @@ fun CommonTopBar(
 
             AnimatedVisibility(showDoneButton) {
                 DoneButton(
+                    modifier = Modifier
+                        .bounceClick(),
                     text = buttonText
                 ) {
                     onDoneClick()

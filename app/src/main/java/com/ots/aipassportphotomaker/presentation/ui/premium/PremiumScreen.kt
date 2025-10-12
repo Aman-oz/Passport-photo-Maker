@@ -67,6 +67,7 @@ import androidx.constraintlayout.compose.ConstraintSet
 import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ots.aipassportphotomaker.R
+import com.ots.aipassportphotomaker.common.ext.bounceClick
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.iab.AppBillingClient
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
@@ -489,54 +490,62 @@ private fun PremiumScreen(
                             uiState.subscriptionItems.find { it.sku == AppBillingClient.SKU_ITEM_ONE_WEEK }
 
                         Box(
+
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 4.dp, horizontal = 16.dp)
-                                .background(
-                                    brush = premiumHorizontalGradientBrush,
-                                    shape = RoundedCornerShape(32.dp)
-                                )
+                                .bounceClick()
                                 .clickable(
                                     onClick = {
                                         onSubscribeWeekly()
                                     }
                                 )
-
                         ) {
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(2.dp)
+                                    .padding(vertical = 4.dp, horizontal = 16.dp)
                                     .background(
-                                        color = colors.background,
+                                        brush = premiumHorizontalGradientBrush,
                                         shape = RoundedCornerShape(32.dp)
                                     )
 
                             ) {
-                                Row(
+                                Box(
                                     modifier = Modifier
-                                        .padding(vertical = 16.dp, horizontal = 16.dp)
-                                ) {
-                                    Text(
-                                        modifier = Modifier
-                                            .weight(1f),
-                                        text = stringResource(R.string.subscribe_weekly),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = colors.onBackground
-                                    )
-                                    Text(
-                                        modifier = Modifier,
-                                        text = weeklyItem?.pricingPhase?.formattedPrice
-                                            ?: "Rs. 850.00",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = colors.onBackground
-                                    )
-                                }
+                                        .fillMaxWidth()
+                                        .padding(2.dp)
+                                        .background(
+                                            color = colors.background,
+                                            shape = RoundedCornerShape(32.dp)
+                                        )
 
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .padding(vertical = 16.dp, horizontal = 16.dp)
+                                    ) {
+                                        Text(
+                                            modifier = Modifier
+                                                .weight(1f),
+                                            text = stringResource(R.string.subscribe_weekly),
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = colors.onBackground
+                                        )
+                                        Text(
+                                            modifier = Modifier,
+                                            text = weeklyItem?.pricingPhase?.formattedPrice
+                                                ?: "Rs. 850.00",
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = colors.onBackground
+                                        )
+                                    }
+
+                                }
                             }
                         }
+
 
                         Spacer(modifier = Modifier.height(8.dp))
 
@@ -652,7 +661,16 @@ fun PremiumMonthlyButton(
         }
     }
 
-    ConstraintLayout(constraints, modifier = modifier) {
+    ConstraintLayout(
+        constraints,
+        modifier = modifier
+            .bounceClick()
+            .clickable(
+                onClick = {
+                    onSubscribeMonthly()
+                }
+            )
+    ) {
         // Main Button
         Box(
             modifier = Modifier
@@ -664,11 +682,6 @@ fun PremiumMonthlyButton(
                 )
                 .fillMaxWidth()
                 .animateContentSize()
-                .clickable(
-                    onClick = {
-                        onSubscribeMonthly()
-                    }
-                )
         ) {
             Row(
                 modifier = Modifier

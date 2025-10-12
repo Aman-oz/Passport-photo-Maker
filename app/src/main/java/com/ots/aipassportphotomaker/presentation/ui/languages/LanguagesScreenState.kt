@@ -1,5 +1,6 @@
 package com.ots.aipassportphotomaker.presentation.ui.languages
 
+import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
 import com.ots.aipassportphotomaker.domain.bottom_nav.Page
@@ -11,6 +12,7 @@ import javax.inject.Inject
 data class LanguagesScreenUiState(
     val showLoading: Boolean = true,
     val errorMessage: String? = null,
+    val selectedLanguage: String = LocaleListCompat.getDefault()[0]?.language ?: "en"
 
 )
 

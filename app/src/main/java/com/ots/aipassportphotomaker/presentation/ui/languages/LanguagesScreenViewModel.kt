@@ -1,11 +1,13 @@
 package com.ots.aipassportphotomaker.presentation.ui.languages
 
+import android.app.Activity
 import android.content.Context
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import com.ots.aipassportphotomaker.adsmanager.admob.MyAdsManager
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
 import com.ots.aipassportphotomaker.common.managers.AnalyticsManager
+import com.ots.aipassportphotomaker.common.managers.AppLocaleManager
 import com.ots.aipassportphotomaker.common.managers.PreferencesHelper
 import com.ots.aipassportphotomaker.common.utils.AdsConstants
 import com.ots.aipassportphotomaker.common.utils.AnalyticsConstants
@@ -35,6 +37,7 @@ class LanguagesScreenViewModel @Inject constructor(
     private val preferencesHelper: PreferencesHelper,
     private val analyticsManager: AnalyticsManager,
     private val adsManager: MyAdsManager,
+    private val appLocaleManager: AppLocaleManager,
     @ApplicationContext private val context: Context
 ) : BaseViewModel() {
 
@@ -45,6 +48,9 @@ class LanguagesScreenViewModel @Inject constructor(
     private val _navigationState: MutableSharedFlow<LanguagesScreenNavigationState> =
         singleSharedFlow()
     val navigationState = _navigationState.asSharedFlow()
+
+    private val _settingState = MutableStateFlow(LanguagesScreenUiState())
+    val settingState: StateFlow<LanguagesScreenUiState> = _settingState
 
     private val _loading = MutableStateFlow(false)
     val loading: StateFlow<Boolean> = _loading.asStateFlow()
@@ -105,10 +111,19 @@ class LanguagesScreenViewModel @Inject constructor(
         val savedLang = getSavedLanguage()
         if (code != savedLang) {
             preferencesHelper.setString("app_language", code)
-            // Set via AppCompatDelegate for dynamic application
-            val locale = Locale(code)
-            val localeList = LocaleListCompat.forLanguageTags(locale.toLanguageTag())
+            val localeList = LocaleListCompat.forLanguageTags(code)
             AppCompatDelegate.setApplicationLocales(localeList)
         }
+    }
+
+
+    private fun loadInitialLanguage() {
+        val currentLanguage = appLocaleManager.getLanguageCode(context)
+        _settingState.value = _settingState.value.copy(selectedLanguage = currentLanguage)
+    }
+
+    fun changeLanguage(languageCode: String) {
+        appLocaleManager.changeLanguage(context,languageCode)
+        _settingState.value = _settingState.value.copy(selectedLanguage = languageCode)
     }
 }

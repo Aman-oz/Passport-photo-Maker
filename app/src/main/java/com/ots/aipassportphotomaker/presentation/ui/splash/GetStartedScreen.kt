@@ -53,6 +53,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -68,6 +69,7 @@ import com.ots.aipassportphotomaker.adsmanager.admob.AdaptiveBannerAd
 import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
 import com.ots.aipassportphotomaker.adsmanager.admob.adids.TestAdIds
 import com.ots.aipassportphotomaker.adsmanager.admob.loadFullScreenAd
+import com.ots.aipassportphotomaker.common.ext.bounceClick
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
 import com.ots.aipassportphotomaker.common.utils.AnalyticsConstants
@@ -299,13 +301,15 @@ private fun GetStartedScreen(
                         .weight(1f)
                 ) {
 
-                    var adLoadState by remember { mutableStateOf(false) }
+                    var adViewLoadState by remember { mutableStateOf(true) }
+                    var callback by remember { mutableStateOf(false) }
 
                     Spacer(modifier = Modifier.weight(1f))
                     Text(
-                        text = stringResource(id = R.string.app_name),
+                        text = stringResource(id = R.string.app_name_localized),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
                         color = colors.onBackground,
                         modifier = Modifier
                             .align(Alignment.CenterHorizontally)
@@ -320,6 +324,7 @@ private fun GetStartedScreen(
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
                         color = colors.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
                         modifier = Modifier
                             .align(Alignment.CenterHorizontally)
                             .scale(textAnimatedScale)
@@ -331,16 +336,17 @@ private fun GetStartedScreen(
 
                     Button(
                         onClick = {
-                            if ((!consentState || !adLoadState) && !isPremium) return@Button
+                            if ((!consentState || !callback) && !isPremium) return@Button
 
                             onGetStartedClick()
                         },
                         modifier = Modifier
                             .fillMaxWidth()
+                            .bounceClick()
                             .padding(horizontal = 16.dp, vertical = 4.dp)
                             .scale(buttonAnimatedScale),
                     ) {
-                        if ((!adLoadState || !consentState) && !isPremium) {
+                        if ((!callback || !consentState) && !isPremium) {
                             LottieAnimation(
                                 composition = composition,
                                 iterations = LottieConstants.IterateForever,
@@ -364,43 +370,46 @@ private fun GetStartedScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     if (!isPremium && consentState) {
-                        Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(min = 54.dp)
-                                .animateContentSize(
-                                    animationSpec = spring(
-                                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                                        stiffness = Spring.StiffnessLow
+                        AnimatedVisibility(adViewLoadState) {
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(min = 54.dp)
+                                    .animateContentSize(
+                                        animationSpec = spring(
+                                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                                            stiffness = Spring.StiffnessLow
+                                        )
                                     )
-                                )
-                        ) {
-                            Box(
-                                contentAlignment = Alignment.Center,
                             ) {
-                                if (!adLoadState) {
-                                    Text(
-                                        text = stringResource(R.string.advertisement),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Medium,
-                                        color = colors.onSurfaceVariant,
+                                Box(
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    if (!callback) {
+                                        Text(
+                                            text = stringResource(R.string.advertisement),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Medium,
+                                            color = colors.onSurfaceVariant,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .wrapContentSize(align = Alignment.Center)
+                                        )
+                                    }
+
+                                    AdaptiveBannerAd(
+                                        adUnit = AdIdsFactory.getSplashBannerAdId(),
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .wrapContentSize(align = Alignment.Center)
+                                            .animateContentSize()
+                                            .align(Alignment.Center),
+                                        onAdLoaded = { isLoaded ->
+                                            callback = true
+                                            adViewLoadState = isLoaded
+                                            Logger.d(TAG, "AdaptiveBannerAd: onAdLoaded: $isLoaded")
+                                        }
                                     )
                                 }
-
-                                AdaptiveBannerAd(
-                                    adUnit = AdIdsFactory.getSplashBannerAdId(),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .animateContentSize()
-                                        .align(Alignment.Center),
-                                    onAdLoaded = { isLoaded ->
-                                        adLoadState = true
-                                        Logger.d(TAG, "AdaptiveBannerAd: onAdLoaded: $isLoaded")
-                                    }
-                                )
                             }
                         }
                     }

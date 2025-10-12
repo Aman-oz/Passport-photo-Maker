@@ -23,6 +23,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ots.aipassportphotomaker.R
+import com.ots.aipassportphotomaker.common.ext.bounceClick
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
 import com.ots.aipassportphotomaker.presentation.ui.theme.AppTheme
 import com.ots.aipassportphotomaker.presentation.ui.theme.colors
@@ -43,6 +44,7 @@ fun HomeCardItem(
             .padding(8.dp)
             .aspectRatio(1.78f)
             .clip(RoundedCornerShape(16.dp))
+            .bounceClick()
             .clickable { onClick() }
     ) {
         if (backgroundImage != null) {

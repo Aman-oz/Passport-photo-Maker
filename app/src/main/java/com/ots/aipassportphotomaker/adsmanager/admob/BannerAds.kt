@@ -53,7 +53,7 @@ fun AdMobBanner(
             override fun onAdFailedToLoad(p0: LoadAdError) {
                 super.onAdFailedToLoad(p0)
                 onAdLoaded(false)
-                Logger.e("MyAdsManager", "Ad Failed to load: ${p0.message}")
+                Logger.e("MyAdsManager", "Banner Ad Failed to load: ${p0.message}")
             }
         }
         adView.onPaidEventListener = OnPaidEventListener { adValue ->
@@ -119,12 +119,12 @@ fun AdaptiveBannerAd(
             override fun onAdLoaded() {
                 super.onAdLoaded()
                 onAdLoaded(true)
-                Logger.d("MyAdsManager", "Banner Ad Loaded (size: ${finalAdSize.width}dp x ${finalAdSize.height}dp)")
+                Logger.d("MyAdsManager", "Adaptive Banner Ad Loaded (size: ${finalAdSize.width}dp x ${finalAdSize.height}dp)")
             }
             override fun onAdFailedToLoad(error: LoadAdError) {
                 super.onAdFailedToLoad(error)
                 onAdLoaded(false)
-                Logger.e("MyAdsManager", "Ad Failed to load: ${error.message}")
+                Logger.e("MyAdsManager", "Adaptive Banner Ad Failed to load: ${error.message}")
             }
         }
         adView.onPaidEventListener = OnPaidEventListener { adValue ->
@@ -141,7 +141,7 @@ fun AdaptiveBannerAd(
         onDispose {
             adView.pause()
             adView.destroy()
-            Logger.d("MyAdsManager", "AdView destroyed")
+            Logger.d("MyAdsManager", "Adaptive Banner AdView destroyed")
         }
     }
 

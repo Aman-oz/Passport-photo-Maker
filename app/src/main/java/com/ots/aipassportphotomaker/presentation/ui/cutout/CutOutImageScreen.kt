@@ -294,7 +294,7 @@ private fun CutOutImageScreen(
                 }
         ) {
             CommonTopBar(
-                title = "Cut Out",
+                title = stringResource(id = R.string.cut_out),
                 showGetProButton = !isPremium,
                 onBackClick = {
                     onBackClick.invoke()

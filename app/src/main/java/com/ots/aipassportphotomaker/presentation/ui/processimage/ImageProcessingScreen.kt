@@ -51,6 +51,7 @@ import com.ots.aipassportphotomaker.adsmanager.admob.AdMobCollapsableBanner
 import com.ots.aipassportphotomaker.adsmanager.admob.CollapseDirection
 import com.ots.aipassportphotomaker.adsmanager.admob.NativeAdViewCompose
 import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
+import com.ots.aipassportphotomaker.adsmanager.admob.adtype.NativeAdType
 import com.ots.aipassportphotomaker.common.ext.animatedBorder
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
@@ -317,6 +318,7 @@ private fun ImageProcessingScreen(
 
                             NativeAdViewCompose(
                                 context = context,
+                                adType = NativeAdType.NATIVE_AD_IMAGE_PROCESSING,
                                 nativeID = AdIdsFactory.getNativeAdId(),
                                 onAdLoaded = {
                                     adLoadState = it
@@ -378,6 +380,7 @@ fun ImageProcessingScreenPreview() {
 
     PreviewContainer {
         ImageProcessingScreen(
+            isPremium = false,
             uiState = ImageProcessingScreenUiState(
                 showLoading = false,
                 errorMessage = null,

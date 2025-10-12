@@ -259,4 +259,6 @@
     <string name="polish_native" translatable="false">Polski</string>
     <string name="japanese_native" translatable="false">日本語</string>
     <string name="turkish_native" translatable="false">Türkçe</string>
+    <string name="finish">Finish</string>
+    <string name="next">Next</string>
 </resources>
