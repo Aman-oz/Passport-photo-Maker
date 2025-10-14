@@ -198,17 +198,17 @@
     <string name="auto_fit_image_through_advanced_ai">Auto-Fit image through advanced AI.</string>
     <string name="premium">Premium</string>
 
-    <string name="spanish">Spanish</string>
-    <string name="hindi">Hindi</string>
-    <string name="italian">Italian</string>
-    <string name="portuguese">Portuguese</string>
-    <string name="german">German</string>
-    <string name="dutch">Dutch</string>
-    <string name="french">French</string>
-    <string name="arabic">Arabic</string>
-    <string name="polish">Polish</string>
-    <string name="japanese">Japanese</string>
-    <string name="turkish">Turkish</string>
+    <string name="spanish" translatable="false">Spanish</string>
+    <string name="hindi" translatable="false">Hindi</string>
+    <string name="italian" translatable="false">Italian</string>
+    <string name="portuguese" translatable="false">Portuguese</string>
+    <string name="german" translatable="false">German</string>
+    <string name="dutch" translatable="false">Dutch</string>
+    <string name="french" translatable="false">French</string>
+    <string name="arabic" translatable="false">Arabic</string>
+    <string name="polish" translatable="false">Polish</string>
+    <string name="japanese" translatable="false">Japanese</string>
+    <string name="turkish" translatable="false">Turkish</string>
 
     <string name="select_language_en" translatable="false">Select Language</string>
     <string name="default_language_en" translatable="false">Default</string>
@@ -261,4 +261,22 @@
     <string name="turkish_native" translatable="false">Türkçe</string>
     <string name="finish">Finish</string>
     <string name="next">Next</string>
+    <string name="images">Images</string>
+    <string name="no_images_found">No images found</string>
+    <string name="photo_guide">Photo Guide</string>
+    <string name="background_">Background:</string>
+    <string name="plain_white_or_light_colored_background">" • Plain white or light-colored background.\n"</string>
+    <string name="no_shadows_patterns_or_objects_behind_you">" • No shadows, patterns, or objects behind you.\n"</string>
+    <string name="face_position">Face Position:</string>
+    <string name="face_should_be_centered_and_fully_visible">" • Face should be centered and fully visible.\n"</string>
+    <string name="neutral_expression_no_smile_mouth_closed">" • Neutral expression (no smile, mouth closed).\n"</string>
+    <string name="eyes_open_and_clearly_visible">" • Eyes open and clearly visible.\n"</string>
+    <string name="glasses_accessories"><![CDATA[Glasses & Accessories:]]></string>
+    <string name="no_sunglasses">" • No sunglasses.\n"</string>
+    <string name="if_you_wear_glasses_ensure_no_glare">" • If you wear glasses, ensure no glare.\n"</string>
+    <string name="no_headphones_covering_the_face">" • No headphones covering the face.\n"</string>
+    <string name="sample_images">Sample Images</string>
+    <string name="choose_image">Choose Image</string>
+    <string name="pick_image_from_your_gallery_or_camera">Pick image from your gallery or capture new one</string>
+    <string name="attribution">AD</string>
 </resources>

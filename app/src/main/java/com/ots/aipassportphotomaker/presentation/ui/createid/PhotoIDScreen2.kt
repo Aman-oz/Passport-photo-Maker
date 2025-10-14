@@ -4,6 +4,7 @@ import android.app.Activity
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -275,8 +276,12 @@ private fun PhotoIDScreen2(
                         )
                     } else {
 
+                        var adViewLoadState by remember { mutableStateOf(true) }
+                        var callback by remember { mutableStateOf(false) }
+
                         if (!isPremium) {
-                            var adLoadState by remember { mutableStateOf(false) }
+
+                            AnimatedVisibility(adViewLoadState) {
                             Surface(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -284,7 +289,7 @@ private fun PhotoIDScreen2(
                                     .heightIn(min = 54.dp) // match banner height
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
-                                    if (!adLoadState) {
+                                    if (!callback) {
                                         Text(
                                             text = stringResource(R.string.advertisement),
                                             style = MaterialTheme.typography.bodyMedium,
@@ -303,12 +308,13 @@ private fun PhotoIDScreen2(
                                             .animateContentSize()
                                             .align(Alignment.Center),
                                         onAdLoaded = { isLoaded ->
-                                            adLoadState = true
+                                            callback = true
+                                            adViewLoadState = isLoaded
                                             Logger.d(TAG, "AdaptiveBannerAd: onAdLoaded: $isLoaded")
                                         }
                                     )
 
-                                   /* AdMobBanner(
+                                    /* AdMobBanner(
                                         adUnit = AdIdsFactory.getBannerAdId(),
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -322,6 +328,7 @@ private fun PhotoIDScreen2(
                                     )*/
                                 }
                             }
+                        }
 
                         }
 

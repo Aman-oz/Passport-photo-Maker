@@ -186,4 +186,26 @@
     <string name="auto_fit_image_through_advanced_ai">उन्नत AI के माध्यम से छवि स्वतः फिट करें।</string>
     <string name="premium">प्रीमियम</string>
 
+
+        <string name="finish">समाप्त</string>
+        <string name="next">अगला</string>
+        <string name="images">छवियां</string>
+        <string name="no_images_found">कोई छवि नहीं मिली</string>
+        <string name="photo_guide">फोटो गाइड</string>
+        <string name="background_">पृष्ठभूमि:</string>
+        <string name="plain_white_or_light_colored_background">" • सादा सफेद या हल्के रंग की पृष्ठभूमि।\n"</string>
+        <string name="no_shadows_patterns_or_objects_behind_you">" • आपके पीछे कोई छाया, पैटर्न या वस्तु नहीं।\n"</string>
+        <string name="face_position">चेहरे की स्थिति:</string>
+        <string name="face_should_be_centered_and_fully_visible">" • चेहरा केंद्रित और पूरी तरह से दिखाई देना चाहिए।\n"</string>
+        <string name="neutral_expression_no_smile_mouth_closed">" • तटस्थ अभिव्यक्ति (कोई मुस्कान नहीं, मुंह बंद)।\n"</string>
+        <string name="eyes_open_and_clearly_visible">" • आंखें खुली और स्पष्ट रूप से दिखाई दें।\n"</string>
+        <string name="glasses_accessories"><![CDATA[चश्मा और सहायक उपकरण:]]></string>
+        <string name="no_sunglasses">" • कोई सनग्लासेस नहीं।\n"</string>
+        <string name="if_you_wear_glasses_ensure_no_glare">" • यदि आप चश्मा पहनते हैं, तो कोई चमक न हो।\n"</string>
+        <string name="no_headphones_covering_the_face">" • चेहरे को ढकने वाले हेडफोन नहीं।\n"</string>
+        <string name="sample_images">नमूना छवियां</string>
+        <string name="choose_image">छवि चुनें</string>
+        <string name="pick_image_from_your_gallery_or_camera">अपनी गैलरी से छवि चुनें या नई कैप्चर करें</string>
+
+
 </resources>

@@ -1,14 +1,17 @@
 package com.ots.aipassportphotomaker.image_picker.view
 
+import android.Manifest
 import android.content.Context
 import android.content.res.Configuration
 import android.net.Uri
 import android.provider.MediaStore
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -17,7 +20,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,16 +29,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -52,6 +51,8 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -63,6 +64,7 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.input.pointer.pointerInput
@@ -88,12 +90,14 @@ import com.ots.aipassportphotomaker.image_picker.model.AssetResourceType
 import com.ots.aipassportphotomaker.image_picker.model.RequestType
 import com.ots.aipassportphotomaker.image_picker.viewmodel.AssetViewModel
 import com.ots.aipassportphotomaker.presentation.ui.components.LoaderFullScreen
+import com.ots.aipassportphotomaker.presentation.ui.components.createImageUri
 import com.ots.aipassportphotomaker.presentation.ui.theme.colors
 import com.ots.aipassportphotomaker.presentation.ui.theme.custom300
 import com.ots.aipassportphotomaker.presentation.ui.theme.onCustom300
 import com.ots.aipassportphotomaker.presentation.ui.theme.onCustom400
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
+import kotlin.text.clear
 
 @Composable
 internal fun AssetDisplayScreen(
@@ -102,17 +106,20 @@ internal fun AssetDisplayScreen(
     onPicked: (List<AssetInfo>) -> Unit,
     onClose: (List<AssetInfo>) -> Unit,
 ) {
-
-    var isLoading by remember { mutableStateOf(true) }
+    val isLoading by viewModel.isAssetsLoading.collectAsState()
+//    var isLoading by remember { mutableStateOf(true) }
     val showTab by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
+    /*LaunchedEffect(Unit) {
         isLoading = true
         viewModel.initDirectories()
         isLoading = false
-        Logger.d("AssetDisplayScreen", "Initial load complete, assets count: ${viewModel.assets.size}")
+        Logger.d(
+            "AssetDisplayScreen",
+            "Initial load complete, assets count: ${viewModel.assets.size}"
+        )
 
-    }
+    }*/
 
     BackHandler {
         if (viewModel.selectedList.isNotEmpty()) {
@@ -155,7 +162,7 @@ internal fun AssetDisplayScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "No images found",
+                            text = stringResource(R.string.no_images_found),
                             color = colors.onBackground,
                             style = MaterialTheme.typography.bodyLarge
                         )
@@ -165,25 +172,49 @@ internal fun AssetDisplayScreen(
                     AssetContent(viewModel, RequestType.IMAGE)
                 }
 
-                if (viewModel.selectedList.isNotEmpty()) {
-                    SelectPhotoButton(
+                if(viewModel.selectedList.isNotEmpty()) {
+                    Box(
                         modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
-                            .background(Color.Transparent)
-                            .pointerInput(Unit) {
-                                detectTapGestures(
-                                    onTap = {
-                                        onPicked(viewModel.selectedList)
-                                        Log.d(
-                                            "AssetDisplayScreen",
-                                            "Settings icon tapped"
+                            .fillMaxWidth()
+                            .align(Alignment.BottomCenter),
+                        contentAlignment = Alignment.BottomCenter
+                    ) {
+
+                        Spacer(
+                            Modifier
+                                .fillMaxWidth()
+                                .height(170.dp)
+                                .background(
+                                    brush = Brush.verticalGradient(
+                                        colors = listOf(
+                                            Color.Transparent,
+                                            colors.background
                                         )
-                                    }
+                                    )
                                 )
-                            },
-                        maxAssets
-                    )
+                                .align(Alignment.Center)
+                        )
+
+                        SelectPhotoButton(
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
+                                .background(Color.Transparent)
+                                .pointerInput(Unit) {
+                                    detectTapGestures(
+                                        onTap = {
+                                            onPicked(viewModel.selectedList)
+                                            Log.d(
+                                                "AssetDisplayScreen",
+                                                "Settings icon tapped"
+                                            )
+                                        }
+                                    )
+                                },
+                            maxAssets
+                        )
+
+                    }
                 }
             }
         }
@@ -469,12 +500,15 @@ fun AssetTabPreview() {
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun AssetContent(viewModel: AssetViewModel, requestType: RequestType) {
+    val TAG = "AssetContent"
 //    val assets = viewModel.getGroupedAssets(requestType).values.flatten()
     val context = LocalContext.current
     val gridCount = LocalAssetConfig.current.gridCount
     val maxAssets = LocalAssetConfig.current.maxAssets
     val errorMessage = stringResource(R.string.message_selected_exceed, maxAssets)
     val itemSize: Dp = (LocalConfiguration.current.screenWidthDp.dp / gridCount)
+
+    val assets by remember { derivedStateOf { viewModel.assets } }
 
     val sharedPreferences =
         context.getSharedPreferences(SharedPrefUtils.PREF_KEY, Context.MODE_PRIVATE)
@@ -494,17 +528,48 @@ private fun AssetContent(viewModel: AssetViewModel, requestType: RequestType) {
     var cameraUri: Uri? by remember { mutableStateOf(null) }
     val scope = rememberCoroutineScope()
 
+    var isImageCaptured by remember { mutableStateOf(false) }
     val cameraLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.TakePicture()
     ) { success ->
         if (success) {
-            cameraUri?.let { scope.launch { viewModel.initDirectories() } }
+            cameraUri?.let { uri ->
+                scope.launch {
+                    Logger.i(TAG, "Image captured successfully: $cameraUri")
+                    viewModel.onImageCaptured(uri)
+
+                    isImageCaptured = true
+                }
+            }
         } else {
+            Logger.w(TAG, "Image capture failed or cancelled")
             viewModel.deleteImage(cameraUri)
         }
     }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            if (isGranted) {
+                // Camera permission granted, prepare URI and launch camera
+                cameraUri = createImageUri(context)
+                if (cameraUri != null) {
+                    cameraLauncher.launch(cameraUri!!)
+                    Logger.i(TAG, "Camera URI: $cameraUri")
+                } else {
+                    Logger.e(TAG, "Failed to create image URI")
+                    Toast.makeText(context, "Failed to prepare camera", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+
+//                onPermissionResult(Manifest.permission.CAMERA, isGranted)
+                Logger.w(TAG, "Camera permission denied")
+                //Toast.makeText(context, "Camera permission is required to take photos", Toast.LENGTH_SHORT).show()
+            }
+        }
+    )
+
     val listState = rememberLazyGridState()
-    val assets = viewModel.assets
 
     LaunchedEffect(listState) {
         snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
@@ -551,6 +616,8 @@ private fun AssetContent(viewModel: AssetViewModel, requestType: RequestType) {
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         state = listState
     ) {
+
+
         item {
             Box(
                 modifier = Modifier
@@ -558,7 +625,7 @@ private fun AssetContent(viewModel: AssetViewModel, requestType: RequestType) {
                     .padding(horizontal = 4.dp, vertical = 4.dp)
                     .clip(RoundedCornerShape(6.dp))
                     .background(colors.custom300)
-                    .clickable {
+                    /*.clickable {
                         if (!isPhotoGuideShown.value) {
                             scope.launch { bottomSheetState.expand() }
                             showBottomSheet = true
@@ -567,23 +634,24 @@ private fun AssetContent(viewModel: AssetViewModel, requestType: RequestType) {
                                 .apply()
                             isPhotoGuideShown.value = true
                         } else {
-                            cameraUri = viewModel.getUri()
-                            cameraLauncher.launch(cameraUri!!)
+                            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                            *//*cameraUri = viewModel.getUri()
+                            cameraLauncher.launch(cameraUri!!)*//*
                         }
-                    },
+                    }*/,
                 contentAlignment = Alignment.Center
             ) {
                 Column {
-                    Icon(
+                    /*Icon(
                         modifier = Modifier
                             .size(40.dp)
                             .align(Alignment.CenterHorizontally),
                         painter = painterResource(R.drawable.camera_icon),
                         contentDescription = stringResource(R.string.label_camera),
                         tint = colors.onCustom300
-                    )
+                    )*/
                     Text(
-                        text = stringResource(R.string.label_camera),
+                        text = stringResource(R.string.sample_images),
                         style = MaterialTheme.typography.bodyMedium,
                         color = colors.onCustom300,
                         modifier = Modifier.fillMaxWidth(),
@@ -646,7 +714,7 @@ private fun AssetContent(viewModel: AssetViewModel, requestType: RequestType) {
                 ) {
 
                     Text(
-                        text = "Photo Guide",
+                        text = stringResource(R.string.photo_guide),
                         color = colors.onCustom400,
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleLarge,
@@ -684,15 +752,15 @@ private fun AssetContent(viewModel: AssetViewModel, requestType: RequestType) {
                 ) {
                     Text(
                         style = MaterialTheme.typography.titleMedium,
-                        text = "Background:",
+                        text = stringResource(R.string.background_),
                         fontWeight = FontWeight.SemiBold,
                         color = colors.onCustom400,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
                     Text(
                         text = buildAnnotatedString {
-                            append(" • Plain white or light-colored background.\n")
-                            append(" • No shadows, patterns, or objects behind you.\n")
+                            append(stringResource(R.string.plain_white_or_light_colored_background))
+                            append(stringResource(R.string.no_shadows_patterns_or_objects_behind_you))
                         },
                         style = MaterialTheme.typography.bodyMedium,
                         color = colors.onSurfaceVariant,
@@ -703,16 +771,16 @@ private fun AssetContent(viewModel: AssetViewModel, requestType: RequestType) {
 
                     Text(
                         style = MaterialTheme.typography.titleMedium,
-                        text = "Face Position:",
+                        text = stringResource(R.string.face_position),
                         fontWeight = FontWeight.SemiBold,
                         color = colors.onCustom400,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
                     Text(
                         text = buildAnnotatedString {
-                            append(" • Face should be centered and fully visible.\n")
-                            append(" • Neutral expression (no smile, mouth closed).\n")
-                            append(" • Eyes open and clearly visible.\n")
+                            append(stringResource(R.string.face_should_be_centered_and_fully_visible))
+                            append(stringResource(R.string.neutral_expression_no_smile_mouth_closed))
+                            append(stringResource(R.string.eyes_open_and_clearly_visible))
                         },
                         style = MaterialTheme.typography.bodyMedium,
                         color = colors.onSurfaceVariant,
@@ -723,16 +791,16 @@ private fun AssetContent(viewModel: AssetViewModel, requestType: RequestType) {
 
                     Text(
                         style = MaterialTheme.typography.titleMedium,
-                        text = "Glasses & Accessories:",
+                        text = stringResource(R.string.glasses_accessories),
                         fontWeight = FontWeight.SemiBold,
                         color = colors.onCustom400,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
                     Text(
                         text = buildAnnotatedString {
-                            append(" • No sunglasses.\n")
-                            append(" • If you wear glasses, ensure no glare.\n")
-                            append(" • No headphones covering the face.\n")
+                            append(stringResource(R.string.no_sunglasses))
+                            append(stringResource(R.string.if_you_wear_glasses_ensure_no_glare))
+                            append(stringResource(R.string.no_headphones_covering_the_face))
                         },
                         style = MaterialTheme.typography.bodyMedium,
                         color = colors.onSurfaceVariant,

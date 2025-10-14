@@ -66,6 +66,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
@@ -105,6 +107,8 @@ import com.ots.aipassportphotomaker.adsmanager.admob.AdaptiveBannerAd
 import com.ots.aipassportphotomaker.adsmanager.admob.CollapseDirection
 import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
 import com.ots.aipassportphotomaker.common.ext.animatedBorder
+import com.ots.aipassportphotomaker.common.ext.animatedGradient
+import com.ots.aipassportphotomaker.common.ext.bounceClick
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
 import com.ots.aipassportphotomaker.common.utils.AnalyticsConstants
@@ -781,13 +785,16 @@ private fun EditImageScreen(
                             Dialog(onDismissRequest = { }) {
                                 Column(
                                     modifier = Modifier
-                                        .background(colors.onBackground)
+                                        .background(
+                                            color = colors.background,
+                                            shape = RoundedCornerShape(16.dp)
+                                        )
                                         .padding(16.dp),
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     Text(
                                         "${stringResource(R.string.preview_of_final_image)} \uD83D\uDC47",
-                                        color = colors.background,
+                                        color = colors.onBackground,
                                         modifier = Modifier
                                             .align(Alignment.CenterHorizontally),
                                     )
@@ -797,14 +804,23 @@ private fun EditImageScreen(
                                         contentDescription = "Preview of ticket"
                                     )
                                     Spacer(Modifier.size(4.dp))
-                                    Row {
-                                        Button(onClick = { ticketBitmap = null }) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Button(modifier = Modifier
+                                            .weight(1f) // Takes 50% of the width
+                                            .padding(end = 3.dp),
+                                            onClick = { ticketBitmap = null }) {
                                             Text(stringResource(R.string.close))
                                         }
 
                                         Spacer(Modifier.size(6.dp))
 
-                                        Button(onClick = {
+                                        Button(modifier = Modifier
+                                            .weight(1f) // Takes 50% of the width
+                                            .padding(start = 3.dp),
+                                            onClick = {
                                             val permissionsGranted =
                                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                                                     true
@@ -916,7 +932,7 @@ private fun EditImageScreen(
 
                         Spacer(Modifier.size(8.dp))
 
-                        Button(
+                        /*Button(
                             onClick = {
 
                                 if (boxWidth.value <= 0 || boxHeight.value <= 0 || !isLayoutReady) {
@@ -979,11 +995,107 @@ private fun EditImageScreen(
                                     )
                                 }
                             }
+                        }*/
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .bounceClick()
+                                .padding(horizontal = 16.dp)
+                                .height(48.dp)
+                                .animatedGradient(colors.primary, colors.primaryContainer)
+                                .pointerInput(Unit) {
+                                    detectTapGestures(
+                                        onPress = {
+                                        },
+                                        onTap = {
+                                            if (boxWidth.value <= 0 || boxHeight.value <= 0 || !isLayoutReady) {
+                                                Toast.makeText(
+                                                    context,
+                                                    context.getString(R.string.layout_not_ready_please_wait),
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                                return@detectTapGestures
+                                            }
+
+                                            isCreatingBitmap = true
+
+                                            uiScope.launch {
+                                                // Capture the screen content
+                                                val capturedBitmap = captureController.captureAsync().await()
+
+                                                // Create a new bitmap with source dimensions but containing captured content
+                                                val resultBitmap = Bitmap.createScaledBitmap(
+                                                    capturedBitmap.asAndroidBitmap(),
+                                                    pixelSize.width,
+                                                    pixelSize.height,
+                                                    false
+                                                )
+
+                                                // Assign the result to ticketBitmap
+                                                ticketBitmap = resultBitmap.asImageBitmap()
+                                                isCreatingBitmap = false
+                                            }
+                                        }
+                                    )
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (isCreatingBitmap) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier
+                                        .size(24.dp),
+                                    color = colors.onPrimary,
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 8.dp)
+                                        .align(Alignment.Center)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.align(Alignment.Center)
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.download_icon),
+                                            contentDescription = "Save Icon",
+                                            tint = colors.onPrimary,
+                                            modifier = Modifier
+                                                .size(20.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = stringResource(R.string.save_to_gallery),
+                                            color = colors.onPrimary,
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold
+                                        )
+
+
+                                    }
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.arrow_back),
+                                        contentDescription = null,
+                                        tint = colors.onPrimary,
+                                        modifier = Modifier
+                                            .padding(end = 10.dp)
+                                            .rotate(180f)
+                                            .align(Alignment.CenterEnd)
+                                    )
+                                }
+                            }
                         }
 
                         Spacer(modifier = Modifier.weight(1f))
+
+                        var adViewLoadState by remember { mutableStateOf(true) }
+                        var callback by remember { mutableStateOf(false) }
+
                         if (!isPremium) {
-                            var adLoadState by remember { mutableStateOf(false) }
+
+                            AnimatedVisibility(adViewLoadState) {
                             Surface(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -991,7 +1103,7 @@ private fun EditImageScreen(
                                     .heightIn(min = 54.dp) // match banner height
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
-                                    if (!adLoadState) {
+                                    if (!callback) {
                                         Text(
                                             text = stringResource(R.string.advertisement),
                                             style = MaterialTheme.typography.bodyMedium,
@@ -1011,7 +1123,8 @@ private fun EditImageScreen(
                                             .animateContentSize()
                                             .align(Alignment.Center),
                                         onAdLoaded = { isLoaded ->
-                                            adLoadState = true
+                                            callback = true
+                                            adViewLoadState = isLoaded
                                             Logger.d(TAG, "AdaptiveBannerAd: onAdLoaded: $isLoaded")
                                         }
                                     )
@@ -1031,6 +1144,7 @@ private fun EditImageScreen(
                                     )*/
                                 }
                             }
+                        }
 
                             // Add SnackbarHost to display permission rationale
                             SnackbarHost(

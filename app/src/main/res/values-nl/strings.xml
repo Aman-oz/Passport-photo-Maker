@@ -183,4 +183,24 @@
     <string name="remove_ads_and_unlock_all_features">Verwijder advertenties en ontgrendel alle functies</string>
     <string name="auto_fit_image_through_advanced_ai">Automatisch afbeelding aanpassen via geavanceerde AI.</string>
     <string name="premium">Premium</string>
+
+        <string name="finish">Afmaken</string>
+        <string name="next">Volgende</string>
+        <string name="images">Afbeeldingen</string>
+        <string name="no_images_found">Geen afbeeldingen gevonden</string>
+        <string name="photo_guide">Fotogids</string>
+        <string name="background_">Achtergrond:</string>
+        <string name="plain_white_or_light_colored_background">" • Effen witte of lichte achtergrond.\n"</string>
+        <string name="no_shadows_patterns_or_objects_behind_you">" • Geen schaduwen, patronen of objecten achter je.\n"</string>
+        <string name="face_position">Gezichtspositie:</string>
+        <string name="face_should_be_centered_and_fully_visible">" • Het gezicht moet gecentreerd en volledig zichtbaar zijn.\n"</string>
+        <string name="neutral_expression_no_smile_mouth_closed">" • Neutrale uitdrukking (geen glimlach, mond gesloten).\n"</string>
+        <string name="eyes_open_and_clearly_visible">" • Ogen open en duidelijk zichtbaar.\n"</string>
+        <string name="glasses_accessories"><![CDATA[Brillen en accessoires:]]></string>
+        <string name="no_sunglasses">" • Geen zonnebrillen.\n"</string>
+        <string name="if_you_wear_glasses_ensure_no_glare">" • Als je brillen draagt, zorg ervoor dat er geen schittering is.\n"</string>
+        <string name="no_headphones_covering_the_face">" • Geen koptelefoons die het gezicht bedekken.\n"</string>
+        <string name="sample_images">Voorbeeldafbeeldingen</string>
+        <string name="choose_image">Afbeelding kiezen</string>
+        <string name="pick_image_from_your_gallery_or_camera">Kies een afbeelding uit je galerij of maak een nieuwe</string>
 </resources>

@@ -149,10 +149,16 @@ private fun LanguagesScreen(
     }
 
     var selectedLanguage by remember { mutableStateOf(defaultLanguage.code) }
-    var buttonText by remember { mutableStateOf(defaultLanguage.buttonText) }
-    var titleText by remember { mutableStateOf(defaultLanguage.titleText) }
-    var defaultText by remember { mutableStateOf(defaultLanguage.defaultText) }
-    var otherLanguagesText by remember { mutableStateOf(defaultLanguage.otherLanguages) }
+//    var buttonText by remember { mutableStateOf(defaultLanguage.buttonText) }
+//    var titleText by remember { mutableStateOf(defaultLanguage.titleText) }
+//    var defaultText by remember { mutableStateOf(defaultLanguage.defaultText) }
+//    var otherLanguagesText by remember { mutableStateOf(defaultLanguage.otherLanguages) }
+
+    var selectedLanguageState by remember(selectedLanguage) { mutableStateOf(selectedLanguage) }
+    var buttonText by remember(selectedLanguageState) { mutableStateOf(languages.find { it.code == selectedLanguageState }?.buttonText ?: defaultLanguage.buttonText) }
+    var titleText by remember(selectedLanguageState) { mutableStateOf(languages.find { it.code == selectedLanguageState }?.titleText ?: defaultLanguage.titleText) }
+    var defaultText by remember(selectedLanguageState) { mutableStateOf(languages.find { it.code == selectedLanguageState }?.defaultText ?: defaultLanguage.defaultText) }
+    var otherLanguagesText by remember(selectedLanguageState) { mutableStateOf(languages.find { it.code == selectedLanguageState }?.otherLanguages ?: defaultLanguage.otherLanguages) }
 
     Surface(
         modifier = Modifier
@@ -197,263 +203,256 @@ private fun LanguagesScreen(
             if (isLoading) {
                 LoaderFullScreen()
             } else {
-                Box(
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .fillMaxSize()
+                        .pointerInput(Unit) {
+                            detectTapGestures(
+                                onTap = {
+
+                                })
+                        }
                 ) {
-                    Column(
+                    // Default Section
+                    Text(
+                        text = defaultText,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = colors.onBackground,
                         modifier = Modifier
-                            .background(colors.custom300)
-                            .fillMaxSize()
-                            .pointerInput(Unit) {
-                                detectTapGestures(
-                                    onTap = {
+                            .animateContentSize()
+                            .padding(
+                                top = 24.dp,
+                                bottom = 8.dp,
+                                start = 16.dp,
+                                end = 16.dp
+                            )
+                    )
 
-                                    })
-                            }
+                    Card(
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp)
+                            .fillMaxWidth()
+                            .wrapContentHeight()
+                            .clip(shape = RoundedCornerShape(12.dp))
+                            .bounceClick()
+                            .clickable {
+                                selectedLanguageState = defaultLanguage.code
+                                buttonText = defaultLanguage.buttonText
+                                titleText = defaultLanguage.titleText
+                                defaultText = defaultLanguage.defaultText
+                                otherLanguagesText = defaultLanguage.otherLanguages
+                            },
+                        colors = CardDefaults.cardColors(containerColor = colors.background),
+                        shape = RoundedCornerShape(12.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
                     ) {
-                        // Default Section
-                        Text(
-                            text = defaultText,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = colors.onBackground,
+                        Row(
                             modifier = Modifier
-                                .animateContentSize()
-                                .padding(
-                                    top = 24.dp,
-                                    bottom = 8.dp,
-                                    start = 16.dp,
-                                    end = 16.dp
-                                )
-                        )
-
-                        Card(
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp)
                                 .fillMaxWidth()
-                                .wrapContentHeight()
-                                .clip(shape = RoundedCornerShape(12.dp))
-                                .bounceClick()
-                                .clickable {
-                                    selectedLanguage = defaultLanguage.code
-                                    buttonText = defaultLanguage.buttonText
-                                    titleText = defaultLanguage.titleText
-                                    defaultText = defaultLanguage.defaultText
-                                    otherLanguagesText = defaultLanguage.otherLanguages
-                                },
-                            colors = CardDefaults.cardColors(containerColor = colors.background),
-                            shape = RoundedCornerShape(12.dp),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
 
-                                    Spacer(modifier = Modifier.width(8.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
 
-                                    Image(
-                                        painter = painterResource(id = defaultLanguage.image),
-                                        contentDescription = null,
-                                        modifier = Modifier.size(34.dp)
+                                Image(
+                                    painter = painterResource(id = defaultLanguage.image),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(34.dp)
+                                )
+
+                                Spacer(modifier = Modifier.width(12.dp))
+
+                                Row {
+
+                                    Text(
+                                        text = defaultLanguage.nativeName,
+                                        style = MaterialTheme.typography.titleSmall,
+                                        color = colors.onBackground,
+                                        fontWeight = FontWeight.Normal,
+                                        modifier = Modifier.align(Alignment.CenterVertically)
                                     )
 
                                     Spacer(modifier = Modifier.width(12.dp))
 
-                                    Row {
+                                    val annotatedString = buildAnnotatedString {
+                                        withStyle(style = SpanStyle(color = colors.onBackground)) {
+                                            append("( ")
+                                        }
+                                        withStyle(
+                                            style = SpanStyle(
+                                                color = colors.primary,
+                                                fontWeight = FontWeight.Medium
+                                            )
+                                        ) {
+                                            append(defaultLanguage.name.lowercase())
+                                        }
+                                        append(" )")
+                                    }
 
-                                        Text(
-                                            text = defaultLanguage.nativeName,
-                                            style = MaterialTheme.typography.titleSmall,
-                                            color = colors.onBackground,
-                                            fontWeight = FontWeight.Normal,
-                                            modifier = Modifier.align(Alignment.CenterVertically)
+                                    Text(
+                                        text = annotatedString,
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Medium,
+                                        modifier = Modifier
+                                            .align(Alignment.CenterVertically)
+                                    )
+                                }
+                            }
+
+                            Image(
+                                painter = painterResource(
+                                    id = if (selectedLanguageState == defaultLanguage.code) R.drawable.radio_checked else R.drawable.radio_unchecked
+                                ),
+                                colorFilter = ColorFilter.tint(colors.primary),
+                                contentDescription = null,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+
+                    // Other Languages Section
+                    Text(
+                        text = otherLanguagesText,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = colors.onBackground,
+                        modifier = Modifier
+                            .animateContentSize()
+                            .padding(top = 24.dp, bottom = 8.dp, start = 16.dp)
+                    )
+
+                    val otherLanguages =
+                        remember(defaultLanguage.code) { languages.filter { it.code != defaultLanguage.code } }
+
+                    LazyColumn(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(bottom = 10.dp)
+                        ,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(
+                            count = otherLanguages.size,
+                            key = { index -> otherLanguages[index].id }
+                        ) { index ->
+
+                            val language = otherLanguages[index]
+
+                            Card(
+                                modifier = Modifier
+                                    .padding(horizontal = 16.dp, vertical = 2.dp)
+                                    .fillMaxWidth()
+                                    .clip(shape = RoundedCornerShape(12.dp))
+                                    .bounceClick()
+                                    .clickable {
+                                        selectedLanguageState = language.code
+                                        buttonText = language.buttonText
+                                        titleText = language.titleText
+                                        defaultText = language.defaultText
+                                        otherLanguagesText = language.otherLanguages
+                                    },
+                                colors = CardDefaults.cardColors(containerColor = colors.background),
+                                shape = RoundedCornerShape(12.dp),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                            ) {
+
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+
+                                        Spacer(modifier = Modifier.width(8.dp))
+
+                                        Image(
+                                            painter = painterResource(id = language.image),
+                                            contentDescription = null,
+                                            modifier = Modifier.size(34.dp)
                                         )
 
                                         Spacer(modifier = Modifier.width(12.dp))
 
-                                        val annotatedString = buildAnnotatedString {
-                                            withStyle(style = SpanStyle(color = colors.onBackground)) {
-                                                append("( ")
-                                            }
-                                            withStyle(
-                                                style = SpanStyle(
-                                                    color = colors.primary,
-                                                    fontWeight = FontWeight.Medium
-                                                )
-                                            ) {
-                                                append(defaultLanguage.name.lowercase())
-                                            }
-                                            append(" )")
-                                        }
-
-                                        Text(
-                                            text = annotatedString,
-                                            style = MaterialTheme.typography.labelMedium,
-                                            fontWeight = FontWeight.Medium,
-                                            modifier = Modifier
-                                                .align(Alignment.CenterVertically)
-                                        )
-                                    }
-                                }
-
-                                Image(
-                                    painter = painterResource(
-                                        id = if (selectedLanguage == defaultLanguage.code) R.drawable.radio_checked else R.drawable.radio_unchecked
-                                    ),
-                                    colorFilter = ColorFilter.tint(colors.primary),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
-                        }
-
-                        // Other Languages Section
-                        Text(
-                            text = otherLanguagesText,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = colors.onBackground,
-                            modifier = Modifier
-                                .animateContentSize()
-                                .padding(top = 24.dp, bottom = 8.dp, start = 16.dp)
-                        )
-
-                        val otherLanguages =
-                            remember(defaultLanguage.code) { languages.filter { it.code != defaultLanguage.code } }
-
-                        LazyColumn(
-                            modifier = Modifier
-                                .padding(bottom = 40.dp)
-                                .fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            items(
-                                count = otherLanguages.size,
-                                key = { index -> otherLanguages[index].id }
-                            ) { index ->
-
-                                val language = otherLanguages[index]
-
-                                Card(
-                                    modifier = Modifier
-                                        .padding(horizontal = 16.dp, vertical = 2.dp)
-                                        .fillMaxWidth()
-                                        .clip(shape = RoundedCornerShape(12.dp))
-                                        .bounceClick()
-                                        .clickable {
-                                            selectedLanguage = language.code
-                                            buttonText = language.buttonText
-                                            titleText = language.titleText
-                                            defaultText = language.defaultText
-                                            otherLanguagesText = language.otherLanguages
-                                        },
-                                    colors = CardDefaults.cardColors(containerColor = colors.background),
-                                    shape = RoundedCornerShape(12.dp),
-                                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-                                ) {
-
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(16.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-
-                                            Spacer(modifier = Modifier.width(8.dp))
-
-                                            Image(
-                                                painter = painterResource(id = language.image),
-                                                contentDescription = null,
-                                                modifier = Modifier.size(34.dp)
+                                        Row {
+                                            Text(
+                                                text = language.nativeName,
+                                                style = MaterialTheme.typography.titleSmall,
+                                                color = colors.onBackground,
+                                                fontWeight = if (selectedLanguageState == language.code) FontWeight.Bold else FontWeight.Normal,
+                                                modifier = Modifier
+                                                    .align(Alignment.CenterVertically)
                                             )
 
                                             Spacer(modifier = Modifier.width(12.dp))
-
-                                            Row {
-                                                Text(
-                                                    text = language.nativeName,
-                                                    style = MaterialTheme.typography.titleSmall,
-                                                    color = colors.onBackground,
-                                                    fontWeight = if (selectedLanguage == language.code) FontWeight.Bold else FontWeight.Normal,
-                                                    modifier = Modifier
-                                                        .align(Alignment.CenterVertically)
-                                                )
-
-                                                Spacer(modifier = Modifier.width(12.dp))
-                                                val annotatedString = buildAnnotatedString {
-                                                    withStyle(
-                                                        style = SpanStyle(
-                                                            color = colors.onBackground,
-                                                            fontWeight = if (selectedLanguage == language.code) FontWeight.Bold else FontWeight.Normal
-                                                        )
-                                                    ) {
-                                                        append("( ")
-                                                    }
-                                                    withStyle(
-                                                        style = SpanStyle(
-                                                            color = colors.primary,
-                                                            fontWeight = if (selectedLanguage == language.code) FontWeight.Bold else FontWeight.Medium
-                                                        )
-                                                    ) {
-                                                        append(language.name.lowercase())
-                                                    }
-                                                    withStyle(
-                                                        style = SpanStyle(
-                                                            color = colors.onBackground,
-                                                            fontWeight = if (selectedLanguage == language.code) FontWeight.Bold else FontWeight.Normal
-                                                        )
-                                                    ) {
-                                                        append(" )")
-                                                    }
+                                            val annotatedString = buildAnnotatedString {
+                                                withStyle(
+                                                    style = SpanStyle(
+                                                        color = colors.onBackground,
+                                                        fontWeight = if (selectedLanguageState == language.code) FontWeight.Bold else FontWeight.Normal
+                                                    )
+                                                ) {
+                                                    append("( ")
                                                 }
-
-                                                Text(
-                                                    text = annotatedString,
-                                                    style = MaterialTheme.typography.bodySmall,
-                                                    color = colors.onSurfaceVariant,
-                                                    modifier = Modifier
-                                                        .animateContentSize()
-                                                        .align(Alignment.CenterVertically)
-                                                )
+                                                withStyle(
+                                                    style = SpanStyle(
+                                                        color = colors.primary,
+                                                        fontWeight = if (selectedLanguageState == language.code) FontWeight.Bold else FontWeight.Medium
+                                                    )
+                                                ) {
+                                                    append(language.name.lowercase())
+                                                }
+                                                withStyle(
+                                                    style = SpanStyle(
+                                                        color = colors.onBackground,
+                                                        fontWeight = if (selectedLanguageState == language.code) FontWeight.Bold else FontWeight.Normal
+                                                    )
+                                                ) {
+                                                    append(" )")
+                                                }
                                             }
-                                        }
 
-                                        Image(
-                                            painter = painterResource(
-                                                id = if (selectedLanguage == language.code) R.drawable.radio_checked else R.drawable.radio_unchecked
-                                            ),
-                                            colorFilter = ColorFilter.tint(if (selectedLanguage == language.code) colors.primary else colors.onBackground),
-                                            contentDescription = null,
-                                            modifier = Modifier
-                                                .animateContentSize()
-                                                .size(24.dp)
-                                        )
+                                            Text(
+                                                text = annotatedString,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = colors.onSurfaceVariant,
+                                                modifier = Modifier
+                                                    .animateContentSize()
+                                                    .align(Alignment.CenterVertically)
+                                            )
+                                        }
                                     }
+
+                                    Image(
+                                        painter = painterResource(
+                                            id = if (selectedLanguageState == language.code) R.drawable.radio_checked else R.drawable.radio_unchecked
+                                        ),
+                                        colorFilter = ColorFilter.tint(if (selectedLanguageState == language.code) colors.primary else colors.onBackground),
+                                        contentDescription = null,
+                                        modifier = Modifier
+                                            .animateContentSize()
+                                            .size(24.dp)
+                                    )
                                 }
                             }
                         }
                     }
 
-//                    Spacer(modifier = Modifier.weight(1f))
+                    // Ad Section
                     var adViewLoadState by remember { mutableStateOf(true) }
                     var callback by remember { mutableStateOf(false) }
 
-
                     if (!isPremium) {
-                        if(adViewLoadState) {
+                        if (adViewLoadState) {
                             Surface(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .heightIn(min = 54.dp)
-                                    .align(Alignment.BottomCenter)
                                     .animateContentSize(
                                         animationSpec = spring(
                                             dampingRatio = Spring.DampingRatioMediumBouncy,
@@ -478,8 +477,8 @@ private fun LanguagesScreen(
 
                                     NativeAdViewCompose(
                                         context = context,
-                                        adType = NativeAdType.NATIVE_AD_IMAGE_PROCESSING,
-                                        nativeID = AdIdsFactory.getNativeAdId(),
+                                        adType = NativeAdType.NATIVE_AD_LANGUAGE,
+                                        nativeID = AdIdsFactory.getNativeAdIdLanguage(),
                                         onAdLoaded = {
                                             callback = true
                                             adViewLoadState = it
@@ -489,7 +488,6 @@ private fun LanguagesScreen(
                             }
                         }
                     }
-
                 }
 
             }

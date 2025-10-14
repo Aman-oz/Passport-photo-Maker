@@ -15,7 +15,13 @@ import com.ots.aipassportphotomaker.image_picker.model.AssetInfo
 import com.ots.aipassportphotomaker.image_picker.model.RequestType
 import com.ots.aipassportphotomaker.image_picker.provider.AssetLoader
 import com.ots.aipassportphotomaker.image_picker.provider.AssetPickerRepository
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlin.text.clear
+import kotlin.toString
 
 //const val init_directory = "Photos/Videos"
 const val init_directory = "Camera"
@@ -34,6 +40,9 @@ internal class AssetViewModel(
 
     val selectedList = mutableStateListOf<AssetInfo>()
     var directory by mutableStateOf(init_directory)
+
+    private val _isAssetsLoading = MutableStateFlow(false)
+    val isAssetsLoading: StateFlow<Boolean> = _isAssetsLoading.asStateFlow()
 
     private var currentOffset = 0
     private val batchSize = 50
@@ -73,6 +82,7 @@ internal class AssetViewModel(
         } catch (e: Exception) {
             Logger.e("AssetViewModel", "Error loading initial data: ${e.message}", e)
         } finally {
+            _isAssetsLoading.value = false
             isLoading = false
         }
     }
@@ -80,6 +90,7 @@ internal class AssetViewModel(
     private suspend fun loadBatch() {
         if (isLoading) return
         isLoading = true
+        _isAssetsLoading.value = true
         try {
             val newAssets = assetPickerRepository.getAssets(RequestType.IMAGE, batchSize, currentOffset)
             if (newAssets.isNotEmpty()) {
@@ -93,6 +104,7 @@ internal class AssetViewModel(
             Logger.e("AssetViewModel", "Error loading batch: ${e.message}", e)
         } finally {
             isLoading = false
+            _isAssetsLoading.value = false
         }
     }
 
@@ -104,6 +116,30 @@ internal class AssetViewModel(
                     updateDirectoryGroupsWithCounts()
                 }
             }
+        }
+    }
+
+    fun onImageCaptured(uri: Uri) {
+        viewModelScope.launch {
+//            delay(500)
+            initDirectories()
+            val newImage = assets.firstOrNull {
+                it.uriString == uri.toString() ||
+                        it.uriString.endsWith(uri.lastPathSegment ?: "")
+            }
+            Logger.d("AssetViewModel", "Captured URI: $uri, Found: $newImage")
+            newImage?.let {
+                selectedList.clear() // Clear previous selections for single auto-select; remove if multi-select desired
+                selectedList.add(newImage)
+                toggleSelect(true, it) // Or directly: selectedList.add(it)
+                Logger.i("AssetViewModel", "Auto-selected captured image: ${it.filename}")
+            } ?: run {
+                Logger.w("AssetViewModel", "Captured image not found in assets after refresh")
+            }
+            /*if (newImage != null) {
+                selectedList.clear()
+                selectedList.add(newImage)
+            }*/
         }
     }
 

@@ -119,6 +119,9 @@ val ColorScheme.customWarningContainer: Color
 val ColorScheme.onCustomWarningContainer: Color
     get() = if (this == darkColors) AppColors.DarkOnWarningContainer else AppColors.LightOnWarningContainer
 
+val ColorScheme.nativeAdButtonColor: Color
+    get() = if (this == darkColors) AppColors.DarkNativeCTAColor else AppColors.LightNativeCTAColor
+
 // Define dark and light color schemes with custom colors
 val darkColors = DarkColorScheme.copy(
     primary = AppColors.DarkPrimary,

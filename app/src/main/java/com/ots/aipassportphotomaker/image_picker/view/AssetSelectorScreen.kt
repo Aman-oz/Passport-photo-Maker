@@ -36,6 +36,7 @@ import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -121,8 +122,7 @@ internal fun AssetSelectorScreen(
                     leadingContent = {
                         AsyncImage(
                             model = ImageRequest.Builder(LocalContext.current)
-                                .data(it.cover ?: Icons.Default.Place)
-                                .decoderFactory(VideoFrameDecoder.Factory())
+                                .data(it.cover)
                                 .build(),
                             modifier = Modifier
                                 .size(56.dp)
@@ -150,7 +150,7 @@ internal fun AssetSelectorScreen(
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = "Images",
+                                    text = stringResource(R.string.images),
                                     color = colors.outline,
                                     style = MaterialTheme.typography.bodyMedium
                                 )

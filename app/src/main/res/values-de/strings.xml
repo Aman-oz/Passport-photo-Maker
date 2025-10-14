@@ -186,4 +186,27 @@
     <string name="auto_fit_image_through_advanced_ai">Bilde automatisch an mit fortschrittlicher KI.</string>
     <string name="premium">Premium</string>
 
+
+        <string name="finish">Fertig</string>
+        <string name="next">Weiter</string>
+        <string name="images">Bilder</string>
+        <string name="no_images_found">Keine Bilder gefunden</string>
+        <string name="photo_guide">Fotoführer</string>
+        <string name="background_">Hintergrund:</string>
+        <string name="plain_white_or_light_colored_background">" • Einfarbiger weißer oder hellfarbiger Hintergrund.\n"</string>
+        <string name="no_shadows_patterns_or_objects_behind_you">" • Keine Schatten, Muster oder Objekte hinter dir.\n"</string>
+        <string name="face_position">Gesichtsposition:</string>
+        <string name="face_should_be_centered_and_fully_visible">" • Das Gesicht sollte zentriert und vollständig sichtbar sein.\n"</string>
+        <string name="neutral_expression_no_smile_mouth_closed">" • Neutraler Ausdruck (kein Lächeln, Mund geschlossen).\n"</string>
+        <string name="eyes_open_and_clearly_visible">" • Augen offen und deutlich sichtbar.\n"</string>
+        <string name="glasses_accessories"><![CDATA[Brillen & Accessoires:]]></string>
+        <string name="no_sunglasses">" • Keine Sonnenbrillen.\n"</string>
+        <string name="if_you_wear_glasses_ensure_no_glare">" • Wenn du Brillen trägst, stelle sicher, dass kein Glanz vorhanden ist.\n"</string>
+        <string name="no_headphones_covering_the_face">" • Keine Kopfhörer, die das Gesicht bedecken.\n"</string>
+        <string name="sample_images">Beispiele Bilder</string>
+        <string name="choose_image">Bild auswählen</string>
+        <string name="pick_image_from_your_gallery_or_camera">Wähle ein Bild aus deiner Galerie oder mache ein neues</string>
+
+
+
 </resources>

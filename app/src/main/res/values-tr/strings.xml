@@ -183,4 +183,25 @@
     <string name="remove_ads_and_unlock_all_features">Reklamları kaldırın ve tüm özellikleri açın</string>
     <string name="auto_fit_image_through_advanced_ai">Gelişmiş AI ile otomatik görüntü uyumu.</string>
     <string name="premium">Premium</string>
+
+        <string name="finish">Bitir</string>
+        <string name="next">Sonraki</string>
+        <string name="images">Görüntüler</string>
+        <string name="no_images_found">Görüntü bulunamadı</string>
+        <string name="photo_guide">Fotoğraf Rehberi</string>
+        <string name="background_">Arka plan:</string>
+        <string name="plain_white_or_light_colored_background">" • Düz beyaz veya açık renkli arka plan.\n"</string>
+        <string name="no_shadows_patterns_or_objects_behind_you">" • Arkanda gölge, desen veya nesne yok.\n"</string>
+        <string name="face_position">Yüz Pozisyonu:</string>
+        <string name="face_should_be_centered_and_fully_visible">" • Yüz ortalanmış ve tamamen görünür olmalı.\n"</string>
+        <string name="neutral_expression_no_smile_mouth_closed">" • Nötr ifade (gülümseme yok, ağız kapalı).\n"</string>
+        <string name="eyes_open_and_clearly_visible">" • Gözler açık ve net görünür.\n"</string>
+        <string name="glasses_accessories"><![CDATA[Gözlükler ve Aksesuarlar:]]></string>
+        <string name="no_sunglasses">" • Güneş gözlüğü yok.\n"</string>
+        <string name="if_you_wear_glasses_ensure_no_glare">" • Gözlük takıyorsan, parlama olmadığından emin ol.\n"</string>
+        <string name="no_headphones_covering_the_face">" • Yüzü kapatan kulaklık yok.\n"</string>
+        <string name="sample_images">Örnek Görüntüler</string>
+        <string name="choose_image">Görüntü Seç</string>
+        <string name="pick_image_from_your_gallery_or_camera">Galerinizden bir görüntü seçin veya yeni bir tane yakalayın</string>
+
 </resources>

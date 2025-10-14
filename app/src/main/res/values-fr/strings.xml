@@ -183,4 +183,26 @@
     <string name="remove_ads_and_unlock_all_features">Supprimer les pubs et débloquer toutes les fonctionnalités</string>
     <string name="auto_fit_image_through_advanced_ai">Ajustement automatique de l\'image via une IA avancée.</string>
     <string name="premium">Premium</string>
+
+
+        <string name="finish">Terminer</string>
+        <string name="next">Suivant</string>
+        <string name="images">Images</string>
+        <string name="no_images_found">Aucune image trouvée</string>
+        <string name="photo_guide">Guide photo</string>
+        <string name="background_">Arrière-plan :</string>
+        <string name="plain_white_or_light_colored_background">" • Arrière-plan blanc uni ou de couleur claire.\n"</string>
+        <string name="no_shadows_patterns_or_objects_behind_you">" • Pas d\'ombres, de motifs ou d\'objets derrière vous.\n"</string>
+        <string name="face_position">Position du visage :</string>
+        <string name="face_should_be_centered_and_fully_visible">" • Le visage doit être centré et entièrement visible.\n"</string>
+        <string name="neutral_expression_no_smile_mouth_closed">" • Expression neutre (pas de sourire, bouche fermée).\n"</string>
+        <string name="eyes_open_and_clearly_visible">" • Yeux ouverts et clairement visibles.\n"</string>
+        <string name="glasses_accessories"><![CDATA[Lunettes et accessoires :]]></string>
+        <string name="no_sunglasses">" • Pas de lunettes de soleil.\n"</string>
+        <string name="if_you_wear_glasses_ensure_no_glare">" • Si vous portez des lunettes, assurez-vous qu\'il n\'y a pas d\'éblouissement.\n"</string>
+        <string name="no_headphones_covering_the_face">" • Pas d'écouteurs couvrant le visage.\n"</string>
+        <string name="sample_images">Images d\'exemple</string>
+        <string name="choose_image">Choisir une image</string>
+        <string name="pick_image_from_your_gallery_or_camera">Choisissez une image dans votre galerie ou en capturez une nouvelle</string>
+
 </resources>

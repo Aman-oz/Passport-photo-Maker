@@ -14,6 +14,7 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
@@ -36,7 +37,9 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.ots.aipassportphotomaker.common.enums.ButtonState
 
@@ -130,5 +133,37 @@ fun Modifier.bounceClick() = composed {
                     ButtonState.PRESSED
                 }
             }
+        }
+}
+
+fun Modifier.animatedGradient(
+    primaryColor: Color,
+    containerColor: Color
+): Modifier = composed {
+    var size by remember { mutableStateOf(IntSize.Zero) }
+    val transition = rememberInfiniteTransition(label = "")
+    val colors = listOf(
+        primaryColor,
+        containerColor,
+        primaryColor
+    )
+    val offsetXAnimation by transition.animateFloat(
+        initialValue = -size.width.toFloat(),
+        targetValue = size.width.toFloat(),
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1500, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ), label = "gradientAnimation"
+    )
+    background(
+        brush = Brush.linearGradient(
+            colors = colors,
+            start = Offset(x = offsetXAnimation, y = 0f),
+            end = Offset(x = offsetXAnimation + size.width.toFloat(), y = size.height.toFloat())
+        ),
+        shape = RoundedCornerShape(24.dp)
+    )
+        .onGloballyPositioned {
+            size = it.size
         }
 }

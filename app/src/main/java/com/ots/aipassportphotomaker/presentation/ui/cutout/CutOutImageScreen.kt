@@ -8,6 +8,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -650,8 +651,13 @@ private fun CutOutImageScreen(
 
                         Spacer(modifier = Modifier.height(4.dp))
 
+
+                        var adViewLoadState by remember { mutableStateOf(true) }
+                        var callback by remember { mutableStateOf(false) }
+
                         if (!isPremium) {
-                            var adLoadState by remember { mutableStateOf(false) }
+
+                            AnimatedVisibility(adViewLoadState) {
                             Surface(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -659,7 +665,7 @@ private fun CutOutImageScreen(
                                     .heightIn(min = 54.dp) // match banner height
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
-                                    if (!adLoadState) {
+                                    if (!callback) {
                                         Text(
                                             text = stringResource(R.string.advertisement),
                                             style = MaterialTheme.typography.bodyMedium,
@@ -678,7 +684,8 @@ private fun CutOutImageScreen(
                                             .animateContentSize()
                                             .align(Alignment.Center),
                                         onAdLoaded = { isLoaded ->
-                                            adLoadState = true
+                                            callback = true
+                                            adViewLoadState = isLoaded
                                             Logger.d(TAG, "AdaptiveBannerAd: onAdLoaded: $isLoaded")
                                         }
                                     )
@@ -697,6 +704,7 @@ private fun CutOutImageScreen(
                                     )*/
                                 }
                             }
+                        }
 
                         }
 

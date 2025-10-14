@@ -186,4 +186,26 @@
     <string name="auto_fit_image_through_advanced_ai">Ajuste automático de imagen mediante IA avanzada.</string>
     <string name="premium">Premium</string>
 
+
+        <string name="finish">Finalizar</string>
+        <string name="next">Siguiente</string>
+        <string name="images">Imágenes</string>
+        <string name="no_images_found">No se encontraron imágenes</string>
+        <string name="photo_guide">Guía de fotos</string>
+        <string name="background_">Fondo:</string>
+        <string name="plain_white_or_light_colored_background">" • Fondo blanco liso o de color claro.\n"</string>
+        <string name="no_shadows_patterns_or_objects_behind_you">" • Sin sombras, patrones ni objetos detrás de ti.\n"</string>
+        <string name="face_position">Posición del rostro:</string>
+        <string name="face_should_be_centered_and_fully_visible">" • El rostro debe estar centrado y completamente visible.\n"</string>
+        <string name="neutral_expression_no_smile_mouth_closed">" • Expresión neutral (sin sonrisa, boca cerrada).\n"</string>
+        <string name="eyes_open_and_clearly_visible">" • Ojos abiertos y claramente visibles.\n"</string>
+        <string name="glasses_accessories"><![CDATA[Gafas y accesorios:]]></string>
+        <string name="no_sunglasses">" • Sin gafas de sol.\n"</string>
+        <string name="if_you_wear_glasses_ensure_no_glare">" • Si usas gafas, asegúrate de que no haya reflejos.\n"</string>
+        <string name="no_headphones_covering_the_face">" • Sin auriculares que cubran la cara.\n"</string>
+        <string name="sample_images">Imágenes de muestra</string>
+        <string name="choose_image">Elegir imagen</string>
+        <string name="pick_image_from_your_gallery_or_camera">Elige una imagen de tu galería o captura una nueva</string>
+
+
 </resources>

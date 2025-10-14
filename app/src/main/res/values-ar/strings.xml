@@ -186,4 +186,24 @@
     <string name="auto_fit_image_through_advanced_ai">تناسب تلقائي للصورة عبر الذكاء الاصطناعي المتقدم.</string>
     <string name="premium">ممتاز</string>
 
+        <string name="finish">إنهاء</string>
+        <string name="next">التالي</string>
+        <string name="images">الصور</string>
+        <string name="no_images_found">لم يتم العثور على صور</string>
+        <string name="photo_guide">دليل الصورة</string>
+        <string name="background_">الخلفية:</string>
+        <string name="plain_white_or_light_colored_background">" • خلفية بيضاء سادة أو ملونة فاتحة.\n"</string>
+        <string name="no_shadows_patterns_or_objects_behind_you">" • لا ظلال أو أنماط أو أجسام خلفك.\n"</string>
+        <string name="face_position">موضع الوجه:</string>
+        <string name="face_should_be_centered_and_fully_visible">" • يجب أن يكون الوجه في المنتصف ومرئياً بالكامل.\n"</string>
+        <string name="neutral_expression_no_smile_mouth_closed">" • تعبير محايد (لا ابتسامة، فم مغلق).\n"</string>
+        <string name="eyes_open_and_clearly_visible">" • عيون مفتوحة ومرئية بوضوح.\n"</string>
+        <string name="glasses_accessories"><![CDATA[النظارات والإكسسوارات:]]></string>
+        <string name="no_sunglasses">" • لا نظارات شمسية.\n"</string>
+        <string name="if_you_wear_glasses_ensure_no_glare">" • إذا كنت ترتدي نظارات، تأكد من عدم وجود وميض.\n"</string>
+        <string name="no_headphones_covering_the_face">" • لا سماعات تغطي الوجه.\n"</string>
+        <string name="sample_images">صور عينة</string>
+        <string name="choose_image">اختر صورة</string>
+        <string name="pick_image_from_your_gallery_or_camera">اختر صورة من معرضك أو التقط واحدة جديدة</string>
+
 </resources>

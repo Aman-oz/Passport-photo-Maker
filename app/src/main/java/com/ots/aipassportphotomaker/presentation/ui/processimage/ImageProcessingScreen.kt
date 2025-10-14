@@ -3,6 +3,7 @@ package com.ots.aipassportphotomaker.presentation.ui.processimage
 import android.annotation.SuppressLint
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearEasing
@@ -295,37 +296,43 @@ private fun ImageProcessingScreen(
 
                 Spacer(modifier = Modifier.weight(1f))
 
+                var adViewLoadState by remember { mutableStateOf(true) }
+                var callback by remember { mutableStateOf(false) }
+
                 if (!isPremium) {
-                    var adLoadState by remember { mutableStateOf(false) }
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .animateContentSize()
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            if (!adLoadState) {
-                                Text(
-                                    text = stringResource(R.string.advertisement),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Medium,
-                                    color = colors.onSurfaceVariant,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .animateContentSize()
-                                        .wrapContentSize(align = Alignment.Center)
-                                )
-                            }
 
-                            NativeAdViewCompose(
-                                context = context,
-                                adType = NativeAdType.NATIVE_AD_IMAGE_PROCESSING,
-                                nativeID = AdIdsFactory.getNativeAdId(),
-                                onAdLoaded = {
-                                    adLoadState = it
+                    AnimatedVisibility(adViewLoadState) {
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .animateContentSize()
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                if (!callback) {
+                                    Text(
+                                        text = stringResource(R.string.advertisement),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium,
+                                        color = colors.onSurfaceVariant,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .animateContentSize()
+                                            .wrapContentSize(align = Alignment.Center)
+                                    )
                                 }
-                            )
 
-                            /*AdMobCollapsableBanner(
+                                NativeAdViewCompose(
+                                    context = context,
+                                    adType = NativeAdType.NATIVE_AD_IMAGE_PROCESSING,
+                                    nativeID = AdIdsFactory.getNativeAdId(),
+                                    onAdLoaded = {
+                                        callback = it
+                                        adViewLoadState = it
+                                        Log.d(TAG, "NativeAdViewCompose: onAdLoaded: $it")
+                                    }
+                                )
+
+                                /*AdMobCollapsableBanner(
                                 adUnit = AdIdsFactory.getBannerAdId(),
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -338,6 +345,7 @@ private fun ImageProcessingScreen(
                                     Logger.d(TAG, "AdMobBanner: onAdLoaded: $isLoaded")
                                 }
                             )*/
+                            }
                         }
                     }
                 }

@@ -183,4 +183,24 @@
     <string name="remove_ads_and_unlock_all_features">Remover anúncios e desbloquear todas as funções</string>
     <string name="auto_fit_image_through_advanced_ai">Ajuste automático de imagem via IA avançada.</string>
     <string name="premium">Premium</string>
+
+        <string name="finish">Concluir</string>
+        <string name="next">Próximo</string>
+        <string name="images">Imagens</string>
+        <string name="no_images_found">Nenhuma imagem encontrada</string>
+        <string name="photo_guide">Guia de fotos</string>
+        <string name="background_">Fundo:</string>
+        <string name="plain_white_or_light_colored_background">" • Fundo branco liso ou de cor clara.\n"</string>
+        <string name="no_shadows_patterns_or_objects_behind_you">" • Sem sombras, padrões ou objetos atrás de você.\n"</string>
+        <string name="face_position">Posição do rosto:</string>
+        <string name="face_should_be_centered_and_fully_visible">" • O rosto deve estar centralizado e totalmente visível.\n"</string>
+        <string name="neutral_expression_no_smile_mouth_closed">" • Expressão neutra (sem sorriso, boca fechada).\n"</string>
+        <string name="eyes_open_and_clearly_visible">" • Olhos abertos e claramente visíveis.\n"</string>
+        <string name="glasses_accessories"><![CDATA[Óculos e acessórios:]]></string>
+        <string name="no_sunglasses">" • Sem óculos de sol.\n"</string>
+        <string name="if_you_wear_glasses_ensure_no_glare">" • Se você usa óculos, certifique-se de que não haja reflexos.\n"</string>
+        <string name="no_headphones_covering_the_face">" • Sem fones de ouvido cobrindo o rosto.\n"</string>
+        <string name="sample_images">Imagens de amostra</string>
+        <string name="choose_image">Escolher imagem</string>
+        <string name="pick_image_from_your_gallery_or_camera">Escolha uma imagem da sua galeria ou capture uma nova</string>
 </resources>

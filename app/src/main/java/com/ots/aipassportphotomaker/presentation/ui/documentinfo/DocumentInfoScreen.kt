@@ -13,7 +13,13 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -60,6 +66,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
@@ -81,6 +88,8 @@ import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.adsmanager.admob.AdMobBanner
 import com.ots.aipassportphotomaker.adsmanager.admob.AdaptiveBannerAd
 import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
+import com.ots.aipassportphotomaker.common.ext.animatedGradient
+import com.ots.aipassportphotomaker.common.ext.bounceClick
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
 import com.ots.aipassportphotomaker.common.utils.AnalyticsConstants
@@ -97,6 +106,7 @@ import com.ots.aipassportphotomaker.presentation.ui.components.CameraPermissionT
 import com.ots.aipassportphotomaker.presentation.ui.components.ColorItem
 import com.ots.aipassportphotomaker.presentation.ui.components.CommonTopBar
 import com.ots.aipassportphotomaker.presentation.ui.components.DpiItem
+import com.ots.aipassportphotomaker.presentation.ui.components.ImagePickerDialog
 import com.ots.aipassportphotomaker.presentation.ui.components.ImageWithMeasurements
 import com.ots.aipassportphotomaker.presentation.ui.components.LoaderFullScreen
 import com.ots.aipassportphotomaker.presentation.ui.components.PermissionDialog
@@ -106,6 +116,7 @@ import com.ots.aipassportphotomaker.presentation.ui.components.StoragePermission
 import com.ots.aipassportphotomaker.presentation.ui.components.createImageUri
 import com.ots.aipassportphotomaker.presentation.ui.main.MainRouter
 import com.ots.aipassportphotomaker.presentation.ui.main.openAppSettings
+import com.ots.aipassportphotomaker.presentation.ui.processimage.deriveColorFromProgress
 import com.ots.aipassportphotomaker.presentation.ui.theme.AppColors
 import com.ots.aipassportphotomaker.presentation.ui.theme.colors
 import com.ots.aipassportphotomaker.presentation.ui.theme.custom100
@@ -353,6 +364,7 @@ fun DocumentInfoPage(
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DocumentInfoScreen(
     uiState: DocumentInfoScreenUiState,
@@ -376,9 +388,12 @@ private fun DocumentInfoScreen(
 
     val TAG = "DocumentInfoScreen"
 
+    val context = LocalContext.current
     val systemBarsPadding = WindowInsets.systemBars.asPaddingValues()
 
-    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var showImagePickerBottomSheet by rememberSaveable { mutableStateOf(false) }
+    val imagePickerBottomSheetState = rememberModalBottomSheetState()
 
     // Define permissions based on Android version
     val permissionsToRequest: List<String> =
@@ -705,15 +720,16 @@ private fun DocumentInfoScreen(
 
                 Column(
                     modifier = Modifier
-                        .padding(bottom = 12.dp)
+                        .padding(bottom = 2.dp)
                         .fillMaxWidth()
                         .align(Alignment.BottomCenter),
                 ) {
                     if (isImageSelected) {
+
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                                .padding(horizontal = 16.dp, vertical = 4.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Row(
@@ -727,7 +743,12 @@ private fun DocumentInfoScreen(
                                                 scale1 = 1f
                                             },
                                             onTap = {
-                                                onOpenGalleryClick()
+//                                                onOpenGalleryClick()
+                                                scope.launch {
+                                                    imagePickerBottomSheetState.show()
+                                                    imagePickerBottomSheetState.expand()
+                                                }
+                                                showImagePickerBottomSheet = true
                                             }
                                         )
                                     }
@@ -750,16 +771,13 @@ private fun DocumentInfoScreen(
                                 )
                             }
 
-                            Button(
-                                onClick = {
-                                    onCreatePhotoClick(uiState.documentType)
-                                },
-                                shape = RoundedCornerShape(24.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = colors.primary),
+                            Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
+                                    .bounceClick()
                                     .padding(bottom = 8.dp)
                                     .height(48.dp)
+                                    .animatedGradient(colors.primary, colors.primaryContainer)
                                     .pointerInput(Unit) {
                                         detectTapGestures(
                                             onPress = {
@@ -772,13 +790,36 @@ private fun DocumentInfoScreen(
                                             }
                                         )
                                     }
-                                    .scale(buttonAnimatedScale)
+                                    .scale(buttonAnimatedScale),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Text(
-                                    text = stringResource(R.string.create_photo),
-                                    color = colors.onPrimary,
-                                    fontSize = 16.sp
-                                )
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 8.dp)
+                                        .align(Alignment.Center)
+                                ) {
+
+                                    Text(
+                                        text = stringResource(R.string.create_photo),
+                                        color = colors.onPrimary,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier
+                                            .align(Alignment.Center)
+                                    )
+
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.arrow_back),
+                                        contentDescription = null,
+                                        tint = colors.onPrimary,
+                                        modifier = Modifier
+                                            .padding(end = 10.dp)
+                                            .rotate(180f)
+                                            .align(Alignment.CenterEnd)
+                                    )
+
+                                }
                             }
                         }
 
@@ -793,11 +834,50 @@ private fun DocumentInfoScreen(
                                 }
                             }
                         }
-                        Row(
+                        Button(
+                            onClick = {
+                                scope.launch {
+                                    imagePickerBottomSheetState.show()
+                                    imagePickerBottomSheetState.expand()
+                                }
+                                showImagePickerBottomSheet = true
+                                /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    galleryPermissionLauncher.launch(arrayOf(Manifest.permission.READ_MEDIA_IMAGES))
+                                } else {
+                                    galleryPermissionLauncher.launch(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE))
+                                }*/
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = colors.primary), // Blue color from image
+                            shape = RoundedCornerShape(24.dp),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 8.dp),
-                            horizontalArrangement = Arrangement.SpaceEvenly
+                                .bounceClick()
+                                .padding(horizontal = 10.dp, vertical = 8.dp)
+                                .height(48.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.gallery_icon), // Replace with gallery icon
+                                    contentDescription = "Open Gallery",
+                                    tint = colors.onPrimary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = stringResource(R.string.choose_image),
+                                    color = colors.onPrimary,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
+                        }
+                        /*Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 10.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.Center
                         ) {
                             Button(
                                 onClick = {
@@ -823,7 +903,7 @@ private fun DocumentInfoScreen(
                                     )
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Text(
-                                        text = stringResource(R.string.open_gallery),
+                                        text = stringResource(R.string.choose_image),
                                         color = colors.onPrimary,
                                         style = MaterialTheme.typography.titleMedium,
                                         maxLines = 1,
@@ -834,7 +914,7 @@ private fun DocumentInfoScreen(
 
                             Button(
                                 onClick = {
-                                    cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+
                                 },
                                 shape = RoundedCornerShape(24.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
@@ -861,11 +941,15 @@ private fun DocumentInfoScreen(
                                     )
                                 }
                             }
-                        }
+                        }*/
                     }
 
+                    var adViewLoadState by remember { mutableStateOf(true) }
+                    var callback by remember { mutableStateOf(false) }
+
                     if (!isPremium) {
-                        var adLoadState by remember { mutableStateOf(false) }
+
+                        AnimatedVisibility(adViewLoadState) {
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -873,7 +957,7 @@ private fun DocumentInfoScreen(
                                 .heightIn(min = 54.dp) // match banner height
                         ) {
                             Box(contentAlignment = Alignment.Center) {
-                                if (!adLoadState) {
+                                if (!callback) {
                                     Text(
                                         text = stringResource(R.string.advertisement),
                                         style = MaterialTheme.typography.bodyMedium,
@@ -893,7 +977,8 @@ private fun DocumentInfoScreen(
                                         .animateContentSize()
                                         .align(Alignment.Center),
                                     onAdLoaded = { isLoaded ->
-                                        adLoadState = true
+                                        callback = true
+                                        adViewLoadState = isLoaded
                                         Logger.d(TAG, "AdaptiveBannerAd: onAdLoaded: $isLoaded")
                                     }
                                 )
@@ -912,10 +997,50 @@ private fun DocumentInfoScreen(
                             }
                         }
                     }
+                    }
                 }
 
 
             }
+        }
+    }
+
+    // Color Picker Bottom Sheet
+    if (showImagePickerBottomSheet) {
+
+        ModalBottomSheet(
+            onDismissRequest = {
+                scope.launch {
+                    imagePickerBottomSheetState.hide()
+                }
+                showImagePickerBottomSheet = false
+            },
+            containerColor = colors.background,
+            sheetState = imagePickerBottomSheetState
+        ) {
+            ImagePickerDialog(
+                onGalleryClick = {
+                    scope.launch {
+                        imagePickerBottomSheetState.hide()
+                    }
+                    showImagePickerBottomSheet = false
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        galleryPermissionLauncher.launch(arrayOf(Manifest.permission.READ_MEDIA_IMAGES))
+                    } else {
+                        galleryPermissionLauncher.launch(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE))
+                    }
+                },
+                onCameraClick = {
+                    scope.launch {
+                        imagePickerBottomSheetState.hide()
+                    }
+                    showImagePickerBottomSheet = false
+                    // Trigger camera action
+                    cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                }
+            )
+
         }
     }
 }

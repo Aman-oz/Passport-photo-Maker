@@ -15,13 +15,16 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -77,6 +80,7 @@ import com.ots.aipassportphotomaker.adsmanager.admob.AdMobBanner
 import com.ots.aipassportphotomaker.adsmanager.admob.NativeAdViewCompose
 import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
 import com.ots.aipassportphotomaker.adsmanager.admob.adtype.NativeAdType
+import com.ots.aipassportphotomaker.common.ext.bounceClick
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
 import com.ots.aipassportphotomaker.common.utils.AnalyticsConstants
@@ -243,7 +247,7 @@ private fun OnboardingScreen(
                             Spacer(
                                 Modifier
                                     .fillMaxWidth()
-                                    .height(50.dp)
+                                    .height(100.dp)
                                     .background(
                                         brush = Brush.verticalGradient(
                                             colors = listOf(
@@ -255,25 +259,24 @@ private fun OnboardingScreen(
                                     .align(Alignment.BottomCenter)
                             )
 
-//                            if (statePager.currentPage == 0) {
-                                /*Image(
-                                    painter = painterResource(id = R.drawable.list_images),
-                                    contentDescription = "Screen1",
-                                    modifier = Modifier
-                                        .align(Alignment.BottomCenter)
-                                        .animateContentSize(),
-                                    contentScale = ContentScale.Fit,
-                                )*/
+                            val modifier = if (page == 0) {
+                                Modifier
+                                    .fillMaxWidth()
+                                    .height(200.dp)
+                                    .align(Alignment.BottomCenter)
+                            } else {
+                                Modifier
+                                    .fillMaxWidth(.8f)
+                                    .height(150.dp)
+                                    .align(Alignment.BottomStart)
+                            }
 
                                 LottieAnimation(
                                     composition = composition,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .align(Alignment.BottomCenter), // Center the Lottie over the image
+                                    modifier = modifier, // Center the Lottie over the image
                                     iterations = LottieConstants.IterateForever, // Loop the animation
                                     contentScale = ContentScale.Fit
                                 )
-//                            }
                         }
                     }
 
@@ -338,7 +341,6 @@ fun BottomSection(
         modifier = Modifier
             .background(colors.background)
             .fillMaxSize()
-            .padding(12.dp)
     ) {
         val buttonText =
             if (size == index + 1)
@@ -353,7 +355,7 @@ fun BottomSection(
             verticalArrangement = Arrangement.Top
         )
         {
-            Text(
+            /*Text(
                 text = stringResource(id = item.title),
                 style = MaterialTheme.typography.headlineSmall,
                 color = colors.onBackground,
@@ -366,36 +368,49 @@ fun BottomSection(
                 color = colors.onSurfaceVariant,
                 textAlign = TextAlign.Center,
                 fontWeight = FontWeight.Medium
-            )
+            )*/
 
             Spacer(modifier = Modifier.weight(1f))
 
-            HorizontalPagerIndicator(
-                pagerState = statePager,
-                activeColor = colors.primary,
-                inactiveColor = colors.outline,
-
-                modifier = Modifier
-                    .padding(top = 12.dp, bottom = 8.dp)
-                    .align(Alignment.CenterHorizontally)
-            )
-
-            Button(
-                onClick = {
-                    onNextClicked()
-                },
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
+                    .padding(start = 16.dp, end = 16.dp, bottom = 10.dp)
             ) {
-                Text(
+                HorizontalPagerIndicator(
+                    pagerState = statePager,
+                    activeColor = colors.primary,
+                    inactiveColor = colors.outline,
+
                     modifier = Modifier
-                        .padding(vertical = 4.dp),
-                    text = buttonText,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = colors.onPrimary
+                        .padding(top = 12.dp, bottom = 8.dp)
                 )
+
+                Box(
+                    modifier = Modifier
+                        .wrapContentSize()
+                        .animateContentSize()
+                        .clip(RoundedCornerShape(32.dp))
+                        .bounceClick()
+                        .clickable(onClick = {
+                            onNextClicked()
+                        })
+                        .border(width = 1.dp, color = colors.primary, shape = RoundedCornerShape(32.dp))
+                        .padding(horizontal = 18.dp, vertical = 4.dp),
+                ) {
+                    Text(
+                        modifier = Modifier
+                            .padding(vertical = 4.dp)
+                            .align(Alignment.Center),
+                        text = buttonText,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = colors.primary
+                    )
+                }
             }
+
             var adViewLoadState by remember { mutableStateOf(true) }
             var callback by remember { mutableStateOf(false) }
 
@@ -430,8 +445,8 @@ fun BottomSection(
 
                             NativeAdViewCompose(
                                 context = context,
-                                adType = NativeAdType.NATIVE_AD_IMAGE_PROCESSING,
-                                nativeID = AdIdsFactory.getNativeAdId(),
+                                adType = NativeAdType.NATIVE_AD_ONBOARDING,
+                                nativeID = AdIdsFactory.getNativeAdIdOnboarding(),
                                 onAdLoaded = {
                                     callback = true
                                     adViewLoadState = it

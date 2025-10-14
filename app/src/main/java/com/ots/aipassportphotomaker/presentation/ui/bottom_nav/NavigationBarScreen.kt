@@ -1,6 +1,7 @@
 package com.ots.aipassportphotomaker.presentation.ui.bottom_nav
 
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -114,40 +115,49 @@ fun NavigationBarScreen(
                         sharedViewModel.onBottomItemClicked(bottomItem)
                     }
                 )
+
+                var adViewLoadState by remember { mutableStateOf(true) }
+                var callback by remember { mutableStateOf(false) }
+
                 if (!isPremium) {
-                    var adLoadState by remember { mutableStateOf(false) }
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .animateContentSize()
-                            .heightIn(min = 54.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            if (!adLoadState) {
-                                Text(
-                                    text = "Advertisement",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Medium,
-                                    color = colors.onSurfaceVariant,
+
+                    AnimatedVisibility(adViewLoadState) {
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .animateContentSize()
+                                .heightIn(min = 54.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                if (!callback) {
+                                    Text(
+                                        text = "Advertisement",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium,
+                                        color = colors.onSurfaceVariant,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .wrapContentSize(align = Alignment.Center)
+                                    )
+                                }
+
+                                AdaptiveBannerAd(
+                                    adUnit = AdIdsFactory.getBannerAdId(),
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .wrapContentSize(align = Alignment.Center)
+                                        .animateContentSize()
+                                        .align(Alignment.Center),
+                                    onAdLoaded = { isLoaded ->
+                                        callback = true
+                                        adViewLoadState = isLoaded
+                                        Logger.d(
+                                            "AdmobBanner",
+                                            "AdaptiveBannerAd: onAdLoaded: $isLoaded"
+                                        )
+                                    }
                                 )
-                            }
 
-                            AdaptiveBannerAd(
-                                adUnit = AdIdsFactory.getBannerAdId(),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .animateContentSize()
-                                    .align(Alignment.Center),
-                                onAdLoaded = { isLoaded ->
-                                    adLoadState = true
-                                    Logger.d("AdmobBanner", "AdaptiveBannerAd: onAdLoaded: $isLoaded")
-                                }
-                            )
-
-                            /*AdMobBanner(
+                                /*AdMobBanner(
                                 adUnit = AdIdsFactory.getBannerAdId(),
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -159,6 +169,7 @@ fun NavigationBarScreen(
                                     Logger.d("AdMobBanner", "AdMobBanner: onAdLoaded: $isLoaded")
                                 }
                             )*/
+                            }
                         }
                     }
 

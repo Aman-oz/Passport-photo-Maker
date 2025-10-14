@@ -44,6 +44,9 @@ object AppColors {
     val LightWarningContainer = Color(0xFFFFF7ED)
     val LightOnWarningContainer = Color(0xFFC2410C)
 
+    //Ad Colors
+    val LightNativeCTAColor = Color(0xFF0369A1)
+
     val LightBackground = Color(0xFFFFFFFF)
     val LightOnBackground = Color(0xFF18181B)
     val LightSurface = Color(0xFFE4E4E7)
@@ -94,6 +97,9 @@ object AppColors {
     val DarkOnWarning = Color(0xFFFFFFFF)
     val DarkWarningContainer = Color(0xEA580C52)
     val DarkOnWarningContainer = Color(0xFFF97316)
+
+    //Ad Colors
+    val DarkNativeCTAColor = Color(0xFF0369A1)
 
     val DarkBackground = Color(0xFF18181B)
     val DarkOnBackground = Color(0xFFFFFFFF)

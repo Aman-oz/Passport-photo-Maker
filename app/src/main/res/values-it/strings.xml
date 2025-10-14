@@ -183,4 +183,26 @@
     <string name="remove_ads_and_unlock_all_features">Rimuovi annunci e sblocca tutte le funzionalità</string>
     <string name="auto_fit_image_through_advanced_ai">Adattamento automatico immagine tramite IA avanzata.</string>
     <string name="premium">Premium</string>
+
+
+        <string name="finish">Fine</string>
+        <string name="next">Avanti</string>
+        <string name="images">Immagini</string>
+        <string name="no_images_found">Nessuna immagine trovata</string>
+        <string name="photo_guide">Guida foto</string>
+        <string name="background_">Sfondo:</string>
+        <string name="plain_white_or_light_colored_background">" • Sfondo bianco semplice o di colore chiaro.\n"</string>
+        <string name="no_shadows_patterns_or_objects_behind_you">" • Nessuna ombra, motivo o oggetto dietro di te.\n"</string>
+        <string name="face_position">Posizione del viso:</string>
+        <string name="face_should_be_centered_and_fully_visible">" • Il viso deve essere centrato e completamente visibile.\n"</string>
+        <string name="neutral_expression_no_smile_mouth_closed">" • Espressione neutra (nessun sorriso, bocca chiusa).\n"</string>
+        <string name="eyes_open_and_clearly_visible">" • Occhi aperti e chiaramente visibili.\n"</string>
+        <string name="glasses_accessories"><![CDATA[Occhiali e accessori:]]></string>
+        <string name="no_sunglasses">" • Nessun occhiale da sole.\n"</string>
+        <string name="if_you_wear_glasses_ensure_no_glare">" • Se indossi occhiali, assicurati che non ci sia riverbero.\n"</string>
+        <string name="no_headphones_covering_the_face">" • Nessun auricolare che copra il viso.\n"</string>
+        <string name="sample_images">Immagini di esempio</string>
+        <string name="choose_image">Scegli immagine</string>
+        <string name="pick_image_from_your_gallery_or_camera">Scegli un\'immagine dalla tua galleria o catturane una nuova</string>
+
 </resources>

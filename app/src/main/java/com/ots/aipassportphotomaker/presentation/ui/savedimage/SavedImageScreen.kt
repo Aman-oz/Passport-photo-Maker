@@ -8,6 +8,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -82,7 +83,9 @@ import com.google.android.gms.ads.AdSize
 import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.adsmanager.admob.AdMobBanner
 import com.ots.aipassportphotomaker.adsmanager.admob.AdaptiveBannerAd
+import com.ots.aipassportphotomaker.adsmanager.admob.NativeAdViewCompose
 import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
+import com.ots.aipassportphotomaker.adsmanager.admob.adtype.NativeAdType
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.ext.segmentedShadow
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
@@ -557,51 +560,61 @@ private fun SavedImageScreen(
                     }
                     Spacer(modifier = Modifier.weight(1f))
 
+                    var adViewLoadState by remember { mutableStateOf(true) }
+                    var callback by remember { mutableStateOf(false) }
+
                     if (!isPremium) {
-                        var adLoadState by remember { mutableStateOf(false) }
-                        Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .animateContentSize()
-                                .heightIn(min = 54.dp) // match banner height
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                if (!adLoadState) {
-                                    Text(
-                                        text = stringResource(R.string.advertisement),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Medium,
-                                        color = colors.onSurfaceVariant,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .wrapContentSize(align = Alignment.Center)
-                                    )
+
+                        AnimatedVisibility(adViewLoadState) {
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .animateContentSize()
+                                    .heightIn(min = 54.dp) // match banner height
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    if (!callback) {
+                                        Text(
+                                            text = stringResource(R.string.advertisement),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Medium,
+                                            color = colors.onSurfaceVariant,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .wrapContentSize(align = Alignment.Center)
+                                        )
+                                    }
+
+                                    if (uiState.documentName.isNotEmpty()) {
+
+                                        AdaptiveBannerAd(
+                                            adUnit = AdIdsFactory.getBannerAdId(),
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .animateContentSize()
+                                                .align(Alignment.Center),
+                                            onAdLoaded = { isLoaded ->
+                                                callback = true
+                                                adViewLoadState = isLoaded
+                                                Logger.d(
+                                                    TAG,
+                                                    "AdaptiveBannerAd: onAdLoaded: $isLoaded"
+                                                )
+                                            }
+                                        )
+                                    } else {
+                                        NativeAdViewCompose(
+                                            context = context,
+                                            adType = NativeAdType.NATIVE_AD_FINALE_SCREEN,
+                                            nativeID = AdIdsFactory.getNativeAdId(),
+                                            onAdLoaded = {
+                                                callback = true
+                                                adViewLoadState = it
+                                            }
+                                        )
+                                    }
+
                                 }
-
-                                AdaptiveBannerAd(
-                                    adUnit = AdIdsFactory.getBannerAdId(),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .animateContentSize()
-                                        .align(Alignment.Center),
-                                    onAdLoaded = { isLoaded ->
-                                        adLoadState = true
-                                        Logger.d(TAG, "AdaptiveBannerAd: onAdLoaded: $isLoaded")
-                                    }
-                                )
-
-                                /*AdMobBanner(
-                                    adUnit = AdIdsFactory.getBannerAdId(),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .animateContentSize()
-                                        .align(Alignment.Center),
-                                    adSize = AdSize.BANNER, // or adaptive size if needed
-                                    onAdLoaded = { isLoaded ->
-                                        adLoadState = isLoaded
-                                        Logger.d(TAG, "OnboardingScreen: Ad Loaded: $isLoaded")
-                                    }
-                                )*/
                             }
                         }
 

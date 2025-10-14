@@ -183,4 +183,25 @@
     <string name="remove_ads_and_unlock_all_features">広告を削除し、全機能アンロック</string>
     <string name="auto_fit_image_through_advanced_ai">先進AIによる自動フィット画像。</string>
     <string name="premium">プレミアム</string>
+
+        <string name="finish">完了</string>
+        <string name="next">次へ</string>
+        <string name="images">画像</string>
+        <string name="no_images_found">画像が見つかりません</string>
+        <string name="photo_guide">写真ガイド</string>
+        <string name="background_">背景:</string>
+        <string name="plain_white_or_light_colored_background">" • プレーンな白または淡い色の背景。\n"</string>
+        <string name="no_shadows_patterns_or_objects_behind_you">" • 背後の影、パターン、またはオブジェクトなし。\n"</string>
+        <string name="face_position">顔の位置:</string>
+        <string name="face_should_be_centered_and_fully_visible">" • 顔は中央にあり、完全に表示される。\n"</string>
+        <string name="neutral_expression_no_smile_mouth_closed">" • 中立的な表情（笑顔なし、口閉じ）。\n"</string>
+        <string name="eyes_open_and_clearly_visible">" • 目を開き、明確に表示。\n"</string>
+        <string name="glasses_accessories"><![CDATA[メガネとアクセサリー:]]></string>
+        <string name="no_sunglasses">" • サングラスなし。\n"</string>
+        <string name="if_you_wear_glasses_ensure_no_glare">" • メガネを着用する場合、グレアがないことを確認。\n"</string>
+        <string name="no_headphones_covering_the_face">" • 顔を覆うヘッドフォンなし。\n"</string>
+        <string name="sample_images">サンプル画像</string>
+        <string name="choose_image">画像を選択</string>
+        <string name="pick_image_from_your_gallery_or_camera">ギャラリーから画像を選択するか、新しいものをキャプチャ</string>
+
 </resources>
