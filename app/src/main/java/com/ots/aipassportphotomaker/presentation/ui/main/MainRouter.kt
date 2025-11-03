@@ -25,6 +25,14 @@ class MainRouter(
         }
     }
 
+    fun navigateFromPremiumToHomeScreen() {
+        mainNavController.navigate(Page.NavigationBar) {
+            popUpTo(Page.Premium::class) {
+                inclusive = true
+            }
+        }
+    }
+
     fun navigateToItemDetailScreen(name: String) {
         mainNavController.navigate(Page.ItemDetailScreen(name))
     }
@@ -243,6 +251,6 @@ class MainRouter(
     }
 
     fun navigateToPremiumScreen() {
-        mainNavController.navigate(Page.Premium)
+        mainNavController.navigate(Page.Premium("other"))
     }
 }

@@ -451,14 +451,6 @@ private fun DocumentInfoScreen(
     // Gallery permission launcher
     val galleryPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions(),
-
-        /*onResult = { perms ->
-            permissionsToRequest.forEach { permission ->
-                val isGranted = perms[permission] == true
-                if (isGranted)
-                onPermissionResult(permission, perms[permission] == true)
-            }
-        }*/
         onResult = { permissions ->
             val allGranted = permissions.all { it.value }
             if (allGranted) {
@@ -841,11 +833,6 @@ private fun DocumentInfoScreen(
                                     imagePickerBottomSheetState.expand()
                                 }
                                 showImagePickerBottomSheet = true
-                                /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                    galleryPermissionLauncher.launch(arrayOf(Manifest.permission.READ_MEDIA_IMAGES))
-                                } else {
-                                    galleryPermissionLauncher.launch(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE))
-                                }*/
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = colors.primary), // Blue color from image
                             shape = RoundedCornerShape(24.dp),
@@ -873,75 +860,6 @@ private fun DocumentInfoScreen(
                                 )
                             }
                         }
-                        /*Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 10.dp, vertical = 8.dp),
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Button(
-                                onClick = {
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                        galleryPermissionLauncher.launch(arrayOf(Manifest.permission.READ_MEDIA_IMAGES))
-                                    } else {
-                                        galleryPermissionLauncher.launch(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE))
-                                    }
-                                },
-                                colors = ButtonDefaults.buttonColors(containerColor = colors.primary), // Blue color from image
-                                shape = RoundedCornerShape(24.dp),
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(end = 8.dp, bottom = 8.dp)
-                                    .height(48.dp)
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.gallery_icon), // Replace with gallery icon
-                                        contentDescription = "Open Gallery",
-                                        tint = colors.onPrimary,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(
-                                        text = stringResource(R.string.choose_image),
-                                        color = colors.onPrimary,
-                                        style = MaterialTheme.typography.titleMedium,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                    )
-                                }
-                            }
-
-                            Button(
-                                onClick = {
-
-                                },
-                                shape = RoundedCornerShape(24.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                                border = BorderStroke(2.dp, colors.primary),
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(start = 8.dp, bottom = 8.dp)
-                                    .height(48.dp)
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.camera_icon_outline), // Replace with camera icon
-                                        contentDescription = "Take Photo",
-                                        tint = colors.primary,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(
-                                        text = stringResource(R.string.take_photo),
-                                        color = colors.primary,
-                                        style = MaterialTheme.typography.titleMedium,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                    )
-                                }
-                            }
-                        }*/
                     }
 
                     var adViewLoadState by remember { mutableStateOf(true) }
@@ -1036,8 +954,16 @@ private fun DocumentInfoScreen(
                         imagePickerBottomSheetState.hide()
                     }
                     showImagePickerBottomSheet = false
+                    preparedUri = createImageUri(context)
+                    if (preparedUri != null) {
+                        cameraLauncher.launch(preparedUri!!)
+                        Logger.i(TAG, "Camera URI: $preparedUri")
+                    } else {
+                        Logger.e(TAG, "Failed to create image URI")
+                        Toast.makeText(context, "Failed to prepare camera", Toast.LENGTH_SHORT).show()
+                    }
                     // Trigger camera action
-                    cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                    //cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                 }
             )
 

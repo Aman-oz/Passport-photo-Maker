@@ -6,11 +6,14 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Process
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.mutableStateListOf
+import com.google.android.gms.tasks.OnSuccessListener
 import com.las.collage.maker.iab.ProductItem
 import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.adsmanager.admob.MyAdsManager
+import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
 import com.ots.aipassportphotomaker.common.iab.AppBillingClient
 import com.ots.aipassportphotomaker.common.iab.subscription.SubscriptionItem
@@ -25,8 +28,11 @@ import kotlinx.coroutines.flow.asSharedFlow
 import com.ots.aipassportphotomaker.common.iab.interfaces.ConnectResponse
 import com.ots.aipassportphotomaker.common.iab.interfaces.PurchaseResponse
 import com.ots.aipassportphotomaker.common.managers.AnalyticsManager
+import com.ots.aipassportphotomaker.common.screens.Screens
 import com.ots.aipassportphotomaker.common.utils.AnalyticsConstants
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.update
 
 @HiltViewModel
@@ -37,6 +43,7 @@ class PremiumScreenViewModel @Inject constructor(
     private val analyticsManager: AnalyticsManager,
     @ApplicationContext private val context: Context,
 ) : BaseViewModel() {
+    private val TAG = PremiumScreenViewModel::class.java.simpleName
 
     private val _uiState: MutableStateFlow<PremiumScreenUiState> = MutableStateFlow(
         PremiumScreenUiState()
@@ -49,6 +56,8 @@ class PremiumScreenViewModel @Inject constructor(
     private val _subscriptionItems: MutableStateFlow<List<SubscriptionItem>> = MutableStateFlow(emptyList())
     val subscriptionItems = _subscriptionItems.asStateFlow()
 
+    val sourceScreen = premiumScreenBundle.sourceScreen
+
 
     init {
 
@@ -59,6 +68,7 @@ class PremiumScreenViewModel @Inject constructor(
 
     private fun onInitialState() = launch {
         analyticsManager.sendAnalytics(AnalyticsConstants.OPENED, "PremiumScreen")
+        Log.d(TAG, "onInitialState: sourceScreen=$sourceScreen")
     }
 
     private fun loadState(isLoading: Boolean) {
@@ -67,8 +77,26 @@ class PremiumScreenViewModel @Inject constructor(
         }
     }
 
-    fun onOpenCameraClicked() {
-//        _navigationState.tryEmit(PhotoIDScreenNavigationState.TakePhotoScreen(documentId))
+    fun onPremiumClose(activity: Activity, onComplete: () -> Unit) {
+        launch {
+            coroutineScope {
+                val timeoutJob = launch {
+                    delay(10000L)
+                    onComplete()
+                }
+
+                adsManager.loadAndShowInterstitialAd(
+                    activity = activity,
+                    job = timeoutJob,
+                    adUnitId = AdIdsFactory.getWelcomeInterstitialAdId(),
+                    interstitialAdScreen = Screens.OTHER,
+                    onSuccessListener = OnSuccessListener<Boolean> {
+                        timeoutJob.cancel()
+                        onComplete()
+                    }
+                )
+            }
+        }
     }
 
     private fun connectBillingClient() {

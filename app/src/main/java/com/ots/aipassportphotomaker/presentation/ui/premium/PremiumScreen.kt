@@ -118,7 +118,15 @@ fun PremiumPage(
         uiState = uiState,
         onCloseClick = {
             viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnClose_PremiumScreen")
-            mainRouter.goBack()
+
+            if (viewModel.sourceScreen == "getStarted") {
+                viewModel.onPremiumClose(activityContext) {
+                    mainRouter.navigateFromPremiumToHomeScreen()
+                }
+            } else {
+                mainRouter.goBack()
+            }
+                
         },
         onSubscribeWeekly = {
             viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnSubscribeWeekly_PremiumScreen")

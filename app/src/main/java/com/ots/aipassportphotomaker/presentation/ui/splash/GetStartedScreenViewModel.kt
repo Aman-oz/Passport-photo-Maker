@@ -20,6 +20,7 @@ import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
 import com.ots.aipassportphotomaker.adsmanager.openad.ResumeAdManager
 import com.ots.aipassportphotomaker.adsmanager.openad.delay.InitialDelay
 import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
+import com.ots.aipassportphotomaker.common.firebase.remoteconfig.RemoteConfig
 import com.ots.aipassportphotomaker.common.managers.AdsConsentManager
 import com.ots.aipassportphotomaker.common.managers.AnalyticsManager
 import com.ots.aipassportphotomaker.common.managers.PreferencesHelper
@@ -83,12 +84,43 @@ class GetStartedScreenViewModel @Inject constructor(
 
 
     fun initConsent(activity: Activity) {
-        val canRequestAds: Boolean = adsConsentManager.canRequestAds
+        RemoteConfig.initialize { success ->
+            if (success) Log.d(TAG, "Remote Config initialized successfully")
+            else Log.e(TAG, "Remote Config initialization failed")
+        }
 
-        if (!isPremiumUser()) {
+        adsConsentManager.gatherConsentInfo(activity) {
+            Log.d(TAG, "Consent info gathered: canRequestAds = ${adsConsentManager.canRequestAds}")
 
-            adsConsentManager.canRequestAds.apply {
-                if (this == false) {
+            when {
+                // ✅ Consent already available → enable Analytics + Ads immediately
+                adsConsentManager.canRequestAds -> {
+                    enableFirebaseAnalytics(true)
+                    initializeMonetizationComponents(activity)
+
+                    analyticsManager.sendAnalytics(AnalyticsConstants.OPENED, "GetStartedScreen")
+                }
+
+                // ❌ Consent not yet available → show the form
+                else -> {
+                    adsConsentManager.showGDPRConsent(activity, BuildConfig.DEBUG) { consentError ->
+                        if (consentError != null) {
+                            Logger.e(TAG, "Error showing consent form: ${consentError.message}")
+                        }
+
+                        val consentGiven = adsConsentManager.canRequestAds
+                        enableFirebaseAnalytics(consentGiven)
+                        initializeMonetizationComponents(activity)
+
+                        analyticsManager.sendAnalytics(AnalyticsConstants.OPENED, "GetStartedScreen")
+                    }
+                }
+            }
+        }
+
+
+            /*adsConsentManager.canRequestAds.apply {
+                if (!this) {
                     adsConsentManager.showGDPRConsent(
                         activity,
                         BuildConfig.DEBUG
@@ -103,16 +135,22 @@ class GetStartedScreenViewModel @Inject constructor(
                         Logger.d(TAG, "Consent gathering complete")
                         //Can request ads
                         _consentState.value = true
-                        adsManager.initialize {  }
-                        analyticsManager.sendAnalytics("consent", "gdpr_consent_given")
 
-                        ResumeAdManager.initialize(
-                            preferencesHelper,
-                            App.getInstance(),
-                            InitialDelay.NONE,
-                            AdIdsFactory.getResumeAdId(),
-                            AdRequest.Builder().build()
-                        )
+                        analyticsManager.sendAnalytics("consent", "gdpr_consent_given")
+                        if (!isPremiumUser()) {
+
+                            adsManager.initialize {  }
+
+                            ResumeAdManager.initialize(
+                                preferencesHelper,
+                                App.getInstance(),
+                                InitialDelay.NONE,
+                                AdIdsFactory.getResumeAdId(),
+                                AdRequest.Builder().build()
+                            )
+                        } else {
+                            Log.d(TAG, "User is premium, ads will not be initialized")
+                        }
 
                     }
                 } else {
@@ -122,13 +160,7 @@ class GetStartedScreenViewModel @Inject constructor(
                     adsManager.initialize {  }
                     analyticsManager.sendAnalytics("consent", "gdpr_consent_already_given")
                 }
-            }
-        } else {
-            Log.d(TAG, "Ads can be requested or user is premium")
-            //can request ads
-            _consentState.value = true
-            adsManager.initialize {  }
-        }
+            }*/
     }
 
     fun onGetStartedClicked(activity: Activity, onComplete: () -> Unit) {
@@ -181,29 +213,32 @@ class GetStartedScreenViewModel @Inject constructor(
         return builder.create()
     }
 
-    fun getAnalyticsManager(): AnalyticsManager {
-        return analyticsManager
+    private fun initializeMonetizationComponents(activity: Activity) {
+        _consentState.value = true
+
+        if (!isPremiumUser()) {
+            adsManager.initialize { Log.d(TAG, "Ads initialized") }
+
+            ResumeAdManager.initialize(
+                preferencesHelper,
+                App.getInstance(),
+                InitialDelay.NONE,
+                AdIdsFactory.getResumeAdId(),
+                AdRequest.Builder().build()
+            )
+        }
+
+        analyticsManager.sendAnalytics("consent_status", adsConsentManager.canRequestAds.toString())
+    }
+
+    private fun enableFirebaseAnalytics(isConsentGiven: Boolean) {
+        analyticsManager.setAnalyticsCollectionEnabled(isConsentGiven)
+
+        Log.d(TAG, "Firebase Analytics enabled = $isConsentGiven")
     }
 
     fun sendEvent(eventName: String, eventValue: String) {
         analyticsManager.sendAnalytics(eventName, eventValue)
-    }
-
-    fun logAdRevenue(adType: String, adValue: Double) {
-        val price = adValue / 1000000
-        val currency = Currency.getInstance(Locale.US)
-
-        val adRevenueParameters = Bundle()
-        adRevenueParameters.putDouble(FirebaseAnalytics.Param.VALUE, price)
-        adRevenueParameters.putString(FirebaseAnalytics.Param.CURRENCY, currency.currencyCode)
-        adRevenueParameters.putString("ad_format", adType)
-        adRevenueParameters.putString("ad_network", "admob")
-        analyticsManager.sendEvent("ad_revenue_sdk", adRevenueParameters)
-
-        Logger.d("WelcomeInterstitialAdRevenue", "logAdRevenue adType : $adType")
-        Logger.d("WelcomeInterstitialAdRevenue", "logAdRevenue Currency : $currency")
-        Logger.d("WelcomeInterstitialAdRevenue", "logAdRevenue Price : $adValue")
-        Logger.d("WelcomeInterstitialAdRevenue", "logAdRevenue Price divide by 1m : $price")
     }
 
 }

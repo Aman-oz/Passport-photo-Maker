@@ -76,7 +76,11 @@ fun MainGraph(
                 viewModel = getStartedViewModel,
                 sharedViewModel = sharedViewModel,
                 onGetStartedClick = {
-                    val destination = if (isFirstLaunch) Page.LanguagesScreen("splash") else Page.NavigationBar
+                    val destination = if (isFirstLaunch) {
+                        Page.LanguagesScreen("splash")
+                    } else {
+                        Page.NavigationBar
+                    }
                     onGetStartedCompleted(destination)
                 }
             )

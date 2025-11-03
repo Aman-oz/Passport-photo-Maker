@@ -125,28 +125,6 @@ fun GetStartedPage(
     viewModel.consentState.collectAsEffect { isConsentGiven ->
         if (isConsentGiven) {
             Logger.d(TAG, "$TAG: User has given consent: $isConsentGiven")
-//            isConsentDone = true
-            // Load an interstitial ad
-//            LaunchedEffect(Unit) {
-//                context.loadFullScreenAd(
-//                    analyticsManager = viewModel.getAnalyticsManager(),
-//                    adUnitId = AdIdsFactory.getWelcomeInterstitialAdId(),
-//                    onAdLoaded = { ad ->
-//                        isAdLoading = false
-//                        Logger.i(TAG, "$TAG: Interstitial ad loaded.")
-//                        interstitialAd = ad
-//                    },
-//                    onAdFailedToLoad = {
-//                        isAdLoading = false
-//                        Logger.e(TAG, "$TAG: Interstitial ad failed to load: $it")
-//                    },
-//                    onAdDismissed = {
-//                        Logger.i(TAG, "$TAG: Interstitial ad dismissed.")
-////                onGetStartedClick()
-//                        interstitialAd = null
-//                    }
-//                )
-//            }
         }
 
     }
@@ -163,24 +141,10 @@ fun GetStartedPage(
         onGetStartedClick = {
             viewModel.sendEvent(AnalyticsConstants.CLICKED, "get_started_splash")
 
-            viewModel.onGetStartedClicked(activityContext) {
+            onGetStartedClick()
+            /*viewModel.onGetStartedClicked(activityContext) {
                 onGetStartedClick()
-            }
-
-            /*onGetStartedClick()
-
-            interstitialAd?.show(context) ?: run {
-                Logger.e(TAG, "$TAG: Interstitial ad not ready yet.")
-            }
-
-            interstitialAd?.onPaidEventListener = OnPaidEventListener { adValue ->
-                viewModel.logAdRevenue(
-                    adType = "interstitial",
-                    adValue = adValue.valueMicros.toDouble()
-                )
             }*/
-
-
         }
     )
 

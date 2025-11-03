@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
@@ -46,9 +45,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
-import com.google.android.gms.ads.AdSize
 import com.ots.aipassportphotomaker.R
-import com.ots.aipassportphotomaker.adsmanager.admob.AdMobBanner
 import com.ots.aipassportphotomaker.adsmanager.admob.AdaptiveBannerAd
 import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
@@ -156,7 +153,7 @@ fun PhotoIDPage2(
             viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnBack_PhotoID")
             mainRouter.goBack()
 
-            viewModel.showInterstitialAd(activity) {  }
+            viewModel.showInterstitialAd(activity) { }
         },
         onGetProClick = {
             viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnGetPro_PhotoID")
@@ -235,10 +232,14 @@ private fun PhotoIDScreen2(
             if (isLoading) {
                 LoaderFullScreen()
             } else {
+                var adViewLoadState by remember { mutableStateOf(true) }
+                var callback by remember { mutableStateOf(false) }
+
                 Column(
                     modifier = Modifier
                         .background(colors.background)
                         .fillMaxWidth()
+                        .weight(1f)
                         .pointerInput(Unit) {
                             detectTapGestures(onTap = {
                                 focusManager.clearFocus()
@@ -276,62 +277,6 @@ private fun PhotoIDScreen2(
                         )
                     } else {
 
-                        var adViewLoadState by remember { mutableStateOf(true) }
-                        var callback by remember { mutableStateOf(false) }
-
-                        if (!isPremium) {
-
-                            AnimatedVisibility(adViewLoadState) {
-                            Surface(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .animateContentSize()
-                                    .heightIn(min = 54.dp) // match banner height
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    if (!callback) {
-                                        Text(
-                                            text = stringResource(R.string.advertisement),
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            fontWeight = FontWeight.Medium,
-                                            color = colors.onSurfaceVariant,
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .wrapContentSize(align = Alignment.Center)
-                                        )
-                                    }
-
-                                    AdaptiveBannerAd(
-                                        adUnit = AdIdsFactory.getBannerAdId(),
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .animateContentSize()
-                                            .align(Alignment.Center),
-                                        onAdLoaded = { isLoaded ->
-                                            callback = true
-                                            adViewLoadState = isLoaded
-                                            Logger.d(TAG, "AdaptiveBannerAd: onAdLoaded: $isLoaded")
-                                        }
-                                    )
-
-                                    /* AdMobBanner(
-                                        adUnit = AdIdsFactory.getBannerAdId(),
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .animateContentSize()
-                                            .align(Alignment.Center),
-                                        adSize = AdSize.BANNER, // or adaptive size if needed
-                                        onAdLoaded = { isLoaded ->
-                                            adLoadState = isLoaded
-                                            Logger.d(TAG, "AdMobBanner: onAdLoaded: $isLoaded")
-                                        }
-                                    )*/
-                                }
-                            }
-                        }
-
-                        }
-
                         DocumentList(
                             documents,
                             onDocumentClick,
@@ -342,6 +287,50 @@ private fun PhotoIDScreen2(
                             }
                         )
                     }
+                }
+
+                if (!isPremium) {
+
+                    AnimatedVisibility(adViewLoadState) {
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 4.dp)
+                                .animateContentSize()
+                                .heightIn(min = 54.dp) // match banner height
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                if (!callback) {
+                                    Text(
+                                        text = stringResource(R.string.advertisement),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium,
+                                        color = colors.onSurfaceVariant,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .wrapContentSize(align = Alignment.Center)
+                                    )
+                                }
+
+                                AdaptiveBannerAd(
+                                    adUnit = AdIdsFactory.getBannerAdId(),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .animateContentSize()
+                                        .align(Alignment.Center),
+                                    onAdLoaded = { isLoaded ->
+                                        callback = true
+                                        adViewLoadState = isLoaded
+                                        Logger.d(
+                                            TAG,
+                                            "AdaptiveBannerAd: onAdLoaded: $isLoaded"
+                                        )
+                                    }
+                                )
+                            }
+                        }
+                    }
+
                 }
             }
         }

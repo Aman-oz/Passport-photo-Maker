@@ -48,12 +48,15 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.android.billingclient.BuildConfig
+import com.google.android.gms.tasks.OnSuccessListener
 import com.ots.aipassportphotomaker.App
 import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.adsmanager.admob.MyAdsManager
+import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
 import com.ots.aipassportphotomaker.common.managers.AdsConsentManager
 import com.ots.aipassportphotomaker.common.managers.AnalyticsManager
 import com.ots.aipassportphotomaker.common.managers.PreferencesHelper
+import com.ots.aipassportphotomaker.common.screens.Screens
 import com.ots.aipassportphotomaker.common.utils.AdsConstants
 import com.ots.aipassportphotomaker.common.utils.AnalyticsConstants
 import com.ots.aipassportphotomaker.common.utils.Logger
@@ -84,6 +87,7 @@ import kotlinx.coroutines.launch
 import java.util.Locale
 import javax.inject.Inject
 import kotlin.compareTo
+import kotlin.random.Random
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -195,8 +199,7 @@ class MainActivity : ComponentActivity() {
 
             var showSettingsDialog by rememberSaveable { mutableStateOf(false) }
             var showChangeThemeDialog by rememberSaveable { mutableStateOf(false) }
-//            var showExitDialog by rememberSaveable { mutableStateOf(false) }
-//            var showExitDialogState by remember { mutableStateOf(false) }
+
             val showExitDialog by viewModel.showExitDialog.collectAsState()
 
             var selectedTheme by rememberSaveable { mutableIntStateOf(getInitialThemeIndex()) }
@@ -271,18 +274,6 @@ class MainActivity : ComponentActivity() {
                     )
                 }
 
-                /*LaunchedEffect(Unit) {
-                    lifecycleScope.launch {
-                        val result = documentRepository.getAllCreatedImages()
-                        result.onSuccess {
-                            isHistoryItemsAvailable = it.isNotEmpty()
-                        }
-                        result.onError {
-                            isHistoryItemsAvailable = false
-                        }
-                    }
-                }*/
-
                 // Observe database changes
                 LaunchedEffect(Unit) {
                     documentRepository.observeCreatedImagesCount().collect { count ->
@@ -336,8 +327,61 @@ class MainActivity : ComponentActivity() {
                                     popUpTo(Page.GetStartedScreen) { inclusive = true }
                                 }
                             } else {
-                                navController.navigate(destination) {
+                                /*navController.navigate(destination) {
                                     popUpTo(Page.GetStartedScreen) { inclusive = true }
+                                }*/
+
+                                val random = Random.nextInt(3) // 0, 1, 2
+                                when (random) {
+                                    0 -> {
+                                        // Option 0: Directly to NavigationBar (HomeScreen)
+                                        Logger.d("MainActivity", "Second launch: Direct to NavigationBar")
+                                        navController.navigate(Page.NavigationBar) {
+                                            popUpTo(Page.GetStartedScreen) { inclusive = true }
+                                        }
+                                    }
+                                    1 -> {
+                                        // Option 1: Show interstitial ad, then to NavigationBar
+                                        Logger.d("MainActivity", "Second launch: Show interstitial ad, then NavigationBar")
+
+                                        val timeoutJob = lifecycleScope.launch {
+                                            delay(10000L)
+                                            navController.navigate(Page.NavigationBar) {
+                                                popUpTo(Page.GetStartedScreen) { inclusive = true }
+                                            }
+                                        }
+
+                                        adsManager.loadAndShowInterstitialAd(
+                                            activity = this@MainActivity,
+                                            job = timeoutJob,
+                                            adUnitId = AdIdsFactory.getWelcomeInterstitialAdId(),
+                                            interstitialAdScreen = Screens.OTHER,
+                                            onSuccessListener = OnSuccessListener<Boolean> {
+                                                timeoutJob.cancel()
+                                                navController.navigate(Page.NavigationBar) {
+                                                    popUpTo(Page.GetStartedScreen) { inclusive = true }
+                                                }
+                                            }
+                                        )
+                                    }
+                                    2 -> {
+                                        // Option 2: Go to Premium screen, then to NavigationBar
+                                        Logger.d("MainActivity", "Second launch: Go to Premium, then NavigationBar")
+                                        navController.navigate(Page.Premium(sourceScreen = "getStarted")) {
+                                            popUpTo(Page.GetStartedScreen) { inclusive = true }
+                                        }
+                                        // Note: In Premium screen, add a "Continue to Home" button that navigates to Page.NavigationBar
+                                    }
+                                    else -> {
+                                        // Fallback to direct navigation
+                                        Logger.d(
+                                            "MainActivity",
+                                            "Second launch: Fallback to direct NavigationBar"
+                                        )
+                                        navController.navigate(Page.NavigationBar) {
+                                            popUpTo(Page.GetStartedScreen) { inclusive = true }
+                                        }
+                                    }
                                 }
                             }
                         },

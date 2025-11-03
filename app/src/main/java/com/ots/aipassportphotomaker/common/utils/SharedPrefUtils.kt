@@ -11,4 +11,5 @@ object SharedPrefUtils {
 
     const val SELECTED_LANGUAGE = "selected_language"
     const val LANGUAGE_CODE = "language_code"
+    const val IS_CONSENT_GIVEN = "is_consent_given"
 }

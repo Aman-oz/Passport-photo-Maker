@@ -12,6 +12,7 @@ import com.aman.downloader.DownloaderConfig
 import com.aman.downloader.OziDownloader
 import com.aman.downloader.OziDownloader.Companion.create
 import com.android.billingclient.BuildConfig
+import com.google.firebase.FirebaseApp
 import com.las.collage.maker.iab.ProductItem
 import com.ots.aipassportphotomaker.adsmanager.admob.MyAdsManager
 import com.ots.aipassportphotomaker.common.iab.AppBillingClient
@@ -19,6 +20,7 @@ import com.ots.aipassportphotomaker.common.iab.interfaces.ConnectResponse
 import com.ots.aipassportphotomaker.common.iab.interfaces.PurchaseResponse
 import com.ots.aipassportphotomaker.common.iab.subscription.SubscriptionItem
 import com.ots.aipassportphotomaker.common.managers.AdsConsentManager
+import com.ots.aipassportphotomaker.common.managers.AnalyticsManager
 import com.ots.aipassportphotomaker.common.managers.PreferencesHelper
 import com.ots.aipassportphotomaker.common.utils.AdsConstants
 import com.ots.aipassportphotomaker.common.utils.SharedPrefUtils
@@ -58,6 +60,12 @@ class App: Application(), ImageLoaderFactory {
 
         instance = this
         oziDownloader = create(applicationContext, DownloaderConfig())
+
+        FirebaseApp.initializeApp(this)
+        AnalyticsManager.initialize(this)
+
+        val consentGiven = preferencesHelper.getBoolean(SharedPrefUtils.IS_CONSENT_GIVEN, false)
+        AnalyticsManager.getInstance().setAnalyticsCollectionEnabled(consentGiven)
 
         getSubscriptionDetails()
     }

@@ -236,13 +236,14 @@ class MyAdsManager(
             // show progress dialog
             val dialog = progressDialog ?: run {
                 val builder = AlertDialog.Builder(activity)
-                val inflater = LayoutInflater.from(activity)
                 val progressBar = ProgressBar(activity, null, android.R.attr.progressBarStyle)
+
                 val textView = TextView(activity).apply {
                     text = activity.getString(R.string.loading_ad)
                     gravity = Gravity.START
                     setPadding(50, 50, 50, 50)
                 }
+
                 val linearLayout = LinearLayout(activity).apply {
                     orientation = LinearLayout.HORIZONTAL
                     gravity = Gravity.START
@@ -250,11 +251,18 @@ class MyAdsManager(
                     addView(textView)
                     setPadding(50, 50, 50, 50)
                 }
+
                 builder.setView(linearLayout)
                 builder.setCancelable(false)
                 builder.create()
             }
-            dialog.show()
+            try {
+                dialog.show()
+            } catch (e: Exception) {
+                Logger.e(TAG, "Failed to show progress dialog", e)
+                onSuccessListener.onSuccess(false)
+                return
+            }
 
             val adRequest = AdRequest.Builder().build()
 
@@ -264,7 +272,9 @@ class MyAdsManager(
                         TAG,
                         "InterstitialAd - onAdLoaded: ${interstitialAd.adUnitId}"
                     )
-                    dialog.dismiss()
+                    if (dialog.isShowing) {
+                        dialog.dismiss()
+                    }
 
                     job?.cancel()
                     mInterstitialAdLoadAndShow = interstitialAd
@@ -316,7 +326,9 @@ class MyAdsManager(
                 override fun onAdFailedToLoad(loadAdError: LoadAdError) {
                     Logger.d(TAG, "onAdFailedToLoad: ")
 
-                    dialog.dismiss()
+                    if (dialog.isShowing) {
+                        dialog.dismiss()
+                    }
                     job?.cancel()
                     onSuccessListener.onSuccess(false)
                 }
@@ -394,8 +406,13 @@ class MyAdsManager(
             )
         }
 
+        if (activityContext == null) return
+        if (activityContext.isFinishing || activityContext.isDestroyed) {
+            rewardAd = null
+            return
+        }
 
-        rewardAd?.show(activityContext!!) {
+        rewardAd?.show(activityContext) {
             Logger.d(TAG, "The user earned the reward.")
             listener.onRewardEarned(true)
         }
@@ -414,8 +431,10 @@ class MyAdsManager(
         isOtherAdShowing = false
         if (!isNetworkAvailable(context) || isPremium) return
         if (rewardedInterstitialAd == null) {
+            if (activityContext == null) return
+
             RewardedInterstitialAd.load(
-                activityContext!!, AdIdsFactory.getRewardedInterstitialAdId(),
+                activityContext, AdIdsFactory.getRewardedInterstitialAdId(),
                 AdRequest.Builder().build(), object : RewardedInterstitialAdLoadCallback() {
                     override fun onAdFailedToLoad(loadAdError: LoadAdError) {
                         Logger.d("$TAG Rewarded", loadAdError.toString())
@@ -493,27 +512,40 @@ class MyAdsManager(
         }
 
         if (rewardAd == null) {
+            if (activityContext?.isFinishing == true || activityContext?.isDestroyed == true) {
+                listener.onRewardEarned(false)
+                return
+            }
+
             // show progress dialog
             val builder = AlertDialog.Builder(activityContext)
-            val inflater = LayoutInflater.from(activityContext)
-            val dialogView = inflater.inflate(android.R.layout.simple_list_item_1, null)
             val progressBar = ProgressBar(activityContext, null, android.R.attr.progressBarStyle)
+
             val textView = TextView(activityContext).apply {
-                text = "Loading ad..."
-                gravity = Gravity.CENTER
+                text = context.getString(R.string.loading_ad)
+                gravity = Gravity.START
                 setPadding(50, 50, 50, 50)
             }
+
             val linearLayout = LinearLayout(activityContext).apply {
-                orientation = LinearLayout.VERTICAL
-                gravity = Gravity.CENTER
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.START
                 addView(progressBar)
                 addView(textView)
                 setPadding(50, 50, 50, 50)
             }
+
             builder.setView(linearLayout)
             builder.setCancelable(false)
             val dialog = builder.create()
-            dialog.show()
+
+            try {
+                dialog.show()
+            } catch (e: Exception) {
+                Logger.e(TAG, "Failed to show progress dialog", e)
+                listener.onRewardEarned(false)
+                return
+            }
 
             val adRequest = AdRequest.Builder().build()
             Logger.d(TAG, "loadRewardedAd: AdID: $adUnitId")
@@ -524,20 +556,35 @@ class MyAdsManager(
                 object : RewardedAdLoadCallback() {
                     override fun onAdFailedToLoad(loadAdError: LoadAdError) {
                         Logger.d(TAG, "loadRewardedAd: onAdFailedToLoad, error: ${loadAdError.message}")
-                        dialog.dismiss()
+                        if (dialog.isShowing) {
+                            dialog.dismiss()
+                        }
                         isOtherAdShowing = false
                         rewardAd = null
                         listener.onRewardEarned(false)
                     }
 
                     override fun onAdLoaded(rewardedAd: RewardedAd) {
-                        dialog.dismiss()
+                        if (dialog.isShowing) {
+                            dialog.dismiss()
+                        }
                         rewardAd = rewardedAd
                         Logger.d(TAG, "loadRewardedAd: onAdLoaded")
+
+                        if (activityContext.isFinishing || activityContext.isDestroyed) {
+                            isOtherAdShowing = false
+                            rewardAd = null
+                            listener.onRewardEarned(false)
+                            return
+                        }
                         showRewardedAd(activityContext, listener)
                     }
                 })
         } else {
+            if (activityContext?.isFinishing == true || activityContext?.isDestroyed == true) {
+                listener.onRewardEarned(false)
+                return
+            }
             showRewardedAd(activityContext, listener)
         }
     }

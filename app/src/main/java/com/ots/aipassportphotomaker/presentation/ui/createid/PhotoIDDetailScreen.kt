@@ -217,10 +217,14 @@ private fun PhotoIDDetailScreen(
             if (isLoading) {
                 LoaderFullScreen()
             } else {
+                var adViewLoadState by remember { mutableStateOf(true) }
+                var callback by remember { mutableStateOf(false) }
+
                 Column(
                     modifier = Modifier
                         .background(colors.background)
                         .fillMaxWidth()
+                        .weight(1f)
                         .pointerInput(Unit) {
                             detectTapGestures(onTap = {
                                 focusManager.clearFocus()
@@ -257,65 +261,6 @@ private fun PhotoIDDetailScreen(
                         )
                     } else {
 
-                        var adViewLoadState by remember { mutableStateOf(true) }
-                        var callback by remember { mutableStateOf(false) }
-
-                        if (!isPremium) {
-
-                            AnimatedVisibility(adViewLoadState) {
-                                Surface(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .animateContentSize()
-                                        .heightIn(min = 54.dp) // match banner height
-                                ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        if (!callback) {
-                                            Text(
-                                                text = stringResource(R.string.advertisement),
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                fontWeight = FontWeight.Medium,
-                                                color = colors.onSurfaceVariant,
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .wrapContentSize(align = Alignment.Center)
-                                            )
-                                        }
-
-                                        AdaptiveBannerAd(
-                                            adUnit = AdIdsFactory.getBannerAdId(),
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .animateContentSize()
-                                                .align(Alignment.Center),
-                                            onAdLoaded = { isLoaded ->
-                                                callback = true
-                                                adViewLoadState = isLoaded
-                                                Logger.d(
-                                                    TAG,
-                                                    "AdaptiveBannerAd: onAdLoaded: $isLoaded"
-                                                )
-                                            }
-                                        )
-
-                                        /* AdMobBanner(
-                                        adUnit = AdIdsFactory.getBannerAdId(),
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .animateContentSize()
-                                            .align(Alignment.Center),
-                                        adSize = AdSize.BANNER, // or adaptive size if needed
-                                        onAdLoaded = { isLoaded ->
-                                            adLoadState = isLoaded
-                                            Logger.d(TAG, "AdMobBanner: onAdLoaded: $isLoaded")
-                                        }
-                                    )*/
-                                    }
-                                }
-                            }
-
-                        }
-
                         DocumentDetailList(
                             documents,
                             onDocumentClick,
@@ -327,6 +272,63 @@ private fun PhotoIDDetailScreen(
                             }
                         )
                     }
+                }
+
+                if (!isPremium) {
+
+                    AnimatedVisibility(adViewLoadState) {
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 4.dp)
+                                .animateContentSize()
+                                .heightIn(min = 54.dp) // match banner height
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                if (!callback) {
+                                    Text(
+                                        text = stringResource(R.string.advertisement),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium,
+                                        color = colors.onSurfaceVariant,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .wrapContentSize(align = Alignment.Center)
+                                    )
+                                }
+
+                                AdaptiveBannerAd(
+                                    adUnit = AdIdsFactory.getBannerAdId(),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .animateContentSize()
+                                        .align(Alignment.Center),
+                                    onAdLoaded = { isLoaded ->
+                                        callback = true
+                                        adViewLoadState = isLoaded
+                                        Logger.d(
+                                            TAG,
+                                            "AdaptiveBannerAd: onAdLoaded: $isLoaded"
+                                        )
+                                    }
+                                )
+
+                                /* AdMobBanner(
+                                adUnit = AdIdsFactory.getBannerAdId(),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .animateContentSize()
+                                    .align(Alignment.Center),
+                                adSize = AdSize.BANNER, // or adaptive size if needed
+                                onAdLoaded = { isLoaded ->
+                                    adLoadState = isLoaded
+                                    Logger.d(TAG, "AdMobBanner: onAdLoaded: $isLoaded")
+                                }
+                            )*/
+                            }
+                        }
+                    }
+
                 }
             }
         }

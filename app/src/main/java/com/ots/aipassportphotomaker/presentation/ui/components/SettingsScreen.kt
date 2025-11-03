@@ -199,7 +199,7 @@ fun SettingsScreen(
 
         // App Version
         Text(
-            text = "${stringResource(id = R.string.version)}: $appVersion",
+            text = "${stringResource(id = R.string.version)} $appVersion",
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Normal,
             color = MaterialTheme.colorScheme.onSurfaceVariant,

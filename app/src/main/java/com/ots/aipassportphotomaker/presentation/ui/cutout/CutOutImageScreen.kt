@@ -37,7 +37,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,7 +45,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -58,6 +56,7 @@ import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -75,12 +74,11 @@ import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
-import com.google.android.gms.ads.AdSize
 import com.ots.aipassportphotomaker.R
-import com.ots.aipassportphotomaker.adsmanager.admob.AdMobBanner
 import com.ots.aipassportphotomaker.adsmanager.admob.AdaptiveBannerAd
 import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
 import com.ots.aipassportphotomaker.common.ext.animatedBorder
+import com.ots.aipassportphotomaker.common.ext.bounceClick
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
 import com.ots.aipassportphotomaker.common.utils.AnalyticsConstants
@@ -89,11 +87,13 @@ import com.ots.aipassportphotomaker.common.utils.FileUtils.saveBitmapToInternalS
 import com.ots.aipassportphotomaker.common.utils.GraphicOverlay
 import com.ots.aipassportphotomaker.common.utils.ImageUtils.saveBitmapToGallery
 import com.ots.aipassportphotomaker.common.utils.Logger
+import com.ots.aipassportphotomaker.common.utils.ViewsUtils.premiumHorizontalGradientBrush
 import com.ots.aipassportphotomaker.domain.model.ProcessingStage
 import com.ots.aipassportphotomaker.presentation.ui.bottom_nav.NavigationBarSharedViewModel
 import com.ots.aipassportphotomaker.presentation.ui.components.CommonTopBar
 import com.ots.aipassportphotomaker.presentation.ui.components.CustomTab
 import com.ots.aipassportphotomaker.presentation.ui.components.LoaderFullScreen
+import com.ots.aipassportphotomaker.presentation.ui.components.TextSwitch
 import com.ots.aipassportphotomaker.presentation.ui.main.MainRouter
 import com.ots.aipassportphotomaker.presentation.ui.theme.colors
 import com.ots.aipassportphotomaker.presentation.ui.theme.custom300
@@ -180,7 +180,10 @@ fun CutOutImagePage(
                         val savedUri = saveBitmapToGallery(context, bitmap.asAndroidBitmap())
                         if (savedUri != null) {
 
-                            viewModel.loadAndShowRewardedAd(
+                            viewModel.onImageSaved(savedUri.toString())
+                            viewModel.showInterstitialAd(activity) { }
+
+                            /*viewModel.loadAndShowRewardedAd(
                                 activity,
                                 onAdClosed = {
                                     viewModel.onImageSaved(savedUri.toString())
@@ -191,7 +194,7 @@ fun CutOutImagePage(
                                         viewModel.showInterstitialAd(activity) { }
                                     }
 
-                                })
+                                })*/
 
                             Logger.i(TAG, "Image saved successfully: $savedUri")
 
@@ -274,7 +277,7 @@ private fun CutOutImageScreen(
         var brushOffset by remember { mutableFloatStateOf(0f) }
         var finalBitmap: ImageBitmap? by remember { mutableStateOf(null) }
         var removeBackgroundBitmap: ImageBitmap? by remember { mutableStateOf(null) }
-        val (selected, setSelected) = remember { mutableStateOf(1) }
+        val (selected, setSelected) = remember { mutableStateOf(0) }
 
         Logger.i(
             "CutOutImagePage",
@@ -296,7 +299,8 @@ private fun CutOutImageScreen(
         ) {
             CommonTopBar(
                 title = stringResource(id = R.string.cut_out),
-                showGetProButton = !isPremium,
+                showGetProButton = false,
+                showDoneButton = true,
                 onBackClick = {
                     onBackClick.invoke()
 
@@ -304,12 +308,38 @@ private fun CutOutImageScreen(
                 onGetProClick = {
                     onGetProClick.invoke()
 
+                },
+                onDoneClick = {
+                    graphicOverlay?.hideBrush()
+                    currentMode = DrawViewAction.NONE
+
+                    graphicOverlay?.getCurrentBitmap()?.let { bitmap ->
+                        val transparentBitmap = Bitmap.createBitmap(
+                            bitmap.width,
+                            bitmap.height,
+                            Bitmap.Config.ARGB_8888
+                        ).apply { eraseColor(AndroidColor.TRANSPARENT) }
+                        Canvas(transparentBitmap).drawBitmap(bitmap, 0f, 0f, null)
+                        finalBitmap = transparentBitmap.asImageBitmap()
+                    }
                 }
             )
 
             if (isLoading) {
                 LoaderFullScreen()
             } else {
+
+                val item1 = stringResource(R.string.auto)
+                val item2 = stringResource(R.string.manual)
+                val items = remember {
+                    listOf(
+                        item1,
+                        item2
+                    )
+                }
+                var selectedIndex by remember {
+                    mutableStateOf(0)
+                }
 
                 Box(
                     modifier = Modifier
@@ -346,33 +376,6 @@ private fun CutOutImageScreen(
                             val imageLoader = ImageLoader.Builder(context).build()
                             var bitmap by remember { mutableStateOf<Bitmap?>(null) }
 
-                            /*LaunchedEffect(imageUrl) {
-                                val request = ImageRequest.Builder(context)
-                                    .data(imageUrl)
-                                    .target { drawable ->
-                                        bitmap = when (drawable) {
-                                            is BitmapDrawable -> drawable.bitmap
-                                            else -> {
-                                                val bmp = createBitmap(
-                                                    drawable.intrinsicWidth,
-                                                    drawable.intrinsicHeight,
-                                                    Bitmap.Config.ARGB_8888
-                                                )
-                                                val canvas = Canvas(bmp)
-                                                drawable.setBounds(
-                                                    0,
-                                                    0,
-                                                    canvas.width,
-                                                    canvas.height
-                                                )
-                                                drawable.draw(canvas)
-                                                bmp
-                                            }
-                                        }
-                                    }
-                                    .build()
-                                imageLoader.enqueue(request)
-                            }*/
                             LaunchedEffect(imageUrl) {
                                 if (!imageUrl.isNullOrEmpty()) {
                                     try {
@@ -423,12 +426,6 @@ private fun CutOutImageScreen(
 
                             AndroidView(
                                 factory = { ctx ->
-                                    /*GraphicOverlay(ctx, null).apply {
-                                        graphicOverlay = this
-                                        setAction(DrawViewAction.ERASE_BACKGROUND)
-                                        setBrushSize(brushSize)
-                                        bitmap?.let { setBitmap(it) }
-                                    }*/
 
                                     GraphicOverlay(context, null).apply {
                                         graphicOverlay = this
@@ -453,14 +450,6 @@ private fun CutOutImageScreen(
                                     if (view.getCurrentAction() != currentMode) {
                                         view.setAction(currentMode)
                                     }
-                                    /*view.setAction(currentMode)
-                                    view.setBrushSize(brushSize)
-                                    bitmap?.let {
-                                        if (view.getCurrentBitmap() != it) {
-                                            view.setBitmap(it)
-                                        }
-                                    }
-                                    view.invalidate()*/
                                 },
                                 modifier = Modifier
                                     .padding(horizontal = 8.dp)
@@ -470,244 +459,323 @@ private fun CutOutImageScreen(
 
 
                         Spacer(modifier = Modifier.height(16.dp))
+
+                        TextSwitch(
+                            modifier = Modifier
+                                .width(270.dp)
+                                .align(Alignment.CenterHorizontally),
+                            selectedIndex = selectedIndex,
+                            items = items,
+                            onSelectionChange = {
+                                selectedIndex = it
+                            }
+                        )
                     }
 
-                    Column(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                    ) {
-
-
-                        Row(
-                            modifier = Modifier
-                                .padding(end = 16.dp)
-                                .align(Alignment.End)
-                        ) {
-                            Icon(
-                                modifier = Modifier
-                                    .padding(6.dp)
-                                    .clickable(onClick = {
-                                        graphicOverlay?.undo()
-                                    }),
-                                painter = painterResource(id = R.drawable.undo_icon),
-                                contentDescription = "Undo",
-                                tint = colors.onBackground,
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Icon(
-                                modifier = Modifier
-                                    .padding(6.dp)
-                                    .clickable(onClick = {
-                                        graphicOverlay?.redo()
-                                    }),
-                                painter = painterResource(id = R.drawable.redo_icon),
-                                contentDescription = "Redo",
-                                tint = colors.onBackground,
-                            )
-                        }
-
+                    if (selectedIndex == 0) {
                         Column(
                             modifier = Modifier
-                                .padding(horizontal = 16.dp)
+                                .align(Alignment.BottomCenter)
                         ) {
-                            Row {
 
-                                Text(
-                                    text = stringResource(R.string.size),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Medium,
-                                    color = colors.onSurfaceVariant,
-                                    modifier = Modifier
-                                        .align(Alignment.CenterVertically)
-                                )
-
-                                Spacer(modifier = Modifier.width(16.dp))
-
-                                Slider(
-                                    value = brushSize,
-                                    colors = SliderDefaults.colors(
-                                        thumbColor = colors.primary, // White color for thumb
-                                        activeTrackColor = colors.primary, // Primary fill color for active track
-                                        inactiveTrackColor = colors.custom300 // Gray color for inactive track (adjust if custom100 is not gray)
-                                    ),
-
-
-                                    onValueChange = {
-                                        brushSize = it
-                                        graphicOverlay?.setBrushSize(it)
-                                    },
-                                    valueRange = 10f..100f,
-                                )
-                            }
-
-                        }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        Column(
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp)
-                        ) {
-                            Row {
-
-                                Text(
-                                    text = stringResource(R.string.offset),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Medium,
-                                    color = colors.onSurfaceVariant,
-                                    modifier = Modifier
-                                        .align(Alignment.CenterVertically)
-                                )
-
-                                Spacer(modifier = Modifier.width(16.dp))
-
-                                Slider(
-                                    value = brushOffset,
-                                    colors = SliderDefaults.colors(
-                                        thumbColor = colors.primary, // White color for thumb
-                                        activeTrackColor = colors.primary, // Primary fill color for active track
-                                        inactiveTrackColor = colors.custom300 // Gray color for inactive track (adjust if custom100 is not gray)
-                                    ),
-                                    onValueChange = {
-                                        brushOffset = it
-                                        graphicOverlay?.setBrushOffset(it)
-                                    },
-                                    valueRange = 0f..150f
-
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        //tabs
-                        val tabItems = listOf(
-                            R.drawable.ai_tab_item_icon,
-                            R.drawable.eraser_icon,
-                            R.drawable.brush_tab_item_icon,
-                            R.drawable.tick_icon_thick
-                        )
-
-                        LaunchedEffect(selected) {
-                            when (selected) {
-                                0 -> {
-                                    if (currentMode != DrawViewAction.NONE) {
-                                        graphicOverlay?.hideBrush()
-                                        currentMode = DrawViewAction.NONE
-                                    }
-
-                                    graphicOverlay?.getCurrentBitmap()?.let { bitmap ->
-                                        val transparentBitmap = Bitmap.createBitmap(
-                                            bitmap.width,
-                                            bitmap.height,
-                                            Bitmap.Config.ARGB_8888
-                                        ).apply { eraseColor(AndroidColor.TRANSPARENT) }
-                                        Canvas(transparentBitmap).drawBitmap(bitmap, 0f, 0f, null)
-                                        removeBackgroundBitmap = transparentBitmap.asImageBitmap()
-                                    }
-
-                                    setSelected(1) // Reset to eraser mode
-                                }
-
-                                1 -> {
-                                    if (currentMode != DrawViewAction.ERASE_BACKGROUND) {
-                                        currentMode = DrawViewAction.ERASE_BACKGROUND
-                                    }
-                                }
-
-                                2 -> {
-                                    if (currentMode != DrawViewAction.RECOVER_AREA) {
-                                        currentMode = DrawViewAction.RECOVER_AREA
-                                    }
-                                }
-
-                                3 -> {
-                                    graphicOverlay?.hideBrush()
-                                    currentMode = DrawViewAction.NONE
-
-                                    graphicOverlay?.getCurrentBitmap()?.let { bitmap ->
-                                        val transparentBitmap = Bitmap.createBitmap(
-                                            bitmap.width,
-                                            bitmap.height,
-                                            Bitmap.Config.ARGB_8888
-                                        ).apply { eraseColor(AndroidColor.TRANSPARENT) }
-                                        Canvas(transparentBitmap).drawBitmap(bitmap, 0f, 0f, null)
-                                        finalBitmap = transparentBitmap.asImageBitmap()
-                                    }
-                                    setSelected(1) // Reset to eraser mode
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(4.dp))
-                        CustomTab(
-                            selectedItemIndex = selected,
-                            items = tabItems,
-                            modifier = Modifier,
-                            tabWidth = 100.dp,
-                            onClick = setSelected
-                        )
-
-
-                        Spacer(modifier = Modifier.height(4.dp))
-
-
-                        var adViewLoadState by remember { mutableStateOf(true) }
-                        var callback by remember { mutableStateOf(false) }
-
-                        if (!isPremium) {
-
-                            AnimatedVisibility(adViewLoadState) {
-                            Surface(
+                            Text(
                                 modifier = Modifier
+                                    .padding(horizontal = 16.dp)
+                                    .align(Alignment.CenterHorizontally),
+                                text = stringResource(R.string.remove_background_with_ai),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                                color = colors.onSurfaceVariant
+                            )
+
+                            Box(
+                                modifier = Modifier
+                                    .padding(vertical = 8.dp, horizontal = 16.dp)
+                                    .background(
+                                        brush = premiumHorizontalGradientBrush,
+                                        shape = RoundedCornerShape(50.dp)
+                                    )
+                                    .bounceClick()
                                     .fillMaxWidth()
                                     .animateContentSize()
-                                    .heightIn(min = 54.dp) // match banner height
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    if (!callback) {
-                                        Text(
-                                            text = stringResource(R.string.advertisement),
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            fontWeight = FontWeight.Medium,
-                                            color = colors.onSurfaceVariant,
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .wrapContentSize(align = Alignment.Center)
-                                        )
-                                    }
-
-                                    AdaptiveBannerAd(
-                                        adUnit = AdIdsFactory.getBannerAdId(),
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .animateContentSize()
-                                            .align(Alignment.Center),
-                                        onAdLoaded = { isLoaded ->
-                                            callback = true
-                                            adViewLoadState = isLoaded
-                                            Logger.d(TAG, "AdaptiveBannerAd: onAdLoaded: $isLoaded")
+                                    .clickable(onClick = {
+                                        if (currentMode != DrawViewAction.NONE) {
+                                            graphicOverlay?.hideBrush()
+                                            currentMode = DrawViewAction.NONE
                                         }
+
+                                        graphicOverlay?.getCurrentBitmap()?.let { bitmap ->
+                                            val transparentBitmap = Bitmap.createBitmap(
+                                                bitmap.width,
+                                                bitmap.height,
+                                                Bitmap.Config.ARGB_8888
+                                            ).apply { eraseColor(AndroidColor.TRANSPARENT) }
+                                            Canvas(transparentBitmap).drawBitmap(bitmap, 0f, 0f, null)
+                                            removeBackgroundBitmap = transparentBitmap.asImageBitmap()
+                                        }
+                                    }),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .padding(vertical = 18.dp, horizontal = 20.dp)
+                                ) {
+                                    Icon(
+                                        modifier = Modifier
+                                            .size(24.dp),
+                                        painter = painterResource(id = R.drawable.ai_tab_item_icon),
+                                        contentDescription = "Auto Remove Icon",
+                                        tint = Color.White,
                                     )
 
-                                    /*AdMobBanner(
-                                        adUnit = AdIdsFactory.getBannerAdId(),
+                                    Spacer(modifier = Modifier.width(8.dp))
+
+                                    Text(
+                                        modifier = Modifier,
+                                        text = stringResource(R.string.auto_remove),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White
+                                    )
+                                }
+                            }
+
+                        }
+                    } else {
+                        Column(
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                        ) {
+
+
+                            Row(
+                                modifier = Modifier
+                                    .padding(end = 16.dp)
+                                    .align(Alignment.End)
+                            ) {
+                                Icon(
+                                    modifier = Modifier
+                                        .padding(6.dp)
+                                        .clickable(onClick = {
+                                            graphicOverlay?.undo()
+                                        }),
+                                    painter = painterResource(id = R.drawable.undo_icon),
+                                    contentDescription = "Undo",
+                                    tint = colors.onBackground,
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Icon(
+                                    modifier = Modifier
+                                        .padding(6.dp)
+                                        .clickable(onClick = {
+                                            graphicOverlay?.redo()
+                                        }),
+                                    painter = painterResource(id = R.drawable.redo_icon),
+                                    contentDescription = "Redo",
+                                    tint = colors.onBackground,
+                                )
+                            }
+
+                            Column(
+                                modifier = Modifier
+                                    .padding(horizontal = 16.dp)
+                            ) {
+                                Row {
+
+                                    Text(
+                                        text = stringResource(R.string.size),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Medium,
+                                        color = colors.onSurfaceVariant,
+                                        modifier = Modifier
+                                            .align(Alignment.CenterVertically)
+                                    )
+
+                                    Spacer(modifier = Modifier.width(16.dp))
+
+                                    Slider(
+                                        value = brushSize,
+                                        colors = SliderDefaults.colors(
+                                            thumbColor = colors.primary, // White color for thumb
+                                            activeTrackColor = colors.primary, // Primary fill color for active track
+                                            inactiveTrackColor = colors.custom300 // Gray color for inactive track (adjust if custom100 is not gray)
+                                        ),
+
+
+                                        onValueChange = {
+                                            brushSize = it
+                                            graphicOverlay?.setBrushSize(it)
+                                        },
+                                        valueRange = 10f..100f,
+                                    )
+                                }
+
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Column(
+                                modifier = Modifier
+                                    .padding(horizontal = 16.dp)
+                            ) {
+                                Row {
+
+                                    Text(
+                                        text = stringResource(R.string.offset),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Medium,
+                                        color = colors.onSurfaceVariant,
+                                        modifier = Modifier
+                                            .align(Alignment.CenterVertically)
+                                    )
+
+                                    Spacer(modifier = Modifier.width(16.dp))
+
+                                    Slider(
+                                        value = brushOffset,
+                                        colors = SliderDefaults.colors(
+                                            thumbColor = colors.primary, // White color for thumb
+                                            activeTrackColor = colors.primary, // Primary fill color for active track
+                                            inactiveTrackColor = colors.custom300 // Gray color for inactive track (adjust if custom100 is not gray)
+                                        ),
+                                        onValueChange = {
+                                            brushOffset = it
+                                            graphicOverlay?.setBrushOffset(it)
+                                        },
+                                        valueRange = 0f..150f
+
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            //tabs
+                            val tabItems = listOf(
+                                R.drawable.eraser_icon,
+                                R.drawable.brush_tab_item_icon,
+                                R.drawable.ic_transform
+                            )
+
+                            LaunchedEffect(selected) {
+                                when (selected) {
+                                    /*0 -> {
+                                        if (currentMode != DrawViewAction.NONE) {
+                                            graphicOverlay?.hideBrush()
+                                            currentMode = DrawViewAction.NONE
+                                        }
+
+                                        graphicOverlay?.getCurrentBitmap()?.let { bitmap ->
+                                            val transparentBitmap = Bitmap.createBitmap(
+                                                bitmap.width,
+                                                bitmap.height,
+                                                Bitmap.Config.ARGB_8888
+                                            ).apply { eraseColor(AndroidColor.TRANSPARENT) }
+                                            Canvas(transparentBitmap).drawBitmap(bitmap, 0f, 0f, null)
+                                            removeBackgroundBitmap = transparentBitmap.asImageBitmap()
+                                        }
+
+                                        setSelected(1) // Reset to eraser mode
+                                    }*/
+
+                                    0 -> {
+                                        if (currentMode != DrawViewAction.ERASE_BACKGROUND) {
+                                            currentMode = DrawViewAction.ERASE_BACKGROUND
+                                            graphicOverlay?.setAction(DrawViewAction.ERASE_BACKGROUND)
+                                        }
+                                    }
+
+                                    1 -> {
+                                        if (currentMode != DrawViewAction.RECOVER_AREA) {
+                                            currentMode = DrawViewAction.RECOVER_AREA
+                                        }
+
+                                    }
+
+                                    2 -> {
+                                        // Transform mode
+                                        // switch overlay into transform mode
+                                        graphicOverlay?.setAction(DrawViewAction.TRANSFORM)
+                                        currentMode = DrawViewAction.TRANSFORM
+                                    }
+
+                                    /*4 -> {
+                                        graphicOverlay?.hideBrush()
+                                        currentMode = DrawViewAction.NONE
+
+                                        graphicOverlay?.getCurrentBitmap()?.let { bitmap ->
+                                            val transparentBitmap = Bitmap.createBitmap(
+                                                bitmap.width,
+                                                bitmap.height,
+                                                Bitmap.Config.ARGB_8888
+                                            ).apply { eraseColor(AndroidColor.TRANSPARENT) }
+                                            Canvas(transparentBitmap).drawBitmap(bitmap, 0f, 0f, null)
+                                            finalBitmap = transparentBitmap.asImageBitmap()
+                                        }
+                                        setSelected(1) // Reset to eraser mode
+                                    }*/
+
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(4.dp))
+                            CustomTab(
+                                selectedItemIndex = selected,
+                                items = tabItems,
+                                modifier = Modifier,
+                                tabWidth = 130.dp,
+                                onClick = setSelected
+                            )
+
+                            Spacer(modifier = Modifier.height(4.dp))
+
+                            var adViewLoadState by remember { mutableStateOf(true) }
+                            var callback by remember { mutableStateOf(false) }
+
+                            if (!isPremium) {
+
+                                AnimatedVisibility(adViewLoadState) {
+                                    Surface(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .animateContentSize()
-                                            .align(Alignment.Center),
-                                        adSize = AdSize.BANNER, // or adaptive size if needed
-                                        onAdLoaded = { isLoaded ->
-                                            adLoadState = isLoaded
-                                            Logger.d(TAG, "AdMobBanner: onAdLoaded: $isLoaded")
+                                            .heightIn(min = 54.dp) // match banner height
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            if (!callback) {
+                                                Text(
+                                                    text = stringResource(R.string.advertisement),
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    fontWeight = FontWeight.Medium,
+                                                    color = colors.onSurfaceVariant,
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .wrapContentSize(align = Alignment.Center)
+                                                )
+                                            }
+
+                                            AdaptiveBannerAd(
+                                                adUnit = AdIdsFactory.getBannerAdId(),
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .animateContentSize()
+                                                    .align(Alignment.Center),
+                                                onAdLoaded = { isLoaded ->
+                                                    callback = true
+                                                    adViewLoadState = isLoaded
+                                                    Logger.d(
+                                                        TAG,
+                                                        "AdaptiveBannerAd: onAdLoaded: $isLoaded"
+                                                    )
+                                                }
+                                            )
                                         }
-                                    )*/
+                                    }
                                 }
+
                             }
-                        }
 
                         }
-
                     }
 
                 }
@@ -746,7 +814,10 @@ private fun CutOutImageScreen(
                                         .weight(1f) // Takes 50% of the width
                                         .padding(end = 3.dp) // Optional: small padding to separate buttons
                                 ) {
-                                    Text(stringResource(R.string.close), modifier = Modifier.padding(horizontal = 10.dp))
+                                    Text(
+                                        stringResource(R.string.close),
+                                        modifier = Modifier.padding(horizontal = 10.dp)
+                                    )
                                 }
 
                                 Spacer(Modifier.size(6.dp))
@@ -760,7 +831,10 @@ private fun CutOutImageScreen(
                                         .weight(1f) // Takes 50% of the width
                                         .padding(start = 3.dp) // Optional: small padding to separate buttons
                                 ) {
-                                    Text(stringResource(R.string.save), modifier = Modifier.padding(horizontal = 10.dp))
+                                    Text(
+                                        stringResource(R.string.save),
+                                        modifier = Modifier.padding(horizontal = 10.dp)
+                                    )
                                 }
                             }
                         }

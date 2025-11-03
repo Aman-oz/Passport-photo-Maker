@@ -16,7 +16,14 @@ import android.view.View
 import android.widget.ImageView
 import com.ots.aipassportphotomaker.common.utils.BitmapUtils.isMemorySufficient
 import java.util.Stack
-import kotlin.compareTo
+import kotlin.math.atan2
+import kotlin.math.sqrt
+
+// Transformation mode constants
+private const val TRANSFORM_NONE = 0
+private const val TRANSFORM_DRAG = 1
+private const val TRANSFORM_ZOOM = 2
+private const val TOUCH_TOLERANCE = 4f
 
 /**
  * Created by Aman Ullah
@@ -87,6 +94,17 @@ open class GraphicOverlay(context: Context?, attrs: AttributeSet?) : View(contex
     private var currentAction: DrawViewAction = DrawViewAction.ERASE_BACKGROUND
     private var isDrawing = false
 
+    // Transformation state for TRANSFORM action
+    private var userMatrix = Matrix()
+    private var inverseUserMatrix = Matrix()
+    private var savedUserMatrix = Matrix()
+    private var modeTransform = TRANSFORM_NONE
+    private var startX = 0f
+    private var startY = 0f
+    private var midX = 0f
+    private var midY = 0f
+    private var oldDist = 1f
+    private var lastAngle = 0f
     private var brushOffset = 0f // Default offset
     private var brushActualX = 0f // Actual touch position
     private var brushActualY = 0f // Actual touch position
@@ -148,6 +166,16 @@ open class GraphicOverlay(context: Context?, attrs: AttributeSet?) : View(contex
                 pathPaint.xfermode = null
                 hideBrush()
             }
+            DrawViewAction.TRANSFORM -> {
+                // Hide brush when transforming
+                pathPaint.xfermode = null
+                hideBrush()
+                // Ensure matrices are ready
+                userMatrix = Matrix()
+                inverseUserMatrix = Matrix()
+                savedUserMatrix = Matrix()
+                modeTransform = TRANSFORM_NONE
+            }
         }
         updateBrushIndicator()
     }
@@ -157,6 +185,8 @@ open class GraphicOverlay(context: Context?, attrs: AttributeSet?) : View(contex
             DrawViewAction.ERASE_BACKGROUND -> Color.BLUE
             DrawViewAction.RECOVER_AREA -> Color.GREEN
             DrawViewAction.NONE -> Color.GRAY
+            DrawViewAction.TRANSFORM -> Color.GRAY
+            else -> Color.GRAY
         }
     }
 
@@ -272,9 +302,15 @@ open class GraphicOverlay(context: Context?, attrs: AttributeSet?) : View(contex
         updateTransformationIfNeeded()
         canvas.save()
 
+        // Apply base transformation (scale to fit)
+        canvas.concat(transformationMatrix)
+
+        // Apply user transform on top (translate/scale/rotate) if any
+        canvas.concat(userMatrix)
+
         imageBitmap?.let { bitmap ->
             if (isMemorySufficient(bitmap)) {
-                canvas.drawBitmap(bitmap, transformationMatrix, null)
+                canvas.drawBitmap(bitmap, 0f, 0f, null)
             }
         }
 
@@ -298,6 +334,14 @@ open class GraphicOverlay(context: Context?, attrs: AttributeSet?) : View(contex
                     DrawViewAction.NONE -> {
                         color = Color.GRAY
                         alpha = 40 // Transparent gray
+                    }
+                    DrawViewAction.TRANSFORM -> {
+                        color = Color.GRAY
+                        alpha = 40
+                    }
+                    else -> {
+                        color = Color.GRAY
+                        alpha = 40
                     }
                 }
             }
@@ -420,15 +464,63 @@ open class GraphicOverlay(context: Context?, attrs: AttributeSet?) : View(contex
                     }
                 }
                 DrawViewAction.NONE -> return
+                DrawViewAction.TRANSFORM -> return
             }
             invalidate()
         }
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        if (imageBitmap == null || currentAction == DrawViewAction.NONE) {
-            return super.onTouchEvent(event)
+        if (imageBitmap == null) return super.onTouchEvent(event)
+
+        if (currentAction == DrawViewAction.TRANSFORM) {
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    savedUserMatrix.set(userMatrix)
+                    startX = event.x
+                    startY = event.y
+                    modeTransform = TRANSFORM_DRAG
+                }
+                MotionEvent.ACTION_POINTER_DOWN -> {
+                    oldDist = spacing(event)
+                    if (oldDist > 10f) {
+                        savedUserMatrix.set(userMatrix)
+                        midPoint(event)
+                        lastAngle = rotation(event)
+                        modeTransform = TRANSFORM_ZOOM
+                    }
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    if (modeTransform == TRANSFORM_DRAG) {
+                        val dx = event.x - startX
+                        val dy = event.y - startY
+                        userMatrix.set(savedUserMatrix)
+                        userMatrix.postTranslate(dx / scaleFactor, dy / scaleFactor)
+                        constrainUserMatrix()
+                        invalidate()
+                    } else if (modeTransform == TRANSFORM_ZOOM && event.pointerCount >= 2) {
+                        val newDist = spacing(event)
+                        if (newDist > 10f) {
+                            val scale = newDist / oldDist
+                            val newAngle = rotation(event)
+                            val angleDiff = newAngle - lastAngle
+                            userMatrix.set(savedUserMatrix)
+                            userMatrix.postScale(scale, scale, midX / scaleFactor, midY / scaleFactor)
+                            userMatrix.postRotate(angleDiff, midX / scaleFactor, midY / scaleFactor)
+                            constrainUserMatrix()
+                            invalidate()
+                        }
+                    }
+                }
+                MotionEvent.ACTION_POINTER_UP, MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    modeTransform = TRANSFORM_NONE
+                }
+            }
+            return true
         }
+
+        // Fallback to drawing modes
+        if (currentAction == DrawViewAction.NONE) return super.onTouchEvent(event)
 
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
@@ -467,7 +559,74 @@ open class GraphicOverlay(context: Context?, attrs: AttributeSet?) : View(contex
         return super.onTouchEvent(event)
     }
 
-    companion object {
-        private const val TOUCH_TOLERANCE = 4f
+    private fun spacing(event: MotionEvent): Float {
+        if (event.pointerCount < 2) return 0f
+        val x = event.getX(0) - event.getX(1)
+        val y = event.getY(0) - event.getY(1)
+        return sqrt(x * x + y * y).toFloat()
+    }
+
+    private fun midPoint(event: MotionEvent) {
+        if (event.pointerCount >= 2) {
+            midX = (event.getX(0) + event.getX(1)) / 2f
+            midY = (event.getY(0) + event.getY(1)) / 2f
+        }
+    }
+
+    private fun rotation(event: MotionEvent): Float {
+        if (event.pointerCount >= 2) {
+            val deltaX = event.getX(0) - event.getX(1)
+            val deltaY = event.getY(0) - event.getY(1)
+            return Math.toDegrees(kotlin.math.atan2(deltaY, deltaX).toDouble()).toFloat()
+        }
+        return 0f
+    }
+
+    // Keep the userMatrix such that the transformed image remains visible inside the view bounds.
+    private fun constrainUserMatrix() {
+        if (imageBitmap == null || imageWidth <= 0 || imageHeight <= 0) return
+
+        // Compute combined matrix (base fit transform then user transform)
+        val combined = Matrix(transformationMatrix)
+        combined.postConcat(userMatrix)
+
+        val imageRect = android.graphics.RectF(0f, 0f, imageWidth.toFloat(), imageHeight.toFloat())
+        combined.mapRect(imageRect)
+
+        val viewW = width.toFloat()
+        val viewH = height.toFloat()
+
+        var deltaX = 0f
+        var deltaY = 0f
+
+        // Horizontal constraint
+        if (imageRect.width() <= viewW) {
+            // center horizontally
+            deltaX = viewW / 2f - (imageRect.left + imageRect.right) / 2f
+        } else {
+            if (imageRect.left > 0f) deltaX = -imageRect.left
+            if (imageRect.right < viewW) deltaX = viewW - imageRect.right
+        }
+
+        // Vertical constraint
+        if (imageRect.height() <= viewH) {
+            // center vertically
+            deltaY = viewH / 2f - (imageRect.top + imageRect.bottom) / 2f
+        } else {
+            if (imageRect.top > 0f) deltaY = -imageRect.top
+            if (imageRect.bottom < viewH) deltaY = viewH - imageRect.bottom
+        }
+
+        if (deltaX == 0f && deltaY == 0f) return
+
+        // Build a translation matrix in view-space
+        val tView = Matrix().apply { setTranslate(deltaX, deltaY) }
+
+        val invBase = Matrix()
+        if (!transformationMatrix.invert(invBase)) return
+        val pts = floatArrayOf(deltaX, deltaY)
+        invBase.mapPoints(pts)
+
+        userMatrix.postTranslate(pts[0], pts[1])
     }
 }

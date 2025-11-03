@@ -41,7 +41,6 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -57,8 +56,8 @@ import androidx.compose.runtime.ExperimentalComposeApi
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -67,7 +66,6 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
@@ -83,13 +81,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
+import coil.ImageLoader
 import coil.compose.AsyncImage
 import coil.compose.AsyncImagePainter
 import coil.request.ImageRequest
@@ -99,12 +97,8 @@ import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import com.google.android.gms.ads.AdSize
 import com.ots.aipassportphotomaker.R
-import com.ots.aipassportphotomaker.adsmanager.admob.AdMobBanner
-import com.ots.aipassportphotomaker.adsmanager.admob.AdMobCollapsableBanner
 import com.ots.aipassportphotomaker.adsmanager.admob.AdaptiveBannerAd
-import com.ots.aipassportphotomaker.adsmanager.admob.CollapseDirection
 import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
 import com.ots.aipassportphotomaker.common.ext.animatedBorder
 import com.ots.aipassportphotomaker.common.ext.animatedGradient
@@ -132,7 +126,6 @@ import dev.shreyaspatil.capturable.controller.rememberCaptureController
 import io.mhssn.colorpicker.ColorPickerDialog
 import io.mhssn.colorpicker.ColorPickerType
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -218,9 +211,10 @@ fun EditImagePage(
         isPremium = viewModel.isPremiumUser(),
         onImageSaved = { imagePath ->
             viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnSaveImage_EditImageScreen")
-
+            viewModel.onImageSaved(imagePath)
+            viewModel.showInterstitialAd(activity) { }
             //Rewarded ad
-            viewModel.loadAndShowRewardedAd(
+            /*viewModel.loadAndShowRewardedAd(
                 activity,
                 onAdClosed = {
                     viewModel.onImageSaved(imagePath)
@@ -231,7 +225,7 @@ fun EditImagePage(
                         viewModel.showInterstitialAd(activity) { }
                     }
 
-                })
+                })*/
         },
         onColorChange = { color, colorType ->
             viewModel.sendEvent(AnalyticsConstants.CLICKED, "color_${colorType}_EditImageScreen")
@@ -304,6 +298,12 @@ private fun EditImageScreen(
             listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE)
         }
     )
+
+    val softwareImageLoader = remember {
+        ImageLoader.Builder(context)
+            .allowHardware(false)  // Force software bitmaps for Capturable compatibility
+            .build()
+    }
 
     Surface(
         modifier = Modifier
@@ -419,15 +419,17 @@ private fun EditImageScreen(
 //                    if (!imageUrl.isNullOrEmpty()) {
 
                         var flip by remember { mutableStateOf(false) }
-                        var offsetX by remember { mutableStateOf(0f) }
-                        var offsetY by remember { mutableStateOf(0f) }
-                        var scale by remember { mutableStateOf(1f) }
-                        val maxScale = 3f
-                        val minScale = 0.5f
+
+                        var showLayers by remember { mutableStateOf(false) }
+                        var selectedLayer by remember { mutableIntStateOf(1) }
 
                         // Get the size of the parent Box
                         val boxWidth = remember { mutableStateOf(0f) }
                         val boxHeight = remember { mutableStateOf(0f) }
+                        // Get the size of the parent Box
+                        val boxWidthForSuit = remember { mutableStateOf(0f) }
+                        val boxHeightForSuit = remember { mutableStateOf(0f) }
+
                         var isLayoutReady by remember { mutableStateOf(false) }
 
                         Box(
@@ -448,9 +450,14 @@ private fun EditImageScreen(
 
                             var isImageLoading by remember { mutableStateOf(true) } // Start with loading state
 
-                            var scale by remember { mutableStateOf(1f) }
-                            var rotation by remember { mutableStateOf(0f) }
-                            var offset by remember { mutableStateOf(Offset.Zero) }
+                            var imageScale by remember { mutableStateOf(1f) }
+                            var imageRotation by remember { mutableStateOf(0f) }
+                            var imageOffset by remember { mutableStateOf(Offset.Zero) }
+                            var suitScale by remember { mutableStateOf(1f) }
+                            var suitRotation by remember { mutableStateOf(0f) }
+                            var suitOffset by remember { mutableStateOf(Offset.Zero) }
+
+
 
                             Box(
                                 modifier = Modifier
@@ -459,31 +466,63 @@ private fun EditImageScreen(
                                     .aspectRatio(uiState.ratio)
                                     .align(Alignment.Center)
                                     .capturable(captureController)
+                                    .graphicsLayer(scaleX = if (!showLayers) if (flip) -1f else 1f else 1f)
                             ) {
+
+                                // Main image modifier with conditional pointer input
+                                val mainImageBaseModifier = Modifier
+                                    .fillMaxHeight()
+                                    .aspectRatio(uiState.ratio)
+                                    .background(animatedColor)
+                                    .align(Alignment.Center)
+                                    .clipToBounds()
+                                    .onGloballyPositioned { coordinates ->
+                                        boxWidth.value = coordinates.size.width.toFloat()
+                                        boxHeight.value = coordinates.size.height.toFloat()
+
+                                        Logger.i(
+                                            "EditImageScreen",
+                                            "Box width: ${boxWidth.value}, height: ${boxHeight.value}, Selected Document size: ${uiState.documentSize}"
+                                        )
+                                        if (!isLayoutReady) isLayoutReady = true
+                                    }
+                                    .graphicsLayer(
+                                        // Apply flip only to main image
+                                        scaleX = imageScale * (
+                                                if (selectedLayer == 1 && showLayers) {
+                                                    if (flip) -1f else 1f
+                                                } else {
+                                                    1f
+                                                }),
+                                        scaleY = imageScale,
+                                        rotationZ = imageRotation,
+                                        translationX = imageOffset.x,
+                                        translationY = imageOffset.y
+                                    )
+
+                                val mainImagePointerModifier = if (selectedLayer == 1) {
+                                    Modifier.pointerInput(Unit) {
+                                        detectTransformGestures { _, pan, zoom, rotate ->
+                                            imageScale *= zoom
+                                            imageRotation += rotate
+                                            imageOffset += pan
+                                        }
+                                    }
+                                } else {
+                                    Modifier
+                                }
+
+                                val mainImageModifier =
+                                    mainImageBaseModifier.then(mainImagePointerModifier)
 
                                 AsyncImage(
                                     model = ImageRequest.Builder(context)
                                         .data(imageUrl)
                                         .crossfade(true)
                                         .build(),
+                                    imageLoader = softwareImageLoader,
                                     contentDescription = "Edited Image",
-                                    modifier = Modifier
-                                        .fillMaxHeight()
-                                        .aspectRatio(uiState.ratio)
-                                        .background(animatedColor)
-                                        .align(Alignment.Center)
-                                        .clipToBounds()
-                                        .onGloballyPositioned { coordinates ->
-                                            boxWidth.value = coordinates.size.width.toFloat()
-                                            boxHeight.value = coordinates.size.height.toFloat()
-
-                                            Logger.i(
-                                                "EditImageScreen",
-                                                "Box width: ${boxWidth.value}, height: ${boxHeight.value}, Selected Document size: ${uiState.documentSize}"
-                                            )
-                                            if (!isLayoutReady) isLayoutReady = true
-                                        }
-                                        .graphicsLayer(scaleX = if (flip) -1f else 1f),
+                                    modifier = mainImageModifier,
                                     contentScale = ContentScale.Fit,
                                     onState = { state ->
                                         isImageLoading = state is AsyncImagePainter.State.Loading
@@ -491,35 +530,66 @@ private fun EditImageScreen(
                                 )
 
                                 suitUrl?.let { url ->
+
+                                    // Suit modifier with conditional pointer input
+                                    val suitBaseModifier = Modifier
+                                        .fillMaxHeight()
+                                        .aspectRatio(uiState.ratio)
+                                        .align(Alignment.BottomCenter)
+                                        .clipToBounds()
+                                        .onGloballyPositioned { coordinates ->
+                                            boxWidthForSuit.value =
+                                                coordinates.size.width.toFloat()
+                                            boxHeightForSuit.value =
+                                                coordinates.size.height.toFloat()
+
+                                            Logger.i(
+                                                "EditImageScreen",
+                                                "Box width: ${boxWidthForSuit.value}, height: ${boxHeightForSuit.value}, Selected Document size: ${uiState.documentSize}"
+                                            )
+                                            if (!isLayoutReady) isLayoutReady = true
+                                        }
+                                        .graphicsLayer(
+                                            scaleX = suitScale * (
+                                                    if (selectedLayer == 0 && showLayers) {
+                                                        if (flip) -1f else 1f
+                                                    } else {
+                                                        1f
+                                                    }
+                                                    ),
+                                            scaleY = suitScale,
+                                            rotationZ = suitRotation,
+                                            translationX = suitOffset.x,
+                                            translationY = suitOffset.y
+                                        )
+
+                                    val suitPointerModifier = if (selectedLayer == 0) {
+                                        Modifier.pointerInput(Unit) {
+                                            detectTransformGestures { _, pan, zoom, rotate ->
+                                                suitScale *= zoom
+                                                suitRotation += rotate
+                                                suitOffset += pan
+                                            }
+                                        }
+                                    } else {
+                                        Modifier
+                                    }
+
+                                    val suitModifier = suitBaseModifier.then(suitPointerModifier)
+
                                     AsyncImage(
                                         model =
                                             ImageRequest.Builder(context)
                                                 .data(url)
                                                 .crossfade(true)
                                                 .build(),
+                                        imageLoader = softwareImageLoader,
                                         contentDescription = "Suit Image",
                                         contentScale = ContentScale.Fit,
                                         onState = { state ->
                                             isSuitLoading = state is AsyncImagePainter.State.Loading
                                         },
-                                        modifier = Modifier
-                                            .width(150.dp)
-                                            .aspectRatio(uiState.ratio)
-                                            .align(Alignment.BottomCenter)
-                                            .graphicsLayer(
-                                                scaleX = scale,
-                                                scaleY = scale,
-                                                rotationZ = rotation,
-                                                translationX = offset.x,
-                                                translationY = offset.y
-                                            )
-                                            .pointerInput(Unit) {
-                                                detectTransformGestures { _, pan, zoom, rotate ->
-                                                    scale *= zoom
-                                                    rotation += rotate
-                                                    offset += pan
-                                                }
-                                            }
+                                        modifier = suitModifier
                                     )
                                 }
                             }
@@ -597,6 +667,97 @@ private fun EditImageScreen(
                                         contentDescription = "Eraser",
                                         modifier = Modifier.padding(12.dp)
                                     )
+                                }
+                            }
+
+
+                            Column(
+                                modifier = Modifier
+                                    .background(Color.Transparent)
+                                    .align(Alignment.TopStart)
+                                    .padding(16.dp)
+                                    .animateContentSize(),
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Card(
+                                    modifier = Modifier
+                                        .align(Alignment.CenterHorizontally)
+                                        .animateContentSize(),
+                                    shape = if (showLayers) RoundedCornerShape(4.dp) else CircleShape,
+                                    colors = CardDefaults.cardColors(containerColor = colors.primary),
+                                    elevation = CardDefaults.cardElevation(16.dp),
+                                    onClick = {
+                                        showLayers = !showLayers
+                                    }
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_layers),
+                                        contentDescription = "Flip",
+                                        modifier = Modifier.padding(12.dp),
+                                        tint = colors.onPrimary
+                                    )
+                                }
+
+                                if (showLayers) {
+
+                                    suitUrl?.let { url ->
+                                        Card(
+                                            modifier = Modifier
+                                                .align(Alignment.CenterHorizontally)
+                                                .size(50.dp),
+                                            shape = RoundedCornerShape(4.dp),
+                                            border = if (selectedLayer == 0) {
+                                                androidx.compose.foundation.BorderStroke(
+                                                    2.dp,
+                                                    colors.primary
+                                                )
+                                            } else null,
+                                            colors = CardDefaults.cardColors(containerColor = colors.background),
+                                            elevation = CardDefaults.cardElevation(16.dp),
+                                            onClick = {
+                                                selectedLayer = 0
+                                            }
+                                        ) {
+                                            AsyncImage(
+                                                model =
+                                                    ImageRequest.Builder(context)
+                                                        .data(url)
+                                                        .crossfade(true)
+                                                        .build(),
+                                                imageLoader = softwareImageLoader,
+                                                contentDescription = "Suit Layer",
+                                                modifier = Modifier.fillMaxSize()
+                                            )
+
+                                        }
+                                    }
+                                    Card(
+                                        modifier = Modifier
+                                            .align(Alignment.CenterHorizontally)
+                                            .size(50.dp),
+                                        shape = RoundedCornerShape(4.dp),
+                                        colors = CardDefaults.cardColors(containerColor = colors.background),
+                                        border = if (selectedLayer == 1) {
+                                            androidx.compose.foundation.BorderStroke(
+                                                2.dp,
+                                                colors.primary
+                                            )
+                                        } else null,
+                                        elevation = CardDefaults.cardElevation(16.dp),
+                                        onClick = {
+                                            selectedLayer = 1
+                                        }
+                                    ) {
+                                        AsyncImage(
+                                            model = ImageRequest.Builder(context)
+                                                .data(imageUrl)
+                                                .crossfade(true)
+                                                .build(),
+                                            imageLoader = softwareImageLoader,
+                                            contentDescription = "Edited Image Layer",
+                                            modifier = Modifier.fillMaxSize()
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -764,8 +925,13 @@ private fun EditImageScreen(
                                 onItemClick = { selectedSuit ->
                                     selectedSuitId = selectedSuit._id
                                     suitUrl = if (selectedSuitId == "none") {
+                                        if (showLayers) showLayers = false
+                                        if (selectedLayer != 1) selectedLayer = 1
                                         null
                                     } else {
+                                        if (!showLayers) showLayers = true
+                                        if (selectedLayer != 0) selectedLayer = 0
+
                                         isSuitLoading = true
                                         selectedSuit.image
                                     }
@@ -808,76 +974,82 @@ private fun EditImageScreen(
                                         modifier = Modifier.fillMaxWidth(),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Button(modifier = Modifier
-                                            .weight(1f) // Takes 50% of the width
-                                            .padding(end = 3.dp),
+                                        Button(
+                                            modifier = Modifier
+                                                .weight(1f) // Takes 50% of the width
+                                                .padding(end = 3.dp),
                                             onClick = { ticketBitmap = null }) {
                                             Text(stringResource(R.string.close))
                                         }
 
                                         Spacer(Modifier.size(6.dp))
 
-                                        Button(modifier = Modifier
-                                            .weight(1f) // Takes 50% of the width
-                                            .padding(start = 3.dp),
+                                        Button(
+                                            modifier = Modifier
+                                                .weight(1f) // Takes 50% of the width
+                                                .padding(start = 3.dp),
                                             onClick = {
-                                            val permissionsGranted =
-                                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                                                    true
-                                                } else {
-                                                    writeStorageAccessState.allPermissionsGranted
-                                                }
+                                                val permissionsGranted =
+                                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                                                        true
+                                                    } else {
+                                                        writeStorageAccessState.allPermissionsGranted
+                                                    }
 
-                                            showSaveLoading = true
+                                                showSaveLoading = true
 
-                                            uiScope.launch {
-                                                if (permissionsGranted) {
-                                                    withContext(Dispatchers.IO) {
-                                                        val savedUri = saveBitmapToGallery(
-                                                            context,
-                                                            ticketBitmap?.asAndroidBitmap()
-                                                        )
-                                                        showSaveLoading = false
-                                                        withContext(Dispatchers.Main) {
-                                                            if (savedUri != null) {
-                                                                // Now you have the saved image URI
-                                                                ticketBitmap = null
-                                                                val imagePath = savedUri.toString()
-                                                                onImageSaved(imagePath)
-                                                                Logger.d(
-                                                                    "EditImageScreen",
-                                                                    "Image saved to: $imagePath"
-                                                                )
-                                                                /*Toast.makeText(
-                                                                    context,
-                                                                    "Image saved to gallery",
-                                                                    Toast.LENGTH_SHORT
-                                                                ).show()*/
-                                                            } else {
-                                                                Toast.makeText(
-                                                                    context,
-                                                                    context.getString(R.string.failed_to_save_image),
-                                                                    Toast.LENGTH_SHORT
-                                                                ).show()
+                                                uiScope.launch {
+                                                    if (permissionsGranted) {
+                                                        withContext(Dispatchers.IO) {
+                                                            val savedUri = saveBitmapToGallery(
+                                                                context,
+                                                                ticketBitmap?.asAndroidBitmap()
+                                                            )
+                                                            showSaveLoading = false
+                                                            withContext(Dispatchers.Main) {
+                                                                if (savedUri != null) {
+                                                                    // Now you have the saved image URI
+                                                                    ticketBitmap = null
+                                                                    val imagePath =
+                                                                        savedUri.toString()
+                                                                    onImageSaved(imagePath)
+                                                                    Logger.d(
+                                                                        "EditImageScreen",
+                                                                        "Image saved to: $imagePath"
+                                                                    )
+                                                                    /*Toast.makeText(
+                                                                        context,
+                                                                        "Image saved to gallery",
+                                                                        Toast.LENGTH_SHORT
+                                                                    ).show()*/
+                                                                } else {
+                                                                    Toast.makeText(
+                                                                        context,
+                                                                        context.getString(R.string.failed_to_save_image),
+                                                                        Toast.LENGTH_SHORT
+                                                                    ).show()
+                                                                }
                                                             }
                                                         }
-                                                    }
-                                                } else if (writeStorageAccessState.shouldShowRationale) {
-                                                    coroutineScope.launch {
-                                                        val result = snackbarHostState.showSnackbar(
-                                                            message = context.getString(R.string.the_storage_permission_is_needed_to_save_the_image),
-                                                            actionLabel = context.getString(R.string.grant_access)
-                                                        )
-                                                        if (result == SnackbarResult.ActionPerformed) {
-                                                            writeStorageAccessState.launchMultiplePermissionRequest()
+                                                    } else if (writeStorageAccessState.shouldShowRationale) {
+                                                        coroutineScope.launch {
+                                                            val result =
+                                                                snackbarHostState.showSnackbar(
+                                                                    message = context.getString(R.string.the_storage_permission_is_needed_to_save_the_image),
+                                                                    actionLabel = context.getString(
+                                                                        R.string.grant_access
+                                                                    )
+                                                                )
+                                                            if (result == SnackbarResult.ActionPerformed) {
+                                                                writeStorageAccessState.launchMultiplePermissionRequest()
+                                                            }
                                                         }
+                                                    } else {
+                                                        writeStorageAccessState.launchMultiplePermissionRequest()
                                                     }
-                                                } else {
-                                                    writeStorageAccessState.launchMultiplePermissionRequest()
                                                 }
-                                            }
 
-                                        }) {
+                                            }) {
                                             Text(stringResource(R.string.save))
                                         }
                                     }
@@ -932,71 +1104,6 @@ private fun EditImageScreen(
 
                         Spacer(Modifier.size(8.dp))
 
-                        /*Button(
-                            onClick = {
-
-                                if (boxWidth.value <= 0 || boxHeight.value <= 0 || !isLayoutReady) {
-                                    Toast.makeText(
-                                        context,
-                                        context.getString(R.string.layout_not_ready_please_wait),
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                    return@Button
-                                }
-
-                                isCreatingBitmap = true
-
-                                uiScope.launch {
-                                    // Capture the screen content
-                                    val capturedBitmap = captureController.captureAsync().await()
-
-                                    // Create a new bitmap with source dimensions but containing captured content
-                                    val resultBitmap = Bitmap.createScaledBitmap(
-                                        capturedBitmap.asAndroidBitmap(),
-                                        pixelSize.width,
-                                        pixelSize.height,
-                                        false
-                                    )
-
-                                    // Assign the result to ticketBitmap
-                                    ticketBitmap = resultBitmap.asImageBitmap()
-                                    isCreatingBitmap = false
-                                }
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(48.dp)
-                                .padding(horizontal = 16.dp),
-                            shape = RoundedCornerShape(24.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = colors.primary)
-                        ) {
-                            if (isCreatingBitmap) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier
-                                        .size(24.dp),
-                                    color = colors.onPrimary,
-                                    strokeWidth = 2.dp
-                                )
-                            } else {
-                                Row {
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.download_icon),
-                                        contentDescription = "Save Icon",
-                                        tint = colors.onPrimary,
-                                        modifier = Modifier
-                                            .size(20.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = stringResource(R.string.save_to_gallery),
-                                        color = colors.onPrimary,
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                            }
-                        }*/
-
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -1022,19 +1129,58 @@ private fun EditImageScreen(
 
                                             uiScope.launch {
                                                 // Capture the screen content
-                                                val capturedBitmap = captureController.captureAsync().await()
+                                                try {
+                                                    val capturedBitmap =
+                                                        captureController.captureAsync().await()
+                                                    val capturedAndroid =
+                                                        capturedBitmap.asAndroidBitmap()
 
-                                                // Create a new bitmap with source dimensions but containing captured content
-                                                val resultBitmap = Bitmap.createScaledBitmap(
-                                                    capturedBitmap.asAndroidBitmap(),
-                                                    pixelSize.width,
-                                                    pixelSize.height,
-                                                    false
-                                                )
+                                                    val targetWidth =
+                                                        if (pixelSize.width > 0) pixelSize.width else capturedAndroid.width
+                                                    val targetHeight =
+                                                        if (pixelSize.height > 0) pixelSize.height else capturedAndroid.height
 
-                                                // Assign the result to ticketBitmap
-                                                ticketBitmap = resultBitmap.asImageBitmap()
-                                                isCreatingBitmap = false
+                                                    if (targetWidth == 0 || targetHeight == 0) {
+                                                        // Double-check: If still invalid, abort and show error.
+                                                        Logger.e(
+                                                            TAG,
+                                                            "Invalid target dimensions: ${pixelSize.width}x${pixelSize.height}"
+                                                        )
+                                                        withContext(Dispatchers.Main) {
+                                                            Toast.makeText(
+                                                                context,
+                                                                "Something went wrong. Please try again.",
+                                                                Toast.LENGTH_SHORT
+                                                            ).show()
+                                                        }
+                                                        isCreatingBitmap = false
+                                                        return@launch
+                                                    }
+
+                                                    // Create a new bitmap with source dimensions but containing captured content
+                                                    val resultBitmap = Bitmap.createScaledBitmap(
+                                                        capturedAndroid,
+                                                        targetWidth,
+                                                        targetHeight,
+                                                        false
+                                                    )
+
+                                                    // Assign the result to ticketBitmap
+                                                    withContext(Dispatchers.Main) {
+                                                        ticketBitmap = resultBitmap.asImageBitmap()
+                                                    }
+
+                                                    isCreatingBitmap = false
+                                                } catch (e: IllegalStateException) {
+                                                    if (e.message?.contains("Software rendering") == true) {
+                                                        Logger.e(
+                                                            TAG,
+                                                            "Capture failed: Hardware bitmap issue",
+                                                            e
+                                                        )
+                                                    } else throw e
+                                                }
+
                                             }
                                         }
                                     )
@@ -1096,55 +1242,58 @@ private fun EditImageScreen(
                         if (!isPremium) {
 
                             AnimatedVisibility(adViewLoadState) {
-                            Surface(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .animateContentSize()
-                                    .heightIn(min = 54.dp) // match banner height
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    if (!callback) {
-                                        Text(
-                                            text = stringResource(R.string.advertisement),
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            fontWeight = FontWeight.Medium,
-                                            color = colors.onSurfaceVariant,
+                                Surface(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .animateContentSize()
+                                        .heightIn(min = 54.dp) // match banner height
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        if (!callback) {
+                                            Text(
+                                                text = stringResource(R.string.advertisement),
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                fontWeight = FontWeight.Medium,
+                                                color = colors.onSurfaceVariant,
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .animateContentSize()
+                                                    .wrapContentSize(align = Alignment.Center)
+                                            )
+                                        }
+
+                                        AdaptiveBannerAd(
+                                            adUnit = AdIdsFactory.getBannerAdId(),
                                             modifier = Modifier
                                                 .fillMaxWidth()
                                                 .animateContentSize()
-                                                .wrapContentSize(align = Alignment.Center)
+                                                .align(Alignment.Center),
+                                            onAdLoaded = { isLoaded ->
+                                                callback = true
+                                                adViewLoadState = isLoaded
+                                                Logger.d(
+                                                    TAG,
+                                                    "AdaptiveBannerAd: onAdLoaded: $isLoaded"
+                                                )
+                                            }
                                         )
+
+                                        /*AdMobCollapsableBanner(
+                                            adUnit = AdIdsFactory.getBannerAdId(),
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .animateContentSize()
+                                                .align(Alignment.Center),
+                                            adSize = AdSize.FULL_BANNER, // or adaptive size if needed
+                                            collapseDirection = CollapseDirection.BOTTOM,
+                                            onAdLoaded = { isLoaded ->
+                                                adLoadState = isLoaded
+                                                Logger.d(TAG, "AdMobBanner: onAdLoaded: $isLoaded")
+                                            }
+                                        )*/
                                     }
-
-                                    AdaptiveBannerAd(
-                                        adUnit = AdIdsFactory.getBannerAdId(),
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .animateContentSize()
-                                            .align(Alignment.Center),
-                                        onAdLoaded = { isLoaded ->
-                                            callback = true
-                                            adViewLoadState = isLoaded
-                                            Logger.d(TAG, "AdaptiveBannerAd: onAdLoaded: $isLoaded")
-                                        }
-                                    )
-
-                                    /*AdMobCollapsableBanner(
-                                        adUnit = AdIdsFactory.getBannerAdId(),
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .animateContentSize()
-                                            .align(Alignment.Center),
-                                        adSize = AdSize.FULL_BANNER, // or adaptive size if needed
-                                        collapseDirection = CollapseDirection.BOTTOM,
-                                        onAdLoaded = { isLoaded ->
-                                            adLoadState = isLoaded
-                                            Logger.d(TAG, "AdMobBanner: onAdLoaded: $isLoaded")
-                                        }
-                                    )*/
                                 }
                             }
-                        }
 
                             // Add SnackbarHost to display permission rationale
                             SnackbarHost(

@@ -22,6 +22,27 @@ class AdsConsentManager (val context: Context) {
     private val consentInformation: ConsentInformation =
         UserMessagingPlatform.getConsentInformation(context)
 
+    fun gatherConsentInfo(activity: Activity, onComplete: () -> Unit) {
+        val params = ConsentRequestParameters.Builder().build()
+
+        consentInformation.requestConsentInfoUpdate(
+            activity,
+            params,
+            {
+                onComplete()
+            },
+            { formError ->
+                Log.e("AdsConsentManager", "Consent info update failed: ${formError.message}")
+                onComplete()
+            }
+        )
+    }
+
+    /*fun showGDPRConsent(activity: Activity, debug: Boolean, onComplete: (FormError?) -> Unit) {
+        UserMessagingPlatform.loadAndShowConsentFormIfRequired(activity) { formError ->
+            onComplete(formError)
+        }
+    }*/
 
     fun showGDPRConsent(activity: Activity, isTest: Boolean, onConsentGatheringCompleteListener: (FormError?) -> Unit) {
         // Set tag for under age of consent. false means users are not under age
@@ -32,7 +53,7 @@ class AdsConsentManager (val context: Context) {
 
         if (isTest) {
             consentInformation.reset()
-            val android_id = Settings.Secure.getString(activity?.contentResolver, Settings.Secure.ANDROID_ID)
+            val android_id = Settings.Secure.getString(activity.contentResolver, Settings.Secure.ANDROID_ID)
             val deviceId = md5(android_id).uppercase(Locale.getDefault())
             val debugSettings = activity.let {
                 ConsentDebugSettings.Builder(it)

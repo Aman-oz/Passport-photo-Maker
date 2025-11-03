@@ -279,4 +279,8 @@
     <string name="choose_image">Choose Image</string>
     <string name="pick_image_from_your_gallery_or_camera">Pick image from your gallery or capture new one</string>
     <string name="attribution">AD</string>
+    <string name="auto">Auto</string>
+    <string name="manual">Manual</string>
+    <string name="auto_remove">Auto Remove</string>
+    <string name="remove_background_with_ai">Auto remove background through AI</string>
 </resources>
