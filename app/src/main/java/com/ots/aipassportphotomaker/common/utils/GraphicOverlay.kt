@@ -171,6 +171,8 @@ open class GraphicOverlay(context: Context?, attrs: AttributeSet?) : View(contex
                 pathPaint.xfermode = null
                 hideBrush()
                 // Ensure matrices are ready
+                userMatrix.reset()
+                inverseUserMatrix.reset()
                 userMatrix = Matrix()
                 inverseUserMatrix = Matrix()
                 savedUserMatrix = Matrix()

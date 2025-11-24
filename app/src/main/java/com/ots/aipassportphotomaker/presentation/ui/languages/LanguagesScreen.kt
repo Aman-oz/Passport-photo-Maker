@@ -149,10 +149,6 @@ private fun LanguagesScreen(
     }
 
     var selectedLanguage by remember { mutableStateOf(defaultLanguage.code) }
-//    var buttonText by remember { mutableStateOf(defaultLanguage.buttonText) }
-//    var titleText by remember { mutableStateOf(defaultLanguage.titleText) }
-//    var defaultText by remember { mutableStateOf(defaultLanguage.defaultText) }
-//    var otherLanguagesText by remember { mutableStateOf(defaultLanguage.otherLanguages) }
 
     var selectedLanguageState by remember(selectedLanguage) { mutableStateOf(selectedLanguage) }
     var buttonText by remember(selectedLanguageState) { mutableStateOf(languages.find { it.code == selectedLanguageState }?.buttonText ?: defaultLanguage.buttonText) }

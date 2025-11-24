@@ -16,6 +16,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -60,6 +61,9 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.listSaver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -67,6 +71,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
@@ -187,6 +192,7 @@ fun EditImagePage(
     val activity = context as ComponentActivity
     val commonSharedViewModel: SharedViewModel = hiltViewModel(activity)
     val editedImageResult by commonSharedViewModel.editedImageResult.collectAsState()
+    val removedBgResult by commonSharedViewModel.removedBgResult.collectAsState()
 
     LaunchedEffect(editedImageResult) {
         Logger.i(TAG, "LaunchedEffect triggered with: $editedImageResult")
@@ -194,6 +200,15 @@ fun EditImagePage(
             Logger.i(TAG, "Received edited image URL: $editedImageUrl")
             viewModel.updateImageUrl(editedImageUrl)
             commonSharedViewModel.clearResult()
+        }
+    }
+
+    LaunchedEffect(removedBgResult) {
+        Logger.i(TAG, "LaunchedEffect triggered with: $editedImageResult")
+        removedBgResult.let { isRemoved ->
+            Logger.i(TAG, "Received isRemoved BG: $isRemoved")
+            viewModel.updateIsBgRemoved(isRemoved)
+            commonSharedViewModel.clearRemovedBgResult()
         }
     }
 
@@ -251,6 +266,17 @@ fun EditImagePage(
         onGetProClick = {
             viewModel.sendEvent(AnalyticsConstants.CLICKED, "btnGetPro_EditImageScreen")
             mainRouter.navigateToPremiumScreen()
+        },
+        onEditPositionChange = { position ->
+            viewModel.sendEvent(
+                AnalyticsConstants.CLICKED,
+                "editPosition_${if (position == 0) "backdrop" else "add_suit"}_EditImageScreen"
+            )
+            viewModel.updateEditPosition(position)
+        },
+        onSuitSelected = { suitUrl ->
+            viewModel.sendEvent(AnalyticsConstants.CLICKED, "suit_EditImageScreen")
+            viewModel.onSuitSelected(suitUrl)
         }
     )
 
@@ -262,6 +288,10 @@ fun EditImagePage(
 
 }
 
+val OffsetStateSaver = listSaver(
+    save = { listOf(it.value.x, it.value.y) },
+    restore = { mutableStateOf(Offset(it[0] as Float, it[1] as Float)) }
+)
 @OptIn(
     ExperimentalPermissionsApi::class, ExperimentalComposeUiApi::class,
     ExperimentalComposeApi::class
@@ -281,6 +311,8 @@ private fun EditImageScreen(
     onEraseClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
     onGetProClick: () -> Unit = {},
+    onEditPositionChange: (Int) -> Unit = {},
+    onSuitSelected: (String?) -> Unit = {}
 ) {
     val TAG = "EditImageScreen"
     val systemBarsPadding = WindowInsets.systemBars.asPaddingValues()
@@ -319,7 +351,7 @@ private fun EditImageScreen(
         val captureController = rememberCaptureController()
         val uiScope = rememberCoroutineScope()
         var ticketBitmap: ImageBitmap? by remember { mutableStateOf(null) }
-        var suitUrl: String? by remember { mutableStateOf(null) }
+        var suitUrl: String? by remember { mutableStateOf(uiState.selectedSuitUrl) }
         var isSuitLoading by remember { mutableStateOf(false) } // Start with loading state
 
         var showSaveLoading by remember { mutableStateOf(false) }
@@ -420,7 +452,7 @@ private fun EditImageScreen(
 
                         var flip by remember { mutableStateOf(false) }
 
-                        var showLayers by remember { mutableStateOf(false) }
+                        var showLayers by rememberSaveable { mutableStateOf(false) }
                         var selectedLayer by remember { mutableIntStateOf(1) }
 
                         // Get the size of the parent Box
@@ -450,13 +482,30 @@ private fun EditImageScreen(
 
                             var isImageLoading by remember { mutableStateOf(true) } // Start with loading state
 
-                            var imageScale by remember { mutableStateOf(1f) }
+                            /*var imageScale by remember { mutableStateOf(1f) }
                             var imageRotation by remember { mutableStateOf(0f) }
                             var imageOffset by remember { mutableStateOf(Offset.Zero) }
                             var suitScale by remember { mutableStateOf(1f) }
                             var suitRotation by remember { mutableStateOf(0f) }
-                            var suitOffset by remember { mutableStateOf(Offset.Zero) }
+                            var suitOffset by remember { mutableStateOf(Offset.Zero) }*/
 
+                            // primitives: keep as MutableState via rememberSaveable returning MutableState
+                            var imageScale by rememberSaveable { mutableStateOf(1f) }
+                            var imageRotation by rememberSaveable { mutableStateOf(0f) }
+
+                            var suitScale by rememberSaveable { mutableStateOf(1f) }
+                            var suitRotation by rememberSaveable { mutableStateOf(0f) }
+
+// Offsets: rememberSaveable with saver must return MutableState if you want `by` to expose Offset
+                            var imageOffset by rememberSaveable(
+                                saver = OffsetStateSaver,
+                                init = { mutableStateOf(Offset.Zero) }
+                            )
+
+                            var suitOffset by rememberSaveable(
+                                saver = OffsetStateSaver,
+                                init = { mutableStateOf(Offset.Zero) }
+                            )
 
 
                             Box(
@@ -640,7 +689,16 @@ private fun EditImageScreen(
                                         .align(Alignment.CenterHorizontally),
                                     shape = CircleShape,
                                     colors = CardDefaults.cardColors(containerColor = colors.primary),
-                                    elevation = CardDefaults.cardElevation(16.dp),
+                                    elevation = CardDefaults.cardElevation(20.dp),
+                                    border = BorderStroke(
+                                        width = 2.dp,
+                                        brush = Brush.linearGradient(
+                                            colors = listOf(
+                                                colors.primary,
+                                                colors.background
+                                            )
+                                        )
+                                    ),
                                     onClick = {
                                         flip = !flip
                                     }
@@ -656,7 +714,16 @@ private fun EditImageScreen(
                                 Card(
                                     shape = CircleShape,
                                     colors = CardDefaults.cardColors(containerColor = colors.primary),
-                                    elevation = CardDefaults.cardElevation(16.dp),
+                                    elevation = CardDefaults.cardElevation(20.dp),
+                                    border = BorderStroke(
+                                        width = 2.dp,
+                                        brush = Brush.linearGradient(
+                                            colors = listOf(
+                                                colors.primary,
+                                                colors.background
+                                            )
+                                        )
+                                    ),
                                     onClick = {
                                         onEraseClick.invoke()
                                     },
@@ -685,7 +752,16 @@ private fun EditImageScreen(
                                         .animateContentSize(),
                                     shape = if (showLayers) RoundedCornerShape(4.dp) else CircleShape,
                                     colors = CardDefaults.cardColors(containerColor = colors.primary),
-                                    elevation = CardDefaults.cardElevation(16.dp),
+                                    elevation = CardDefaults.cardElevation(20.dp),
+                                    border = BorderStroke(
+                                        width = 2.dp,
+                                        brush = Brush.linearGradient(
+                                            colors = listOf(
+                                                colors.primary,
+                                                colors.background
+                                            )
+                                        )
+                                    ),
                                     onClick = {
                                         showLayers = !showLayers
                                     }
@@ -707,13 +783,30 @@ private fun EditImageScreen(
                                                 .size(50.dp),
                                             shape = RoundedCornerShape(4.dp),
                                             border = if (selectedLayer == 0) {
-                                                androidx.compose.foundation.BorderStroke(
-                                                    2.dp,
-                                                    colors.primary
+                                                BorderStroke(
+
+                                                    width = 3.dp,
+                                                    brush = Brush.linearGradient(
+                                                        colors = listOf(
+                                                            colors.primary,
+                                                            colors.background
+                                                        )
+                                                    )
                                                 )
-                                            } else null,
+                                            } else {
+                                                BorderStroke(
+
+                                                    width = 2.dp,
+                                                    brush = Brush.linearGradient(
+                                                        colors = listOf(
+                                                            colors.background,
+                                                            colors.background
+                                                        )
+                                                    )
+                                                )
+                                            },
                                             colors = CardDefaults.cardColors(containerColor = colors.background),
-                                            elevation = CardDefaults.cardElevation(16.dp),
+                                            elevation = CardDefaults.cardElevation(20.dp),
                                             onClick = {
                                                 selectedLayer = 0
                                             }
@@ -738,12 +831,29 @@ private fun EditImageScreen(
                                         shape = RoundedCornerShape(4.dp),
                                         colors = CardDefaults.cardColors(containerColor = colors.background),
                                         border = if (selectedLayer == 1) {
-                                            androidx.compose.foundation.BorderStroke(
-                                                2.dp,
-                                                colors.primary
+                                            BorderStroke(
+
+                                                width = 3.dp,
+                                                brush = Brush.linearGradient(
+                                                    colors = listOf(
+                                                        colors.primary,
+                                                        colors.background
+                                                    )
+                                                )
                                             )
-                                        } else null,
-                                        elevation = CardDefaults.cardElevation(16.dp),
+                                        } else {
+                                            BorderStroke(
+
+                                                width = 2.dp,
+                                                brush = Brush.linearGradient(
+                                                    colors = listOf(
+                                                        colors.background,
+                                                        colors.background
+                                                    )
+                                                )
+                                            )
+                                        },
+                                        elevation = CardDefaults.cardElevation(20.dp),
                                         onClick = {
                                             selectedLayer = 1
                                         }
@@ -753,6 +863,7 @@ private fun EditImageScreen(
                                                 .data(imageUrl)
                                                 .crossfade(true)
                                                 .build(),
+                                            contentScale = ContentScale.FillBounds,
                                             imageLoader = softwareImageLoader,
                                             contentDescription = "Edited Image Layer",
                                             modifier = Modifier.fillMaxSize()
@@ -785,6 +896,7 @@ private fun EditImageScreen(
                             items = items,
                             onSelectionChange = {
                                 selectedIndex = it
+                                onEditPositionChange.invoke(it)
                             }
                         )
 
@@ -935,6 +1047,8 @@ private fun EditImageScreen(
                                         isSuitLoading = true
                                         selectedSuit.image
                                     }
+
+                                    onSuitSelected.invoke(suitUrl)
                                 },
                                 selectedSuitId = selectedSuitId,
                                 onSelectionChange = { suit, isSelected ->

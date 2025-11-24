@@ -73,6 +73,7 @@ class LanguagesScreenViewModel @Inject constructor(
         loadState(false)
 
         onInitialState()
+        loadInitialLanguage()
     }
 
     private fun onInitialState() = launch {
@@ -110,7 +111,7 @@ class LanguagesScreenViewModel @Inject constructor(
     fun handleLanguageChange(code: String) {
         val savedLang = getSavedLanguage()
         if (code != savedLang) {
-            preferencesHelper.setString("app_language", code)
+            preferencesHelper.setString(SharedPrefUtils.SELECTED_LANGUAGE, code)
             val localeList = LocaleListCompat.forLanguageTags(code)
             AppCompatDelegate.setApplicationLocales(localeList)
         }
@@ -124,6 +125,12 @@ class LanguagesScreenViewModel @Inject constructor(
 
     fun changeLanguage(languageCode: String) {
         appLocaleManager.changeLanguage(context,languageCode)
+        val localeList = LocaleListCompat.forLanguageTags(languageCode)
+        AppCompatDelegate.setApplicationLocales(localeList)
+
+        // Save using the same key everywhere (SharedPrefUtils.SELECTED_LANGUAGE)
+        preferencesHelper.setString(SharedPrefUtils.SELECTED_LANGUAGE, languageCode)
+
         _settingState.value = _settingState.value.copy(selectedLanguage = languageCode)
     }
 }

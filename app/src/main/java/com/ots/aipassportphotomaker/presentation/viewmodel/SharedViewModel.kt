@@ -15,7 +15,9 @@ import javax.inject.Inject
 class SharedViewModel @Inject constructor() : ViewModel() {
 
     private val _editedImageResult = MutableStateFlow<String?>(null)
+    private val _removedBgResult = MutableStateFlow<Boolean>(false)
     val editedImageResult = _editedImageResult.asStateFlow()
+    val removedBgResult = _removedBgResult.asStateFlow()
 
     fun setEditedImageResult(imageUrl: String?) {
         Logger.i("SharedViewModel", "setEditedImageResult: $imageUrl")
@@ -24,5 +26,14 @@ class SharedViewModel @Inject constructor() : ViewModel() {
 
     fun clearResult() {
         _editedImageResult.value = null
+    }
+
+    fun setRemovedBgResult(isBgRemoved: Boolean) {
+        Logger.i("SharedViewModel", "setRemoveBgResult: $isBgRemoved")
+        _removedBgResult.value = isBgRemoved
+    }
+
+    fun clearRemovedBgResult() {
+        _removedBgResult.value = false
     }
 }

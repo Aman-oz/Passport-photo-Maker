@@ -56,7 +56,6 @@ import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -229,6 +228,7 @@ fun CutOutImagePage(
                 if (internalPath != null) {
                     Logger.i(TAG, "Image saved successfully: $internalPath")
                     viewModel.removeBackground(File(internalPath))
+                    commonSharedViewModel.setRemovedBgResult(true)
                 }
             }
         }
@@ -472,12 +472,11 @@ private fun CutOutImageScreen(
                         )
                     }
 
-                    if (selectedIndex == 0) {
-                        Column(
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                        ) {
-
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                    ) {
+                        if (selectedIndex == 0) {
                             Text(
                                 modifier = Modifier
                                     .padding(horizontal = 16.dp)
@@ -510,8 +509,14 @@ private fun CutOutImageScreen(
                                                 bitmap.height,
                                                 Bitmap.Config.ARGB_8888
                                             ).apply { eraseColor(AndroidColor.TRANSPARENT) }
-                                            Canvas(transparentBitmap).drawBitmap(bitmap, 0f, 0f, null)
-                                            removeBackgroundBitmap = transparentBitmap.asImageBitmap()
+                                            Canvas(transparentBitmap).drawBitmap(
+                                                bitmap,
+                                                0f,
+                                                0f,
+                                                null
+                                            )
+                                            removeBackgroundBitmap =
+                                                transparentBitmap.asImageBitmap()
                                         }
                                     }),
                                 contentAlignment = Alignment.Center
@@ -539,14 +544,7 @@ private fun CutOutImageScreen(
                                     )
                                 }
                             }
-
-                        }
-                    } else {
-                        Column(
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                        ) {
-
+                        } else {
 
                             Row(
                                 modifier = Modifier
@@ -729,54 +727,55 @@ private fun CutOutImageScreen(
 
                             Spacer(modifier = Modifier.height(4.dp))
 
-                            var adViewLoadState by remember { mutableStateOf(true) }
-                            var callback by remember { mutableStateOf(false) }
+                        }
 
-                            if (!isPremium) {
+                        var adViewLoadState by remember { mutableStateOf(true) }
+                        var callback by remember { mutableStateOf(false) }
 
-                                AnimatedVisibility(adViewLoadState) {
-                                    Surface(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .animateContentSize()
-                                            .heightIn(min = 54.dp) // match banner height
-                                    ) {
-                                        Box(contentAlignment = Alignment.Center) {
-                                            if (!callback) {
-                                                Text(
-                                                    text = stringResource(R.string.advertisement),
-                                                    style = MaterialTheme.typography.bodyMedium,
-                                                    fontWeight = FontWeight.Medium,
-                                                    color = colors.onSurfaceVariant,
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .wrapContentSize(align = Alignment.Center)
-                                                )
-                                            }
+                        if (!isPremium) {
 
-                                            AdaptiveBannerAd(
-                                                adUnit = AdIdsFactory.getBannerAdId(),
+                            AnimatedVisibility(adViewLoadState) {
+                                Surface(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .animateContentSize()
+                                        .heightIn(min = 54.dp) // match banner height
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        if (!callback) {
+                                            Text(
+                                                text = stringResource(R.string.advertisement),
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                fontWeight = FontWeight.Medium,
+                                                color = colors.onSurfaceVariant,
                                                 modifier = Modifier
                                                     .fillMaxWidth()
-                                                    .animateContentSize()
-                                                    .align(Alignment.Center),
-                                                onAdLoaded = { isLoaded ->
-                                                    callback = true
-                                                    adViewLoadState = isLoaded
-                                                    Logger.d(
-                                                        TAG,
-                                                        "AdaptiveBannerAd: onAdLoaded: $isLoaded"
-                                                    )
-                                                }
+                                                    .wrapContentSize(align = Alignment.Center)
                                             )
                                         }
+
+                                        AdaptiveBannerAd(
+                                            adUnit = AdIdsFactory.getBannerAdId(),
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .animateContentSize()
+                                                .align(Alignment.Center),
+                                            onAdLoaded = { isLoaded ->
+                                                callback = true
+                                                adViewLoadState = isLoaded
+                                                Logger.d(
+                                                    TAG,
+                                                    "AdaptiveBannerAd: onAdLoaded: $isLoaded"
+                                                )
+                                            }
+                                        )
                                     }
                                 }
-
                             }
 
                         }
                     }
+
 
                 }
 

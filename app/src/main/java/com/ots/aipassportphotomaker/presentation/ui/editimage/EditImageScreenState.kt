@@ -28,6 +28,7 @@ data class EditImageScreenUiState(
     val editPosition: Int = 0,
     val sourceScreen: String = "",
     val isBgRemoved: Boolean = false,
+    val selectedSuitUrl: String? = null,
 
     )
 

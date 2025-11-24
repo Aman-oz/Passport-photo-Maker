@@ -83,6 +83,12 @@ android {
         compose = true
     }
 
+    bundle {
+        language {
+            enableSplit = false
+        }
+    }
+
     lint {
         disable += "NullSafeMutableLiveData"
     }
@@ -187,11 +193,30 @@ dependencies {
 
     implementation(libs.accompanist.systemuicontroller)
 
+    implementation(libs.androidx.ui.tooling)
+
     testImplementation(libs.junit)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.androidx.arch.testing)
+    testImplementation(libs.kotlin.coroutines.test)
+    testImplementation(libs.google.truth)
+    testImplementation(libs.squareup.okhttp.mock)
+    testImplementation(libs.io.mockk)
+
+    androidTestImplementation(libs.hilt.test)
+    androidTestImplementation(libs.kotlin.coroutines.test)
+    androidTestImplementation(libs.androidx.arch.testing)
+    androidTestImplementation(libs.google.truth)
     androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.test.core)
+    androidTestImplementation(libs.squareup.okhttp.mock)
+    androidTestImplementation(libs.io.mockk.android)
+    androidTestImplementation(libs.androidx.test.runner)
+
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
-    implementation(libs.androidx.ui.tooling)
+    androidTestImplementation(libs.androidx.ui.tooling)
+
     debugImplementation(libs.androidx.ui.test.manifest)
 }

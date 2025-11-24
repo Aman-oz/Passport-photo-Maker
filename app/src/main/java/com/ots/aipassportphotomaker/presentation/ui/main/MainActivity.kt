@@ -53,6 +53,7 @@ import com.ots.aipassportphotomaker.App
 import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.adsmanager.admob.MyAdsManager
 import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
+import com.ots.aipassportphotomaker.common.firebase.remoteconfig.RemoteFactory
 import com.ots.aipassportphotomaker.common.managers.AdsConsentManager
 import com.ots.aipassportphotomaker.common.managers.AnalyticsManager
 import com.ots.aipassportphotomaker.common.managers.PreferencesHelper
@@ -331,8 +332,8 @@ class MainActivity : ComponentActivity() {
                                     popUpTo(Page.GetStartedScreen) { inclusive = true }
                                 }*/
 
-                                val random = Random.nextInt(3) // 0, 1, 2
-                                when (random) {
+                                val secondLaunch = RemoteFactory.getSplashSecondLaunch() // 0, 1, 2
+                                when (secondLaunch) {
                                     0 -> {
                                         // Option 0: Directly to NavigationBar (HomeScreen)
                                         Logger.d("MainActivity", "Second launch: Direct to NavigationBar")

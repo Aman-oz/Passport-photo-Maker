@@ -140,6 +140,16 @@ class EditImageScreenViewModel @Inject constructor(
         }
     }
 
+    fun updateIsBgRemoved(isBgRemoved: Boolean) {
+        launch {
+            _uiState.value = _uiState.value.copy(
+                isBgRemoved = isBgRemoved
+            )
+            _shouldRemoveBackground.value = !isBgRemoved  // Ensure no re-removal
+            Logger.i("EditImageScreenViewModel", "BG removed from CutOut: isBgRemoved=true")
+        }
+    }
+
     private fun observeSuitsLoadingState() {
         launch {
             suits.collect { pagingData ->
@@ -393,6 +403,22 @@ class EditImageScreenViewModel @Inject constructor(
                 error
             )
             _error.value = "Failed to load document details"
+        }
+    }
+
+    fun updateEditPosition(newPosition: Int) {
+        launch {
+            _uiState.value = _uiState.value.copy(editPosition = newPosition)
+            Logger.i("EditImageScreenViewModel", "Updated edit position: $newPosition")
+        }
+    }
+
+    fun onSuitSelected(suitUrl: String?) {
+        launch {
+            Logger.i("EditImageScreenViewModel", "Suit selected: ${suitUrl}")
+            _uiState.value = _uiState.value.copy(
+                selectedSuitUrl = suitUrl,
+            )
         }
     }
 
