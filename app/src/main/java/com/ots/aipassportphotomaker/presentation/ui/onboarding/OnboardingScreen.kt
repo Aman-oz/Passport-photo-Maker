@@ -411,6 +411,8 @@ fun BottomSection(
                 }
             }
 
+            Spacer(modifier = Modifier.height(6.dp))
+
             var adViewLoadState by remember { mutableStateOf(true) }
             var callback by remember { mutableStateOf(false) }
 

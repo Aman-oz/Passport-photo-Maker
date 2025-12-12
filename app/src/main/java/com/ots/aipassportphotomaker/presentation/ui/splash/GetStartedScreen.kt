@@ -74,6 +74,8 @@ import com.ots.aipassportphotomaker.presentation.ui.components.LoaderFullScreen
 import com.ots.aipassportphotomaker.presentation.ui.main.MainRouter
 import com.ots.aipassportphotomaker.presentation.ui.theme.colors
 import kotlinx.coroutines.delay
+import java.text.BreakIterator
+import java.text.StringCharacterIterator
 
 @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
 @Composable
@@ -221,7 +223,7 @@ private fun GetStartedScreen(
                     contentAlignment = Alignment.TopCenter
                 ) {
                     Image(
-                        painter = painterResource(id = R.drawable.after_image_girl1),
+                        painter = painterResource(id = R.drawable.after_image_girl),
                         contentDescription = stringResource(id = R.string.app_name),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -284,14 +286,36 @@ private fun GetStartedScreen(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
+                    val descriptionText = stringResource(R.string.creation_of_professional_identification_photos)
+                    val breakIterator = remember(descriptionText) { BreakIterator.getCharacterInstance() }
+                    val typingDelayInMs = 20L
+
+                    var substringText by remember {
+                        mutableStateOf("")
+                    }
+                    LaunchedEffect(descriptionText) {
+                        // Initial start delay of the typing animation
+                        delay(100)
+                        breakIterator.text = StringCharacterIterator(descriptionText)
+
+                        var nextIndex = breakIterator.next()
+                        // Iterate over the string, by index boundary
+                        while (nextIndex != BreakIterator.DONE) {
+                            substringText = descriptionText.subSequence(0, nextIndex).toString()
+                            // Go to the next logical character boundary
+                            nextIndex = breakIterator.next()
+                            delay(typingDelayInMs)
+                        }
+                    }
                     Text(
-                        text = stringResource(R.string.creation_of_professional_identification_photos),
+                        text = substringText,
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
                         color = colors.onSurfaceVariant,
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .align(Alignment.CenterHorizontally)
+                            .animateContentSize()
                             .scale(textAnimatedScale)
                             .padding(horizontal = 16.dp),
                     )

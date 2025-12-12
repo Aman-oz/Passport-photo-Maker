@@ -1239,6 +1239,18 @@ private fun EditImageScreen(
                                                 return@detectTapGestures
                                             }
 
+                                            val fallbackWidth = boxWidth.value.toInt().coerceAtLeast(1).coerceAtMost(4096)  // Cap for sanity
+                                            val fallbackHeight = boxHeight.value.toInt().coerceAtLeast(1).coerceAtMost(4096)
+                                            if (fallbackWidth <= 0 || fallbackHeight <= 0 || !isLayoutReady) {
+                                                Logger.w(TAG, "Layout not ready: box=${boxWidth.value}x${boxHeight.value}, ready=$isLayoutReady")
+                                                Toast.makeText(
+                                                    context,
+                                                    context.getString(R.string.layout_not_ready_please_wait),
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                                return@detectTapGestures
+                                            }
+
                                             isCreatingBitmap = true
 
                                             uiScope.launch {
