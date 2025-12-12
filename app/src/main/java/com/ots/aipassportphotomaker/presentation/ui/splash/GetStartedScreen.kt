@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -61,14 +60,10 @@ import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
-import com.google.android.gms.ads.AdSize
-import com.google.android.gms.ads.OnPaidEventListener
 import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.ots.aipassportphotomaker.R
 import com.ots.aipassportphotomaker.adsmanager.admob.AdaptiveBannerAd
 import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
-import com.ots.aipassportphotomaker.adsmanager.admob.adids.TestAdIds
-import com.ots.aipassportphotomaker.adsmanager.admob.loadFullScreenAd
 import com.ots.aipassportphotomaker.common.ext.bounceClick
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
@@ -78,6 +73,7 @@ import com.ots.aipassportphotomaker.presentation.ui.bottom_nav.NavigationBarShar
 import com.ots.aipassportphotomaker.presentation.ui.components.LoaderFullScreen
 import com.ots.aipassportphotomaker.presentation.ui.main.MainRouter
 import com.ots.aipassportphotomaker.presentation.ui.theme.colors
+import kotlinx.coroutines.delay
 
 @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
 @Composable
@@ -138,6 +134,7 @@ fun GetStartedPage(
         onBackClick = {
             mainRouter.goBack()
         },
+        isFirstLaunch = sharedViewModel.isFirstLaunch,
         onGetStartedClick = {
             viewModel.sendEvent(AnalyticsConstants.CLICKED, "get_started_splash")
 
@@ -158,6 +155,7 @@ private fun GetStartedScreen(
 //    isConsentDone: Boolean,
     onBackClick: () -> Unit,
     onGetStartedClick: () -> Unit,
+    isFirstLaunch: Boolean = false,
     isPremium: Boolean = false,
 ) {
 
@@ -200,6 +198,9 @@ private fun GetStartedScreen(
                 targetValue = scale2,
                 label = "FloatAnimation"
             )
+
+            // removed from v1.0.6
+            val isBannerAdEnabled by remember { mutableStateOf(false) }
 
 //            Box(
 //                modifier = Modifier
@@ -297,82 +298,92 @@ private fun GetStartedScreen(
 
 
                     Spacer(modifier = Modifier.height(10.dp))
+                    if (isFirstLaunch) {
+                        Button(
+                            onClick = {
+                                if ((!consentState/* || !callback*/) && !isPremium) return@Button
 
-                    Button(
-                        onClick = {
-                            if ((!consentState || !callback) && !isPremium) return@Button
+                                onGetStartedClick()
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .bounceClick()
+                                .padding(horizontal = 16.dp, vertical = 4.dp)
+                                .scale(buttonAnimatedScale),
+                        ) {
+                            if ((/*!callback || */!consentState) && !isPremium) {
+                                LottieAnimation(
+                                    composition = composition,
+                                    iterations = LottieConstants.IterateForever,
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .align(Alignment.CenterVertically)
+                                )
+                            } else {
+                                Text(
+                                    modifier = Modifier
+                                        .padding(vertical = 4.dp),
+                                    text = stringResource(R.string.get_started),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = colors.onPrimary
+                                )
+                            }
 
-                            onGetStartedClick()
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .bounceClick()
-                            .padding(horizontal = 16.dp, vertical = 4.dp)
-                            .scale(buttonAnimatedScale),
-                    ) {
-                        if ((!callback || !consentState) && !isPremium) {
-                            LottieAnimation(
-                                composition = composition,
-                                iterations = LottieConstants.IterateForever,
-                                modifier = Modifier
-                                    .size(32.dp)
-                                    .align(Alignment.CenterVertically)
-                            )
-                        } else {
-                            Text(
-                                modifier = Modifier
-                                    .padding(vertical = 4.dp),
-                                text = stringResource(R.string.get_started),
-                                style = MaterialTheme.typography.titleMedium,
-                                color = colors.onPrimary
-                            )
                         }
-
+                    } else {
+                        LaunchedEffect(Unit) {
+                            delay(3000L) // 3 seconds
+                            onGetStartedClick()
+                        }
                     }
 
 
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    if (!isPremium && consentState) {
-                        AnimatedVisibility(adViewLoadState) {
-                            Surface(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .heightIn(min = 54.dp)
-                                    .animateContentSize(
-                                        animationSpec = spring(
-                                            dampingRatio = Spring.DampingRatioMediumBouncy,
-                                            stiffness = Spring.StiffnessLow
+                    if (isBannerAdEnabled) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        if (!isPremium && consentState) {
+                            AnimatedVisibility(adViewLoadState) {
+                                Surface(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .heightIn(min = 54.dp)
+                                        .animateContentSize(
+                                            animationSpec = spring(
+                                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                                stiffness = Spring.StiffnessLow
+                                            )
                                         )
-                                    )
-                            ) {
-                                Box(
-                                    contentAlignment = Alignment.Center,
                                 ) {
-                                    if (!callback) {
-                                        Text(
-                                            text = stringResource(R.string.advertisement),
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            fontWeight = FontWeight.Medium,
-                                            color = colors.onSurfaceVariant,
+                                    Box(
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        if (!callback) {
+                                            Text(
+                                                text = stringResource(R.string.advertisement),
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                fontWeight = FontWeight.Medium,
+                                                color = colors.onSurfaceVariant,
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .wrapContentSize(align = Alignment.Center)
+                                            )
+                                        }
+
+                                        AdaptiveBannerAd(
+                                            adUnit = AdIdsFactory.getSplashBannerAdId(),
                                             modifier = Modifier
                                                 .fillMaxWidth()
-                                                .wrapContentSize(align = Alignment.Center)
+                                                .animateContentSize()
+                                                .align(Alignment.Center),
+                                            onAdLoaded = { isLoaded ->
+                                                callback = true
+                                                adViewLoadState = isLoaded
+                                                Logger.d(
+                                                    TAG,
+                                                    "AdaptiveBannerAd: onAdLoaded: $isLoaded"
+                                                )
+                                            }
                                         )
                                     }
-
-                                    AdaptiveBannerAd(
-                                        adUnit = AdIdsFactory.getSplashBannerAdId(),
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .animateContentSize()
-                                            .align(Alignment.Center),
-                                        onAdLoaded = { isLoaded ->
-                                            callback = true
-                                            adViewLoadState = isLoaded
-                                            Logger.d(TAG, "AdaptiveBannerAd: onAdLoaded: $isLoaded")
-                                        }
-                                    )
                                 }
                             }
                         }

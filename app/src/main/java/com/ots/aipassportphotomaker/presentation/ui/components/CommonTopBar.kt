@@ -35,6 +35,7 @@ import com.ots.aipassportphotomaker.common.ext.bounceClick
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CommonTopBar(
+    modifier: Modifier = Modifier,
     backgroundColor: Color = colors.background,
     title: String,
     buttonText: String = stringResource(R.string.done),
@@ -45,6 +46,7 @@ fun CommonTopBar(
     onDoneClick: () -> Unit = {}
 ) {
     TopAppBar(
+        modifier = modifier,
         title = {
             Text(
                 modifier = Modifier

@@ -22,6 +22,8 @@ class NavigationBarSharedViewModel @Inject constructor() : BaseViewModel() {
     private val _editedImageResult = MutableStateFlow<String?>(null)
     val editedImageResult = _editedImageResult.asStateFlow()
 
+    var isFirstLaunch = false
+
     fun onBottomItemClicked(bottomItem: BottomNavigationBarItem) = launch {
         _bottomItem.emit(bottomItem)
     }

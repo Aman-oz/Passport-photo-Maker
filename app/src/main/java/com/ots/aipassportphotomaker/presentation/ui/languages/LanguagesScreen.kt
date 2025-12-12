@@ -3,7 +3,6 @@ package com.ots.aipassportphotomaker.presentation.ui.languages
 import android.annotation.SuppressLint
 import android.util.Log
 import android.widget.Toast
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -20,7 +19,6 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -43,6 +41,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.pointer.pointerInput
@@ -58,7 +57,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ots.aipassportphotomaker.R
-import com.ots.aipassportphotomaker.adsmanager.admob.AdaptiveBannerAd
 import com.ots.aipassportphotomaker.adsmanager.admob.NativeAdViewCompose
 import com.ots.aipassportphotomaker.adsmanager.admob.adids.AdIdsFactory
 import com.ots.aipassportphotomaker.adsmanager.admob.adtype.NativeAdType
@@ -66,7 +64,6 @@ import com.ots.aipassportphotomaker.common.ext.bounceClick
 import com.ots.aipassportphotomaker.common.ext.collectAsEffect
 import com.ots.aipassportphotomaker.common.preview.PreviewContainer
 import com.ots.aipassportphotomaker.common.utils.AnalyticsConstants
-import com.ots.aipassportphotomaker.common.utils.Logger
 import com.ots.aipassportphotomaker.domain.model.language.getLanguageList
 import com.ots.aipassportphotomaker.presentation.ui.bottom_nav.NavigationBarSharedViewModel
 import com.ots.aipassportphotomaker.presentation.ui.components.CommonTopBar
@@ -74,7 +71,6 @@ import com.ots.aipassportphotomaker.presentation.ui.components.LoaderFullScreen
 import com.ots.aipassportphotomaker.presentation.ui.main.MainRouter
 import com.ots.aipassportphotomaker.presentation.ui.theme.colors
 import com.ots.aipassportphotomaker.presentation.ui.theme.custom300
-import kotlin.math.min
 
 // Created by amanullah on 27/08/2025.
 // Copyright (c) 2025 Ozi Publishing. All rights reserved.
@@ -166,6 +162,8 @@ private fun LanguagesScreen(
 
         if (errorMessage != null) Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
 
+        var adCallback by remember { mutableStateOf(false) }
+
         Column(
             modifier = Modifier
                 .background(colors.custom300)
@@ -178,6 +176,8 @@ private fun LanguagesScreen(
                 }
         ) {
             CommonTopBar(
+                modifier = Modifier
+                    .blur(if (adCallback) 0.dp else 4.dp),
                 backgroundColor = colors.custom300,
                 title = titleText,
                 buttonText = buttonText,
@@ -202,6 +202,7 @@ private fun LanguagesScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
+                        .blur(if (adCallback) 0.dp else 4.dp)
                         .pointerInput(Unit) {
                             detectTapGestures(
                                 onTap = {
@@ -218,7 +219,7 @@ private fun LanguagesScreen(
                         modifier = Modifier
                             .animateContentSize()
                             .padding(
-                                top = 24.dp,
+                                top = 0.dp,
                                 bottom = 8.dp,
                                 start = 16.dp,
                                 end = 16.dp
@@ -318,7 +319,7 @@ private fun LanguagesScreen(
                         color = colors.onBackground,
                         modifier = Modifier
                             .animateContentSize()
-                            .padding(top = 24.dp, bottom = 8.dp, start = 16.dp)
+                            .padding(top = 10.dp, bottom = 8.dp, start = 16.dp)
                     )
 
                     val otherLanguages =
@@ -441,7 +442,6 @@ private fun LanguagesScreen(
 
                     // Ad Section
                     var adViewLoadState by remember { mutableStateOf(true) }
-                    var callback by remember { mutableStateOf(false) }
 
                     if (!isPremium) {
                         if (adViewLoadState) {
@@ -459,7 +459,7 @@ private fun LanguagesScreen(
                                 Box(
                                     contentAlignment = Alignment.Center,
                                 ) {
-                                    if (!callback) {
+                                    if (!adCallback) {
                                         Text(
                                             text = stringResource(R.string.advertisement),
                                             style = MaterialTheme.typography.bodyMedium,
@@ -476,7 +476,7 @@ private fun LanguagesScreen(
                                         adType = NativeAdType.NATIVE_AD_LANGUAGE,
                                         nativeID = AdIdsFactory.getNativeAdIdLanguage(),
                                         onAdLoaded = {
-                                            callback = true
+                                            adCallback = true
                                             adViewLoadState = it
                                         }
                                     )

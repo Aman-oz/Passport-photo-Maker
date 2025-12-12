@@ -241,7 +241,7 @@ private fun PremiumScreen(
                 )
 
                 // opacity of 8%
-                Box(
+                /*Box(
                     modifier = Modifier
                         .padding(start = 20.dp, top = 40.dp)
                         .background(
@@ -263,14 +263,16 @@ private fun PremiumScreen(
                             )
                             .padding(horizontal = 12.dp, vertical = 6.dp),
                     )
-                }
+                }*/
 
                 Icon(
                     painter = painterResource(id = R.drawable.close_circled_icon),
                     contentDescription = "Back",
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .padding(top = 40.dp, end = 28.dp)
+                        .padding(top = 45.dp, end = 28.dp)
+                        .size(40.dp)
+                        .padding(8.dp)
                         .clickable(
                             onClick = {
                                 onCloseClick()

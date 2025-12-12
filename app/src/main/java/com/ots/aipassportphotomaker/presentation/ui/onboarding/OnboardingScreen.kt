@@ -344,7 +344,7 @@ fun BottomSection(
     ) {
         val buttonText =
             if (size == index + 1)
-                stringResource(R.string.finish)
+                stringResource(R.string.continue_)
             else
                 stringResource(R.string.next)
         Column(

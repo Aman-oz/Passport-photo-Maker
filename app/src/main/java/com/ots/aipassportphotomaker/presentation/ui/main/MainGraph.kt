@@ -71,6 +71,7 @@ fun MainGraph(
             val nestedNavController = rememberNavController()
             val getStartedViewModel: GetStartedScreenViewModel = hiltViewModel()
             val sharedViewModel = backStack.sharedViewModel<NavigationBarSharedViewModel>(navController = mainNavController)
+            sharedViewModel.isFirstLaunch = isFirstLaunch
             GetStartedPage(
                 mainRouter = MainRouter(mainNavController),
                 viewModel = getStartedViewModel,
@@ -111,8 +112,12 @@ fun MainGraph(
                 viewModel = onboardingViewModel,
                 sharedViewModel = sharedViewModel,
                 onFinishClick = {
-                    mainNavController.navigate(Page.NavigationBar) {
+                    /*mainNavController.navigate(Page.NavigationBar) {
                         popUpTo(Page.OnboardingScreen::class) { inclusive = true }
+                    }*/
+
+                    mainNavController.navigate(Page.Premium(sourceScreen = "getStarted")) {
+                        popUpTo(Page.OnboardingScreen) { inclusive = true }
                     }
                 }
             )

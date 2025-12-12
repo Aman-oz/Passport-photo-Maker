@@ -283,4 +283,6 @@
     <string name="manual">Manual</string>
     <string name="auto_remove">Auto Remove</string>
     <string name="remove_background_with_ai">Auto remove background through AI</string>
+
+    <string name="continue_">Continue</string>
 </resources>
