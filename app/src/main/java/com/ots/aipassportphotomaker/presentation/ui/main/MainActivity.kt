@@ -485,7 +485,7 @@ class MainActivity : ComponentActivity() {
                                 }
                                 showSettingsDialog = false
 
-                                navController.navigate(Page.Premium) {
+                                navController.navigate(Page.Premium(sourceScreen = "other")) {
                                 }
 
                             },

@@ -222,27 +222,57 @@ private fun OnboardingScreen(
                                 .fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
-                            Image(
-                                painter = painterResource(id = item.Image),
-                                contentDescription = "Screen1",
-                                modifier = Modifier
-                                    .graphicsLayer { alpha = 0.99F }
-                                    .drawWithContent {
-                                        val height = size.height
 
-                                        val colors = listOf(Color.Transparent, colors.background)
-                                        drawContent()
-                                        drawRect(
-                                            brush = Brush.verticalGradient(
-                                                colors = colors,
-                                                startY = height, // Start at the bottom
-                                                endY = height - (height / 2f) // End halfway up
-                                            ),
-                                            blendMode = BlendMode.DstIn
-                                        )
-                                    },
-                                contentScale = ContentScale.Fit
-                            )
+                            if (page == 2) {
+                                Image(
+                                    painter = painterResource(id = item.Image),
+                                    contentDescription = "Screen1",
+                                    modifier = Modifier
+                                        .graphicsLayer { alpha = 0.99F }
+                                        .drawWithContent {
+                                            val height = size.height
+
+                                            val colors = listOf(Color.Transparent, colors.background)
+                                            drawContent()
+                                            drawRect(
+                                                brush = Brush.verticalGradient(
+                                                    colors = colors,
+                                                    startY = height, // Start at the bottom
+                                                    endY = height - (height / 2f) // End halfway up
+                                                ),
+                                                blendMode = BlendMode.DstIn
+                                            )
+                                        },
+                                    contentScale = ContentScale.Fit
+                                )
+
+                                val modifier = if (page == 0) {
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .height(200.dp)
+                                        .align(Alignment.BottomCenter)
+                                } else {
+                                    Modifier
+                                        .fillMaxWidth(.8f)
+                                        .height(150.dp)
+                                        .align(Alignment.BottomStart)
+                                }
+
+                                LottieAnimation(
+                                    composition = composition,
+                                    modifier = modifier, // Center the Lottie over the image
+                                    iterations = LottieConstants.IterateForever, // Loop the animation
+                                    contentScale = ContentScale.Fit
+                                )
+                            } else {
+                                LottieAnimation(
+                                    composition = composition,
+                                    modifier = Modifier.fillMaxSize(), // Center the Lottie over the image
+                                    iterations = LottieConstants.IterateForever, // Loop the animation
+                                    contentScale = ContentScale.Fit
+                                )
+                            }
+
 
                             Spacer(
                                 Modifier
@@ -258,25 +288,6 @@ private fun OnboardingScreen(
                                     )
                                     .align(Alignment.BottomCenter)
                             )
-
-                            val modifier = if (page == 0) {
-                                Modifier
-                                    .fillMaxWidth()
-                                    .height(200.dp)
-                                    .align(Alignment.BottomCenter)
-                            } else {
-                                Modifier
-                                    .fillMaxWidth(.8f)
-                                    .height(150.dp)
-                                    .align(Alignment.BottomStart)
-                            }
-
-                                LottieAnimation(
-                                    composition = composition,
-                                    modifier = modifier, // Center the Lottie over the image
-                                    iterations = LottieConstants.IterateForever, // Loop the animation
-                                    contentScale = ContentScale.Fit
-                                )
                         }
                     }
 

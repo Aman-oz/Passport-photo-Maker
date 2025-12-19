@@ -128,6 +128,10 @@ class EditImageScreenViewModel @Inject constructor(
             loadState(true)
         }
 
+        if (sourceScreen == "ImageProcessingScreen") {
+            updateIsBgRemoved(true)
+        }
+
         onInitialState()
         observeSuitsLoadingState()
     }

@@ -11,6 +11,7 @@ import com.ots.aipassportphotomaker.common.ext.singleSharedFlow
 import com.ots.aipassportphotomaker.common.managers.AnalyticsManager
 import com.ots.aipassportphotomaker.common.managers.PreferencesHelper
 import com.ots.aipassportphotomaker.common.utils.AdsConstants
+import com.ots.aipassportphotomaker.common.utils.AnalyticsConstants
 import com.ots.aipassportphotomaker.domain.model.DocumentListItem
 import com.ots.aipassportphotomaker.domain.usecase.photoid.SearchDocuments
 import com.ots.aipassportphotomaker.domain.util.NetworkMonitor
@@ -75,8 +76,13 @@ class PhotoIDScreenViewModel @Inject constructor(
         }.cachedIn(viewModelScope)
 
     init {
+        initialState()
         observeNetworkStatus()
         observeLoadState()
+    }
+
+    private fun initialState() {
+        analyticsManager.sendAnalytics(AnalyticsConstants.OPENED, "CreateIdScreen")
     }
 
     private fun loadData() {

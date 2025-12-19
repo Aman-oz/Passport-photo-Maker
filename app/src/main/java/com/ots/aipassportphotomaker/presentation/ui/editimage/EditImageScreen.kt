@@ -206,8 +206,13 @@ fun EditImagePage(
     LaunchedEffect(removedBgResult) {
         Logger.i(TAG, "LaunchedEffect triggered with: $editedImageResult")
         removedBgResult.let { isRemoved ->
-            Logger.i(TAG, "Received isRemoved BG: $isRemoved")
-            viewModel.updateIsBgRemoved(isRemoved)
+            Logger.i(TAG, "Received isRemoved BG: $isRemoved, shouldRemoveBackground: $shouldRemoveBackground")
+            if (shouldRemoveBackground && !isRemoved) {
+                viewModel.updateIsBgRemoved(false)
+            } else {
+                viewModel.updateIsBgRemoved(true)
+            }
+//            viewModel.updateIsBgRemoved(isRemoved)
             commonSharedViewModel.clearRemovedBgResult()
         }
     }
@@ -366,12 +371,12 @@ private fun EditImageScreen(
 //        val shouldRemoveBg by remember { mutableStateOf(uiState.sourceScreen == "HomeScreen" && shouldRemoveBg) }
         var showRemoveBackgroundDialog by remember { mutableStateOf(false) }
 
-        showNoSuitsFound = suits.itemCount == 0
+        /*showNoSuitsFound = suits.itemCount == 0
 
         Logger.i(
             "EditImagePage",
             "Rendering with imageUrl: $imageUrl, isLoading: $isLoading, errorMessage: $errorMessage"
-        )
+        )*/
 
         if (errorMessage != null) Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
 
